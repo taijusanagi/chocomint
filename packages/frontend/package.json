@@ -6,6 +6,7 @@
     "@craco/craco": "^6.1.1",
     "@tailwindcss/postcss7-compat": "^2.0.3",
     "autoprefixer": "^9",
+    "ipfs-core": "^0.5.2",
     "postcss": "^7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
