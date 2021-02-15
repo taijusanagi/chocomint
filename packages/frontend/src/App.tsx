@@ -1,13 +1,12 @@
+import React from "react";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
-import React from 'react'
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
+import Index from "./pages/index";
+import Account from "./pages/account";
+import Create from "./pages/create";
+import Order from "./pages/order";
 
-import Index from './pages/index'
-import Account from './pages/account'
-import Create from './pages/create'
-import Order from './pages/order'
-
-const App: React.FC = () =>  {
+const App: React.FC = () => {
   return (
     <Router>
       <Switch>
@@ -22,10 +21,10 @@ const App: React.FC = () =>  {
         </Route>
         <Route path="/order" exact>
           <Order />
-        </Route> 
+        </Route>
       </Switch>
     </Router>
   );
-}
+};
 
 export default App;
