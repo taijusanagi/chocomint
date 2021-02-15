@@ -6,13 +6,15 @@
     "@craco/craco": "^6.1.1",
     "@tailwindcss/postcss7-compat": "^2.0.3",
     "autoprefixer": "^9",
+    "ethers": "^5.0.31",
     "ipfs-core": "^0.5.2",
     "postcss": "^7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.2",
-    "tailwindcss": "npm:@tailwindcss/postcss7-compat"
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat",
+    "web3modal": "^1.9.3"
   },
   "scripts": {
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
