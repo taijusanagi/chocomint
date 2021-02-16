@@ -12,8 +12,9 @@ contract ChocoMint is ERC721 {
     }
 
     function mint(address to, string memory tokenURI) public {
-        _mint(to, _tokenIdTracker.current());
-        _setTokenURI(_tokenIdTracker.current(), tokenURI);
+        uint256 tokenId = _tokenIdTracker.current();
+        _mint(to, tokenId);
+        _setTokenURI(tokenId, tokenURI);
         _tokenIdTracker.increment();
     }
 }
