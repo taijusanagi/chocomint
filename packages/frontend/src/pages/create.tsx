@@ -1,15 +1,18 @@
 import React from "react";
-import IPFS from "ipfs-core";
+import IPFS, { IPFS as IPFSType } from "ipfs-core";
 import Web3Modal from "web3modal";
 import { ethers } from "ethers";
-// import Web3 from "web3";
 
 const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 import { abi as contractAbi } from "../ChocoMint.json";
 
 export const Create: React.FC = () => {
-  const [ipfs, setIpfs] = React.useState<any>();
+  const [ipfs, setIpfs] = React.useState<IPFSType>();
+
   const [nft, setNft] = React.useState("");
+
+  // const [file, setFile] = React.useState("");
+  const [filePreview, setFilePreview] = React.useState("");
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
 
@@ -18,6 +21,10 @@ export const Create: React.FC = () => {
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!ipfs) {
+      return;
+    }
+
     if (!event.target.files) {
       return;
     }
@@ -32,6 +39,8 @@ export const Create: React.FC = () => {
       });
       setNft(`ipfs://ipfs/${cid.toString()}/nft.${type}`);
     };
+    console.log(URL.createObjectURL(event.target.files[0]));
+    setFilePreview(URL.createObjectURL(event.target.files[0]));
     reader.readAsArrayBuffer(event.target.files[0]);
   };
 
@@ -46,6 +55,9 @@ export const Create: React.FC = () => {
   };
 
   const uploadToIpfs = async () => {
+    if (!ipfs) {
+      return;
+    }
     const metadata = {
       name,
       description,
@@ -71,11 +83,6 @@ export const Create: React.FC = () => {
     const address = await signer.getAddress();
 
     contract.mint(address, tokenUri);
-
-    // const contract = new web3.eth.Contract(contractAbi as any, contractAddress);
-    // await contract.methods
-    //   .mint("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", tokenUri)
-    //   .send({ from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" });
   };
 
   return (
@@ -91,6 +98,7 @@ export const Create: React.FC = () => {
       <div>
         <label>Name</label>
         <input type="text" name="name" id="name" onChange={handleNameChange} />
+        <img src={filePreview} />
       </div>
       <div>
         <label>Description</label>

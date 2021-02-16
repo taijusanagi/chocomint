@@ -1,10 +1,10 @@
 import { ethers } from "hardhat";
 
 const main = async () => {
-    const ChocoMint = await ethers.getContractFactory("ChocoMint");
-    const chocoMint = await ChocoMint.deploy("ChocoMint", "CM");
-    console.log("ChocoMint deployed to:", chocoMint.address);
-}
+  const ChocoMint = await ethers.getContractFactory("ChocoMint");
+  const chocoMint = await ChocoMint.deploy("ChocoMint", "CM");
+  console.log("ChocoMint deployed to:", chocoMint.address);
+};
 
 main()
   .then(() => process.exit(0))
