@@ -8,40 +8,21 @@ import { abi as contractAbi } from "../ChocoMint.json";
 
 export const Create: React.FC = () => {
   const [ipfs, setIpfs] = React.useState<IPFSType>();
-
-  const [nft, setNft] = React.useState("");
-
-  // const [file, setFile] = React.useState("");
-  const [filePreview, setFilePreview] = React.useState("");
+  const [tokenUri, setTokenUri] = React.useState("");
+  const [file, setFile] = React.useState<File>();
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
+  const [quantity, setQuantity] = React.useState("");
 
   React.useEffect(() => {
     IPFS.create().then((created) => setIpfs(created));
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!ipfs) {
-      return;
-    }
-
     if (!event.target.files) {
       return;
     }
-    const type = event.target.files[0].name.split(".")[1];
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const buffer = new Uint8Array(reader.result as Buffer);
-      const { cid } = await ipfs.add({
-        //TODO: I don't know if this is ok
-        path: `images/nft.${type}`,
-        content: buffer,
-      });
-      setNft(`ipfs://ipfs/${cid.toString()}/nft.${type}`);
-    };
-    console.log(URL.createObjectURL(event.target.files[0]));
-    setFilePreview(URL.createObjectURL(event.target.files[0]));
-    reader.readAsArrayBuffer(event.target.files[0]);
+    setFile(event.target.files[0]);
   };
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,35 +35,56 @@ export const Create: React.FC = () => {
     setDescription(event.target.value);
   };
 
+  const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setQuantity(event.target.value);
+  };
+
+  const getPreviewImageSrc = (file?: File) => {
+    if (!file) {
+      return "";
+    }
+    return URL.createObjectURL(file);
+  };
+
   const uploadToIpfs = async () => {
-    if (!ipfs) {
+    if (!ipfs || !file || !name || !description) {
       return;
     }
-    const metadata = {
-      name,
-      description,
-      image: nft,
-    };
-    const buffer = Buffer.from(JSON.stringify(metadata));
-    const { cid } = await ipfs.add({
-      //TODO: I don't know if this is ok
-      path: "json/metadata.json",
-      content: buffer,
-    });
-    console.log(cid);
-    const tokenUri = `https://ipfs.io/ipfs/${cid.toString()}.metadata.json`;
+    const type = file.name.split(".")[1];
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const nftBuffer = new Uint8Array(reader.result as Buffer);
+      const { cid: nftCid } = await ipfs.add({
+        path: `images/nft.${type}`,
+        content: nftBuffer,
+      });
+      const nft = `ipfs://ipfs/${nftCid.toString()}/nft.${type}`;
+      const metadata = {
+        name,
+        description,
+        image: nft,
+      };
+      const metadataBuffer = Buffer.from(JSON.stringify(metadata));
+      const { cid: metadataCid } = await ipfs.add(metadataBuffer);
 
+      setTokenUri(
+        `https://ipfs.io/ipfs/${metadataCid.toString()}/metadata.json`
+      );
+      console.log(`https://ipfs.io/ipfs/${metadataCid.toString()}`);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const mintNFT = async () => {
+    if (!quantity || !tokenUri) {
+      return;
+    }
     const web3Modal = new Web3Modal();
     const web3ModalProvider = await web3Modal.connect();
-    // const web3 = new Web3(web3ModalProvider);
     const web3Provider = new ethers.providers.Web3Provider(web3ModalProvider);
     const signer = web3Provider.getSigner();
-    console.log(web3ModalProvider, tokenUri);
-
     const contract = new ethers.Contract(contractAddress, contractAbi, signer);
-    const address = await signer.getAddress();
-
-    contract.mint(address, tokenUri);
+    contract.mint(quantity, tokenUri);
   };
 
   return (
@@ -95,10 +97,10 @@ export const Create: React.FC = () => {
         name="uploadedFile"
         onChange={handleFileChange}
       />
+      <img src={getPreviewImageSrc(file)} />
       <div>
         <label>Name</label>
         <input type="text" name="name" id="name" onChange={handleNameChange} />
-        <img src={filePreview} />
       </div>
       <div>
         <label>Description</label>
@@ -108,9 +110,12 @@ export const Create: React.FC = () => {
           onChange={handleDescriptionChange}
         />
       </div>
-      <button type="submit" onClick={uploadToIpfs}>
-        Mint
-      </button>
+      <div>
+        <label>Quantity</label>
+        <input name="quantity" id="quantity" onChange={handleQuantityChange} />
+      </div>
+      <button onClick={uploadToIpfs}>Upload</button>
+      <button onClick={mintNFT}>Mint</button>
     </div>
   );
 };
