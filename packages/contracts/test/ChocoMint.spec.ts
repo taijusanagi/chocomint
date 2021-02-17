@@ -8,30 +8,18 @@ var path = require("path");
 
 describe("Token contract", function () {
   let chocoMint;
-  const name = "name";
-  const symbol = "symbol";
-  const tokenUri = "tokenUri";
-  const owner = "0x0000000000000000000000000000000000000001";
-  const amount = 5;
-  const mintedTokenId = 1;
+
   this.beforeAll("initialization.", async function () {
-    const ChocoMint = await ethers.getContractFactory("IPFS");
+    const ChocoMint = await ethers.getContractFactory("ChocoMint_V1");
     chocoMint = await ChocoMint.deploy();
   });
+
   it("string", async function () {
-    console.log("start");
-    var testfile = fs
-      .readFileSync(path.join(__dirname, "./testfile"))
-      .toString();
-    console.log(await chocoMint.getCid(testfile));
+    await chocoMint.mint([
+      "111",
+      "111",
+      "ipfs://ipfs/QmZ8NsEKRzivgcw4p9CEkUqU8Mo5ZBNiFN2wf33oTtnvvq/nft.png",
+    ]);
+    console.log(await chocoMint.tokenURI(1));
   });
-  // it("initialization", async function () {
-  //   expect(await chocoMint.name()).to.equal(name);
-  //   expect(await chocoMint.symbol()).to.equal(symbol);
-  // });
-  // it("mint", async function () {
-  //   await chocoMint.mint(owner, amount, tokenUri, "0x");
-  //   expect(await chocoMint.uri(mintedTokenId)).to.equal(tokenUri);
-  //   expect(await chocoMint.balanceOf(owner, mintedTokenId)).to.equal(amount);
-  // });
 });
