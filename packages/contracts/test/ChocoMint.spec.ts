@@ -23,7 +23,7 @@ describe("Token contract", function () {
     var testfile = fs
       .readFileSync(path.join(__dirname, "./testfile"))
       .toString();
-    console.log(await chocoMint.hello(testfile));
+    console.log(await chocoMint.getCid(testfile));
   });
   // it("initialization", async function () {
   //   expect(await chocoMint.name()).to.equal(name);
