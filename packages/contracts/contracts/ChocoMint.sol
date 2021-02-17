@@ -2,24 +2,24 @@
 pragma solidity 0.7.4;
 pragma experimental ABIEncoderV2;
 
-contract ChocoMint_V1 {
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
+contract ChocoMint_V1 is ERC721 {
+  using ECDSA for bytes32;
+
   struct Choco {
     string name;
     string description;
     string image;
-    // uint256 initial_price;
-    // uint256 creater_fee;
-    // uint256 minter_fee;
-    // address creator;
-    // address minter;
-    // bytes signature;
+    uint256 initial_price;
+    uint256 creator_fee;
+    address payable creator;
+    bytes signature;
   }
 
   mapping(uint256 => Choco) public chocos;
 
-  uint256 public mintedTokenIndex = 0;
-  string public name = "EthereumChocoMint_v1";
-  string public symbol = "ETHCM1";
   string public baseTokenUri = "https://ipfs.io/ipfs/";
   bytes public prefix1 = hex"0a";
   bytes public prefix2 = hex"080212";
@@ -28,12 +28,40 @@ contract ChocoMint_V1 {
   bytes public ALPHABET =
     "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-  function mint(Choco memory choco) public {
-    mintedTokenIndex++;
-    chocos[mintedTokenIndex] = choco;
+  constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
+
+  function mint(Choco memory choco) public payable {
+    require(msg.value == choco.initial_price, "Must pay initial_price");
+    bytes32 hash = hashChoco(choco);
+    bytes32 messageHash = hash.toEthSignedMessageHash();
+    address signer = messageHash.recover(choco.signature);
+    require(signer == choco.creator, "Must be signed by creator");
+    uint256 tokenId = uint256(hash);
+    chocos[tokenId] = choco;
+    _mint(msg.sender, tokenId);
+    choco.creator.transfer(choco.creator_fee);
   }
 
-  function tokenURI(uint256 tokenId) public view returns (string memory) {
+  function hashChoco(Choco memory choco) public pure returns (bytes32) {
+    return
+      keccak256(
+        abi.encodePacked(
+          choco.name,
+          choco.description,
+          choco.image,
+          choco.initial_price,
+          choco.creator_fee,
+          choco.creator
+        )
+      );
+  }
+
+  function tokenURI(uint256 tokenId)
+    public
+    view
+    override
+    returns (string memory)
+  {
     Choco memory choco = chocos[tokenId];
 
     bytes memory cid =
@@ -45,6 +73,14 @@ contract ChocoMint_V1 {
           choco.description,
           '","image":"',
           choco.image,
+          '","initial_price":"',
+          choco.initial_price,
+          '","creator_fee":"',
+          choco.creator_fee,
+          '","creator":"',
+          choco.creator,
+          '","signature":"',
+          choco.signature,
           '"}'
         )
       );
