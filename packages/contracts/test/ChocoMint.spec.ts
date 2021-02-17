@@ -49,15 +49,19 @@ describe("Token contract", function () {
 
     const messageHashBinary = ethers.utils.arrayify(messageHash);
     choco.signature = await signer.signMessage(messageHashBinary);
-
-    const metadataBuffer = Buffer.from(JSON.stringify(choco));
-    console.log(JSON.stringify(choco));
+    const metadataBuffer = Buffer.from(
+      JSON.stringify({
+        name: "name",
+        description: "description",
+        image: "image",
+        initial_price,
+        creator_fee: "100",
+        creator: signer.address.toLowerCase(),
+        signature: choco.signature,
+      })
+    );
     const { cid } = await ipfs.add(metadataBuffer);
-
     console.log(cid.toString());
-
-    console.log(await chocoMint.getCid(JSON.stringify(choco)));
-
     await chocoMint.mint(
       [
         choco.name,
