@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "hardhat/console.sol";
-
 contract ChocoMint_V1 is ERC721 {
   using ECDSA for bytes32;
   using Strings for uint256;
@@ -86,7 +84,6 @@ contract ChocoMint_V1 is ERC721 {
   }
 
   function getCid(bytes memory input) private view returns (bytes memory) {
-    // bytes memory input = bytes(inputString);
     bytes memory len = lengthEncode(input.length);
     bytes memory len2 = lengthEncode(input.length + 4 + 2 * len.length);
     bytes memory source =
@@ -98,8 +95,8 @@ contract ChocoMint_V1 is ERC721 {
           )
         )
       );
-    uint8[] memory digits = new uint8[](255);
-    bytes memory output = new bytes(255);
+    uint8[] memory digits = new uint8[](46);
+    bytes memory output = new bytes(46);
     digits[0] = 0;
     uint8 digitlength = 1;
     for (uint256 i = 0; i < source.length; ++i) {

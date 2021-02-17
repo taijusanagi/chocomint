@@ -1,7 +1,8 @@
 import { ethers } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
-import * as IPFS from "ipfs-core";
+import * as IPFS from "ipfs-mini";
+import axios from "axios";
 chai.use(solidity);
 const { expect } = chai;
 
@@ -9,7 +10,6 @@ describe("Token contract", function () {
   let chocoMint;
   const contractName = "EthereumChocoMintV1";
   const contractSymbol = "ETHCM1";
-
   this.beforeAll("initialization.", async function () {
     const ChocoMint = await ethers.getContractFactory("ChocoMint_V1");
     chocoMint = await ChocoMint.deploy(contractName, contractSymbol);
@@ -20,21 +20,23 @@ describe("Token contract", function () {
     expect(await chocoMint.symbol()).to.equal(contractSymbol);
   });
 
-  it("case: mint is ok / check: tokenOwner, tokenURI", async function () {
-    const ipfs = await IPFS.create();
-
-    const initial_price = "10000";
+  it("case: mint is ok / check: tokenURI", async function () {
+    const ipfs = new IPFS({
+      host: "ipfs.infura.io",
+      port: 5001,
+      protocol: "https",
+    });
+    const baseTokenUri = "https://ipfs.io/ipfs/";
     const [signer] = await ethers.getSigners();
     const choco = {
       name: "name",
       description: "description",
       image: "image",
-      initial_price,
+      initial_price: "10000",
       creator_fee: "100",
       creator: signer.address.toLowerCase(),
       signature: "0x",
     };
-
     const messageHash = ethers.utils.solidityKeccak256(
       ["string", "string", "string", "uint256", "uint256", "address"],
       [
@@ -46,22 +48,10 @@ describe("Token contract", function () {
         choco.creator,
       ]
     );
-
     const messageHashBinary = ethers.utils.arrayify(messageHash);
     choco.signature = await signer.signMessage(messageHashBinary);
-    const metadataBuffer = Buffer.from(
-      JSON.stringify({
-        name: "name",
-        description: "description",
-        image: "image",
-        initial_price,
-        creator_fee: "100",
-        creator: signer.address.toLowerCase(),
-        signature: choco.signature,
-      })
-    );
-    const { cid } = await ipfs.add(metadataBuffer);
-    console.log(cid.toString());
+    const metadataBuffer = Buffer.from(JSON.stringify(choco));
+    const cid = await ipfs.add(metadataBuffer);
     await chocoMint.mint(
       [
         choco.name,
@@ -73,9 +63,12 @@ describe("Token contract", function () {
         choco.signature,
       ],
       {
-        value: initial_price,
+        value: choco.initial_price,
       }
     );
-    console.log(await chocoMint.tokenURI(messageHash));
+    const tokenURI = await chocoMint.tokenURI(messageHash);
+    expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
+    const { data } = await axios.get(tokenURI);
+    expect(JSON.stringify(choco)).to.equal(JSON.stringify(data));
   });
 });
