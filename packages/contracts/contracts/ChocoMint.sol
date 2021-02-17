@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract ChocoMint_V1 is ERC721 {
+contract ChocoMint is ERC721 {
   using ECDSA for bytes32;
   using Strings for uint256;
 
@@ -14,8 +14,8 @@ contract ChocoMint_V1 is ERC721 {
     string name;
     string description;
     string image;
-    uint256 initial_price;
-    uint256 creator_fee;
+    uint256 initialPrice;
+    uint256 creatorFee;
     address payable creator;
     bytes signature;
   }
@@ -33,15 +33,17 @@ contract ChocoMint_V1 is ERC721 {
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
   function mint(Choco memory choco) public payable {
-    require(msg.value == choco.initial_price, "Must pay initial_price");
+    require(msg.value == choco.initialPrice, "Must pay initial_price");
     bytes32 hash =
       keccak256(
         abi.encodePacked(
+          getChainID(),
+          address(this),
           choco.name,
           choco.description,
           choco.image,
-          choco.initial_price,
-          choco.creator_fee,
+          choco.initialPrice,
+          choco.creatorFee,
           choco.creator
         )
       );
@@ -51,7 +53,7 @@ contract ChocoMint_V1 is ERC721 {
     uint256 tokenId = uint256(hash);
     chocos[tokenId] = choco;
     _mint(msg.sender, tokenId);
-    choco.creator.transfer(choco.creator_fee);
+    choco.creator.transfer(choco.creatorFee);
   }
 
   function tokenURI(uint256 tokenId)
@@ -63,16 +65,20 @@ contract ChocoMint_V1 is ERC721 {
     Choco memory choco = chocos[tokenId];
     bytes memory metadata =
       abi.encodePacked(
-        '{"name":"',
+        '{"chainId":"',
+        getChainID().toString(),
+        '","address":"',
+        bytesToUTF8String(abi.encodePacked(address(this))),
+        '","name":"',
         choco.name,
         '","description":"',
         choco.description,
         '","image":"',
         choco.image,
         '","initial_price":"',
-        choco.initial_price.toString(),
+        choco.initialPrice.toString(),
         '","creator_fee":"',
-        choco.creator_fee.toString(),
+        choco.creatorFee.toString(),
         '","creator":"',
         bytesToUTF8String(abi.encodePacked(choco.creator)),
         '","signature":"',
@@ -81,6 +87,14 @@ contract ChocoMint_V1 is ERC721 {
       );
     bytes memory cid = getCid(metadata);
     return string(abi.encodePacked(baseTokenUri, cid));
+  }
+
+  function getChainID() public pure returns (uint256) {
+    uint256 id;
+    assembly {
+      id := chainid()
+    }
+    return id;
   }
 
   function getCid(bytes memory input) private view returns (bytes memory) {

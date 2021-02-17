@@ -8,10 +8,10 @@ const { expect } = chai;
 
 describe("Token contract", function () {
   let chocoMint;
-  const contractName = "EthereumChocoMintV1";
-  const contractSymbol = "ETHCM1";
+  const contractName = "ChocoMintEthereumV1";
+  const contractSymbol = "CMETH1";
   this.beforeAll("initialization.", async function () {
-    const ChocoMint = await ethers.getContractFactory("ChocoMint_V1");
+    const ChocoMint = await ethers.getContractFactory("ChocoMint");
     chocoMint = await ChocoMint.deploy(contractName, contractSymbol);
   });
 
@@ -35,11 +35,23 @@ describe("Token contract", function () {
       initial_price: "10000",
       creator_fee: "100",
       creator: signer.address.toLowerCase(),
-      signature: "0x",
+      signature: "",
     };
+    const chainId = await chocoMint.getChainID();
     const messageHash = ethers.utils.solidityKeccak256(
-      ["string", "string", "string", "uint256", "uint256", "address"],
       [
+        "uint256",
+        "address",
+        "string",
+        "string",
+        "string",
+        "uint256",
+        "uint256",
+        "address",
+      ],
+      [
+        chainId,
+        chocoMint.address,
         choco.name,
         choco.description,
         choco.image,
@@ -50,7 +62,12 @@ describe("Token contract", function () {
     );
     const messageHashBinary = ethers.utils.arrayify(messageHash);
     choco.signature = await signer.signMessage(messageHashBinary);
-    const metadataBuffer = Buffer.from(JSON.stringify(choco));
+    const metadataString = JSON.stringify({
+      chainId: chainId.toString(),
+      address: chocoMint.address.toLowerCase(),
+      ...choco,
+    });
+    const metadataBuffer = Buffer.from(metadataString);
     const cid = await ipfs.add(metadataBuffer);
     await chocoMint.mint(
       [
@@ -69,6 +86,6 @@ describe("Token contract", function () {
     const tokenURI = await chocoMint.tokenURI(messageHash);
     expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
     const { data } = await axios.get(tokenURI);
-    expect(JSON.stringify(choco)).to.equal(JSON.stringify(data));
+    expect(metadataString).to.equal(JSON.stringify(data));
   });
 });
