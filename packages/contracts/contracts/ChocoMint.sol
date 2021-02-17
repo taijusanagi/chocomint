@@ -4,9 +4,13 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+
+import "hardhat/console.sol";
 
 contract ChocoMint_V1 is ERC721 {
   using ECDSA for bytes32;
+  using Strings for uint256;
 
   struct Choco {
     string name;
@@ -60,8 +64,35 @@ contract ChocoMint_V1 is ERC721 {
   {
     Choco memory choco = chocos[tokenId];
 
-    bytes memory cid =
+    console.log(choco.name);
+    string memory cid =
       getCid(
+        string(
+          abi.encodePacked(
+            '{"name":"',
+            choco.name,
+            '","description":"',
+            choco.description,
+            '","image":"',
+            choco.image,
+            '","initial_price":"',
+            choco.initial_price.toString(),
+            '","creator_fee":"',
+            choco.creator_fee.toString(),
+            '","creator":"',
+            addressToString(choco.creator),
+            '","signature":"',
+            bytesToString(choco.signature),
+            '"}'
+          )
+        )
+      );
+
+    console.log("ini", choco.initial_price);
+
+    console.log(
+      "test",
+      string(
         abi.encodePacked(
           '{"name":"',
           choco.name,
@@ -70,21 +101,26 @@ contract ChocoMint_V1 is ERC721 {
           '","image":"',
           choco.image,
           '","initial_price":"',
-          choco.initial_price,
+          choco.initial_price.toString(),
           '","creator_fee":"',
-          choco.creator_fee,
+          choco.creator_fee.toString(),
           '","creator":"',
-          choco.creator,
+          addressToString(choco.creator),
           '","signature":"',
-          choco.signature,
+          bytesToString(choco.signature),
           '"}'
         )
-      );
-
+      )
+    );
     return string(abi.encodePacked(baseTokenUri, cid));
   }
 
-  function getCid(bytes memory input) public view returns (bytes memory) {
+  function getCid(string memory inputString)
+    public
+    view
+    returns (string memory)
+  {
+    bytes memory input = bytes(inputString);
     bytes memory len = lengthEncode(input.length);
     bytes memory len2 = lengthEncode(input.length + 4 + 2 * len.length);
     bytes memory source =
@@ -116,7 +152,7 @@ contract ChocoMint_V1 is ERC721 {
     for (uint256 k = 0; k < digitlength; k++) {
       output[k] = ALPHABET[digits[digitlength - 1 - k]];
     }
-    return output;
+    return string(output);
   }
 
   function lengthEncode(uint256 length) private view returns (bytes memory) {
@@ -140,5 +176,35 @@ contract ChocoMint_V1 is ERC721 {
       r[0] = s;
       return abi.encodePacked(to_binary(x / 256), r);
     }
+  }
+
+  function addressToString(address data) public pure returns (string memory) {
+    bytes32 value = bytes32(uint256(data));
+    bytes memory alphabet = "0123456789abcdef";
+
+    bytes memory str = new bytes(51);
+    str[0] = "0";
+    str[1] = "x";
+    for (uint256 i = 0; i < 20; i++) {
+      str[2 + i * 2] = alphabet[uint256(uint8(value[i + 12] >> 4))];
+      str[3 + i * 2] = alphabet[uint256(uint8(value[i + 12] & 0x0f))];
+    }
+    return string(str);
+  }
+
+  function bytesToString(bytes memory data)
+    public
+    pure
+    returns (string memory)
+  {
+    bytes memory alphabet = "0123456789abcdef";
+    bytes memory str = new bytes(2 + data.length * 2);
+    str[0] = "0";
+    str[1] = "x";
+    for (uint256 i = 0; i < data.length; i++) {
+      str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
+      str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
+    }
+    return string(str);
   }
 }

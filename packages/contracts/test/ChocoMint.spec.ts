@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
+import * as IPFS from "ipfs-core";
 chai.use(solidity);
 const { expect } = chai;
 
@@ -20,6 +21,8 @@ describe("Token contract", function () {
   });
 
   it("case: mint is ok / check: tokenOwner, tokenURI", async function () {
+    const ipfs = await IPFS.create();
+
     const initial_price = "10000";
     const [signer] = await ethers.getSigners();
     const choco = {
@@ -28,7 +31,7 @@ describe("Token contract", function () {
       image: "image",
       initial_price,
       creator_fee: "100",
-      creator: signer.address,
+      creator: signer.address.toLowerCase(),
       signature: "0x",
     };
 
@@ -47,6 +50,14 @@ describe("Token contract", function () {
     const messageHashBinary = ethers.utils.arrayify(messageHash);
     choco.signature = await signer.signMessage(messageHashBinary);
 
+    const metadataBuffer = Buffer.from(JSON.stringify(choco));
+    console.log(JSON.stringify(choco));
+    const { cid } = await ipfs.add(metadataBuffer);
+
+    console.log(cid.toString());
+
+    console.log(await chocoMint.getCid(JSON.stringify(choco)));
+
     await chocoMint.mint(
       [
         choco.name,
@@ -61,6 +72,6 @@ describe("Token contract", function () {
         value: initial_price,
       }
     );
-    // console.log(await chocoMint.tokenURI(1));
+    console.log(await chocoMint.tokenURI(messageHash));
   });
 });
