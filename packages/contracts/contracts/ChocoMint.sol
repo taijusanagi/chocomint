@@ -32,18 +32,7 @@ contract ChocoMint_V1 is ERC721 {
 
   function mint(Choco memory choco) public payable {
     require(msg.value == choco.initial_price, "Must pay initial_price");
-    bytes32 hash = hashChoco(choco);
-    bytes32 messageHash = hash.toEthSignedMessageHash();
-    address signer = messageHash.recover(choco.signature);
-    require(signer == choco.creator, "Must be signed by creator");
-    uint256 tokenId = uint256(hash);
-    chocos[tokenId] = choco;
-    _mint(msg.sender, tokenId);
-    choco.creator.transfer(choco.creator_fee);
-  }
-
-  function hashChoco(Choco memory choco) public pure returns (bytes32) {
-    return
+    bytes32 hash =
       keccak256(
         abi.encodePacked(
           choco.name,
@@ -54,6 +43,13 @@ contract ChocoMint_V1 is ERC721 {
           choco.creator
         )
       );
+    bytes32 messageHash = hash.toEthSignedMessageHash();
+    address signer = messageHash.recover(choco.signature);
+    require(signer == choco.creator, "Must be signed by creator");
+    uint256 tokenId = uint256(hash);
+    chocos[tokenId] = choco;
+    _mint(msg.sender, tokenId);
+    choco.creator.transfer(choco.creator_fee);
   }
 
   function tokenURI(uint256 tokenId)
@@ -135,7 +131,7 @@ contract ChocoMint_V1 is ERC721 {
     }
   }
 
-  function to_binary(uint256 x) public view returns (bytes memory) {
+  function to_binary(uint256 x) private view returns (bytes memory) {
     if (x == 0) {
       return new bytes(0);
     } else {
