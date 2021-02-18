@@ -77,7 +77,7 @@ export const Create: React.FC = () => {
     return URL.createObjectURL(file);
   };
 
-  const uploadToIpfs = async () => {
+  const createNft = async () => {
     if (!ipfs || !file || !name || !description) {
       return;
     }
@@ -146,7 +146,6 @@ export const Create: React.FC = () => {
       const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
       const leaves = [messageHashBinaryBuffer];
       const tree = new MerkleTree(leaves, keccak256, { sort: true });
-      console.log(messageHashBinaryBuffer);
       choco.root = tree.getHexRoot();
       choco.proof = tree.getHexProof(messageHashBinaryBuffer);
       choco.signature = await signer.signMessage(
@@ -161,9 +160,10 @@ export const Create: React.FC = () => {
         ...choco,
       });
       const { cid: metadataCid } = await ipfs.add(metadataString);
-      console.log(`Congraturation! Your NFT: ${choco.tokenId} is created!`);
       console.log(
-        `Verified on IPFS: https://ipfs.io/ipfs/${metadataCid.toString()}`
+        `Congraturation! Your NFT is on : ${
+          window.location.origin
+        }/asset?cid=${metadataCid.toString()}`
       );
     };
     reader.readAsArrayBuffer(file);
@@ -215,7 +215,7 @@ export const Create: React.FC = () => {
           onChange={handleRoyalityChange}
         />
       </div>
-      <button onClick={uploadToIpfs}>Create NFT</button>
+      <button onClick={createNft}>CREATE NFT</button>
     </div>
   );
 };
