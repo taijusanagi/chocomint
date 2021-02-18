@@ -5,11 +5,17 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
 contract ChocoMint is ERC721 {
   using ECDSA for bytes32;
   using Strings for uint256;
 
+  //markle tree proof
+  //fee -> []
+  //minter fee
+  //minter
+  //expire
   struct Choco {
     string name;
     string description;
@@ -31,6 +37,14 @@ contract ChocoMint is ERC721 {
     "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
+
+  function test(
+    bytes32[] memory proof,
+    bytes32 root,
+    bytes memory leaf
+  ) public pure returns (bool) {
+    return MerkleProof.verify(proof, root, keccak256(abi.encodePacked(leaf)));
+  }
 
   function mint(Choco memory choco) public payable {
     require(msg.value == choco.initialPrice, "Must pay initial_price");
