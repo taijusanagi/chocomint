@@ -23,28 +23,6 @@ describe("Token contract", function () {
     expect(await chocoMint.symbol()).to.equal(contractSymbol);
   });
 
-  it("case: markle tree is ok", async function () {
-    const choco1 = {
-      name: "name #1",
-      description: "description",
-      image: "image",
-    };
-    const message = ethers.utils.solidityPack(
-      ["string", "string", "string"],
-      [choco1.name, choco1.description, choco1.image]
-    );
-    const messageHash = ethers.utils.solidityKeccak256(
-      ["string", "string", "string"],
-      [choco1.name, choco1.description, choco1.image]
-    );
-    const leaves = [Buffer.from(ethers.utils.arrayify(messageHash))];
-    const tree = new MerkleTree(leaves, keccak256, { sort: true });
-    const root = tree.getHexRoot();
-    const leaf = keccak256(message);
-    const proof = tree.getHexProof(leaf);
-    expect(await chocoMint.test(proof, root, leaf)).to.equal(true);
-  });
-
   it("case: mint is ok / check: tokenURI", async function () {
     const ipfs = new IPFS({
       host: "ipfs.infura.io",
@@ -60,6 +38,8 @@ describe("Token contract", function () {
       initial_price: "10000",
       creator_fee: "100",
       creator: signer.address.toLowerCase(),
+      root: "",
+      proof: [],
       signature: "",
     };
     const chainId = await chocoMint.getChainID();
@@ -86,14 +66,23 @@ describe("Token contract", function () {
       ]
     );
     const messageHashBinary = ethers.utils.arrayify(messageHash);
-    choco.signature = await signer.signMessage(messageHashBinary);
+    const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
+    const leaves = [messageHashBinaryBuffer];
+    const tree = new MerkleTree(leaves, keccak256, { sort: true });
+    choco.root = tree.getHexRoot();
+    choco.proof = tree.getHexProof(messageHashBinaryBuffer);
+    choco.signature = await signer.signMessage(
+      ethers.utils.arrayify(choco.root)
+    );
     const metadataString = JSON.stringify({
       chainId: chainId.toString(),
       address: chocoMint.address.toLowerCase(),
       ...choco,
     });
+    console.log(metadataString);
     const metadataBuffer = Buffer.from(metadataString);
     const cid = await ipfs.add(metadataBuffer);
+    console.log(cid);
     await chocoMint.mint(
       [
         choco.name,
@@ -102,6 +91,8 @@ describe("Token contract", function () {
         choco.initial_price,
         choco.creator_fee,
         choco.creator,
+        choco.root,
+        choco.proof,
         choco.signature,
       ],
       {

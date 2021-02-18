@@ -7,11 +7,12 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
+import "hardhat/console.sol";
+
 contract ChocoMint is ERC721 {
   using ECDSA for bytes32;
   using Strings for uint256;
 
-  //markle tree proof
   //fee -> []
   //minter fee
   //minter
@@ -23,6 +24,8 @@ contract ChocoMint is ERC721 {
     uint256 initialPrice;
     uint256 creatorFee;
     address payable creator;
+    bytes32 root;
+    bytes32[] proof;
     bytes signature;
   }
 
@@ -37,14 +40,6 @@ contract ChocoMint is ERC721 {
     "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
-
-  function test(
-    bytes32[] memory proof,
-    bytes32 root,
-    bytes32 leaf
-  ) public pure returns (bool) {
-    return MerkleProof.verify(proof, root, leaf);
-  }
 
   function mint(Choco memory choco) public payable {
     require(msg.value == choco.initialPrice, "Must pay initial_price");
@@ -61,7 +56,9 @@ contract ChocoMint is ERC721 {
           choco.creator
         )
       );
-    bytes32 messageHash = hash.toEthSignedMessageHash();
+    bool hashVerified = MerkleProof.verify(choco.proof, choco.root, hash);
+    require(hashVerified, "Must be included in merkle tree");
+    bytes32 messageHash = choco.root.toEthSignedMessageHash();
     address signer = messageHash.recover(choco.signature);
     require(signer == choco.creator, "Must be signed by creator");
     uint256 tokenId = uint256(hash);
@@ -77,6 +74,12 @@ contract ChocoMint is ERC721 {
     returns (string memory)
   {
     Choco memory choco = chocos[tokenId];
+
+    bytes memory proof;
+    for (uint256 i; i < choco.proof.length; i++) {
+      proof = abi.encodePacked(proof, choco.proof);
+    }
+
     bytes memory metadata =
       abi.encodePacked(
         '{"chainId":"',
@@ -95,10 +98,16 @@ contract ChocoMint is ERC721 {
         choco.creatorFee.toString(),
         '","creator":"',
         bytesToUTF8String(abi.encodePacked(choco.creator)),
-        '","signature":"',
+        '","root":"',
+        bytesToUTF8String(abi.encodePacked(choco.root)),
+        '","proof":[',
+        0 < proof.length ? bytesToUTF8String(proof) : "",
+        '],"signature":"',
         bytesToUTF8String(choco.signature),
         '"}'
       );
+
+    console.log(string(metadata));
     bytes memory cid = getCid(metadata);
     return string(abi.encodePacked(baseTokenUri, cid));
   }
