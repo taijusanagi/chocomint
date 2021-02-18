@@ -77,7 +77,13 @@ contract ChocoMint is ERC721 {
 
     bytes memory proof;
     for (uint256 i; i < choco.proof.length; i++) {
-      proof = abi.encodePacked(proof, choco.proof);
+      proof = abi.encodePacked(
+        proof,
+        i > 0 ? "," : "",
+        '"',
+        bytesToUTF8String(abi.encodePacked(choco.proof[i])),
+        '"'
+      );
     }
 
     bytes memory metadata =
@@ -101,7 +107,7 @@ contract ChocoMint is ERC721 {
         '","root":"',
         bytesToUTF8String(abi.encodePacked(choco.root)),
         '","proof":[',
-        0 < proof.length ? bytesToUTF8String(proof) : "",
+        string(proof),
         '],"signature":"',
         bytesToUTF8String(choco.signature),
         '"}'

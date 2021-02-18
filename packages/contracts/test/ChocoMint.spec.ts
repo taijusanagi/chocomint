@@ -67,10 +67,51 @@ describe("Token contract", function () {
     );
     const messageHashBinary = ethers.utils.arrayify(messageHash);
     const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
-    const leaves = [messageHashBinaryBuffer];
+    const leaves = [
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+      messageHashBinaryBuffer,
+    ];
     const tree = new MerkleTree(leaves, keccak256, { sort: true });
     choco.root = tree.getHexRoot();
     choco.proof = tree.getHexProof(messageHashBinaryBuffer);
+    console.log(choco.proof);
     choco.signature = await signer.signMessage(
       ethers.utils.arrayify(choco.root)
     );
