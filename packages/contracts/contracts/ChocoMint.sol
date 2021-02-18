@@ -26,8 +26,8 @@ contract Chocomint is MintableERC721Token {
 
   mapping(uint256 => Choco) public chocos;
 
-  string public name = "Chocomint";
-  string public symbol = "CM";
+  string public name = "NFT";
+  string public symbol = "NFT";
 
   function mint(Choco memory choco) public payable {
     require(msg.value == choco.initialPrice, "Must pay initial_price");

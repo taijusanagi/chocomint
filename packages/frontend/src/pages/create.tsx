@@ -13,16 +13,16 @@ const networkConfigs = {
     address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
   },
   ETH: {
-    chainId: "",
-    address: "",
+    chainId: "4",
+    address: "0x0F527785e39B22911946feDf580d87a4E00465f0",
   },
   MATIC: {
-    chainId: "",
-    address: "",
+    chainId: "80001",
+    address: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
   },
   BSC: {
-    chainId: "",
-    address: "",
+    chainId: "97",
+    address: "0x38F6F2caE52217101D7CA2a5eC040014b4164E6C",
   },
 };
 
