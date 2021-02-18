@@ -21,6 +21,8 @@ describe("Token contract", function () {
   it("case: deploy is ok / check: name, symbol", async function () {
     expect(await chocoMint.name()).to.equal(contractName);
     expect(await chocoMint.symbol()).to.equal(contractSymbol);
+
+    console.log((await chocoMint.time()).toString());
   });
 
   it("case: mint is ok / check: tokenURI", async function () {
@@ -36,8 +38,9 @@ describe("Token contract", function () {
       description: "description",
       image: "image",
       initial_price: "10000",
-      creator_fee: "100",
-      creator: signer.address.toLowerCase(),
+      exp: "9999999999",
+      iss: signer.address.toLowerCase(),
+      sub: "0x0000000000000000000000000000000000000000",
       root: "",
       proof: [],
       signature: "",
@@ -53,6 +56,7 @@ describe("Token contract", function () {
         "uint256",
         "uint256",
         "address",
+        "address",
       ],
       [
         chainId,
@@ -61,53 +65,14 @@ describe("Token contract", function () {
         choco.description,
         choco.image,
         choco.initial_price,
-        choco.creator_fee,
-        choco.creator,
+        choco.exp,
+        choco.iss,
+        choco.sub,
       ]
     );
     const messageHashBinary = ethers.utils.arrayify(messageHash);
     const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
-    const leaves = [
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-      messageHashBinaryBuffer,
-    ];
+    const leaves = [messageHashBinaryBuffer, messageHashBinaryBuffer];
     const tree = new MerkleTree(leaves, keccak256, { sort: true });
     choco.root = tree.getHexRoot();
     choco.proof = tree.getHexProof(messageHashBinaryBuffer);
@@ -130,8 +95,9 @@ describe("Token contract", function () {
         choco.description,
         choco.image,
         choco.initial_price,
-        choco.creator_fee,
-        choco.creator,
+        choco.exp,
+        choco.iss,
+        choco.sub,
         choco.root,
         choco.proof,
         choco.signature,

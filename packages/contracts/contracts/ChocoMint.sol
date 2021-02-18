@@ -13,17 +13,20 @@ contract ChocoMint is ERC721 {
   using ECDSA for bytes32;
   using Strings for uint256;
 
-  //fee -> []
-  //minter fee
-  //minter
-  //expire
+  struct Fee {
+    address payable recipient;
+    uint256 value;
+  }
+
   struct Choco {
     string name;
     string description;
     string image;
     uint256 initialPrice;
-    uint256 creatorFee;
-    address payable creator;
+    Fee[] fees;
+    uint256 exp;
+    address payable iss;
+    address payable sub;
     bytes32 root;
     bytes32[] proof;
     bytes signature;
@@ -41,8 +44,24 @@ contract ChocoMint is ERC721 {
 
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
+  function time() public view returns (uint256) {
+    return block.timestamp;
+  }
+
   function mint(Choco memory choco) public payable {
+    require(block.timestamp <= choco.exp, "Must not be expired");
     require(msg.value == choco.initialPrice, "Must pay initial_price");
+    if (choco.sub != address(0x0)) {
+      require(msg.sender == choco.sub, "Must be minted by sub");
+    }
+    for (uint256 i = 0; i < choco.fees.length; i++) {
+      require(
+        choco.fees[i].recipient != address(0x0),
+        "Must not be null address"
+      );
+      require(choco.fees[i].value != 0, "Must not be zero");
+    }
+
     bytes32 hash =
       keccak256(
         abi.encodePacked(
@@ -52,19 +71,21 @@ contract ChocoMint is ERC721 {
           choco.description,
           choco.image,
           choco.initialPrice,
-          choco.creatorFee,
-          choco.creator
+          choco.fees,
+          choco.exp,
+          choco.iss,
+          choco.sub
         )
       );
     bool hashVerified = MerkleProof.verify(choco.proof, choco.root, hash);
     require(hashVerified, "Must be included in merkle tree");
     bytes32 messageHash = choco.root.toEthSignedMessageHash();
     address signer = messageHash.recover(choco.signature);
-    require(signer == choco.creator, "Must be signed by creator");
+    require(signer == choco.iss, "Must be signed by iss");
     uint256 tokenId = uint256(hash);
     chocos[tokenId] = choco;
     _mint(msg.sender, tokenId);
-    choco.creator.transfer(choco.creatorFee);
+    choco.iss.transfer(choco.initialPrice);
   }
 
   function tokenURI(uint256 tokenId)
@@ -100,10 +121,12 @@ contract ChocoMint is ERC721 {
         choco.image,
         '","initial_price":"',
         choco.initialPrice.toString(),
-        '","creator_fee":"',
-        choco.creatorFee.toString(),
-        '","creator":"',
-        bytesToUTF8String(abi.encodePacked(choco.creator)),
+        '","exp":"',
+        choco.exp.toString(),
+        '","iss":"',
+        bytesToUTF8String(abi.encodePacked(choco.iss)),
+        '","sub":"',
+        bytesToUTF8String(abi.encodePacked(choco.sub)),
         '","root":"',
         bytesToUTF8String(abi.encodePacked(choco.root)),
         '","proof":[',
