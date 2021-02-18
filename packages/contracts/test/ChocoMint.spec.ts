@@ -10,19 +10,17 @@ import { MerkleTree } from "merkletreejs";
 const keccak256 = require("keccak256");
 
 describe("Token contract", function () {
-  let chocoMint;
-  const contractName = "ChocoMintEthereumV1";
-  const contractSymbol = "CMETH1";
+  let chocomint;
+  const contractName = "Chocomint";
+  const contractSymbol = "CM";
   this.beforeAll("initialization.", async function () {
-    const ChocoMint = await ethers.getContractFactory("ChocoMint");
-    chocoMint = await ChocoMint.deploy(contractName, contractSymbol);
+    const Chocomint = await ethers.getContractFactory("Chocomint");
+    chocomint = await Chocomint.deploy();
   });
 
   it("case: deploy is ok / check: name, symbol", async function () {
-    expect(await chocoMint.name()).to.equal(contractName);
-    expect(await chocoMint.symbol()).to.equal(contractSymbol);
-
-    console.log((await chocoMint.time()).toString());
+    expect(await chocomint.name()).to.equal(contractName);
+    expect(await chocomint.symbol()).to.equal(contractSymbol);
   });
 
   it("case: mint is ok / check: tokenURI", async function () {
@@ -33,19 +31,23 @@ describe("Token contract", function () {
     });
     const baseTokenUri = "https://ipfs.io/ipfs/";
     const [signer] = await ethers.getSigners();
+    const iss = signer.address.toLowerCase();
     const choco = {
       name: "name",
       description: "description",
       image: "image",
+      blank: "",
       initialPrice: "10000",
-      exp: "9999999999",
-      iss: signer.address.toLowerCase(),
+      fees: ["100"],
+      recipients: [iss],
+      iss: iss,
       sub: "0x0000000000000000000000000000000000000000",
       root: "",
       proof: [],
       signature: "",
     };
-    const chainId = await chocoMint.getChainID();
+
+    const chainId = await chocomint.getChainID();
     const messageHash = ethers.utils.solidityKeccak256(
       [
         "uint256",
@@ -53,19 +55,23 @@ describe("Token contract", function () {
         "string",
         "string",
         "string",
+        "string",
         "uint256",
-        "uint256",
+        "uint256[]",
+        "address[]",
         "address",
         "address",
       ],
       [
         chainId,
-        chocoMint.address,
+        chocomint.address,
         choco.name,
         choco.description,
         choco.image,
+        choco.blank,
         choco.initialPrice,
-        choco.exp,
+        choco.fees,
+        choco.recipients,
         choco.iss,
         choco.sub,
       ]
@@ -76,26 +82,25 @@ describe("Token contract", function () {
     const tree = new MerkleTree(leaves, keccak256, { sort: true });
     choco.root = tree.getHexRoot();
     choco.proof = tree.getHexProof(messageHashBinaryBuffer);
-    console.log(choco.proof);
     choco.signature = await signer.signMessage(
       ethers.utils.arrayify(choco.root)
     );
     const metadataString = JSON.stringify({
       chainId: chainId.toString(),
-      address: chocoMint.address.toLowerCase(),
+      address: chocomint.address.toLowerCase(),
       ...choco,
     });
-    console.log(metadataString);
     const metadataBuffer = Buffer.from(metadataString);
     const cid = await ipfs.add(metadataBuffer);
-    console.log(cid);
-    await chocoMint.mint(
+    await chocomint.mint(
       [
         choco.name,
         choco.description,
         choco.image,
+        choco.blank,
         choco.initialPrice,
-        choco.exp,
+        choco.fees,
+        choco.recipients,
         choco.iss,
         choco.sub,
         choco.root,
@@ -106,7 +111,11 @@ describe("Token contract", function () {
         value: choco.initialPrice,
       }
     );
-    const tokenURI = await chocoMint.tokenURI(messageHash);
+    const tokenId = ethers.utils.solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [messageHash, choco.root]
+    );
+    const tokenURI = await chocomint.tokenURI(tokenId);
     expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
     const { data } = await axios.get(tokenURI);
     expect(metadataString).to.equal(JSON.stringify(data));

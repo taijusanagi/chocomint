@@ -14,7 +14,6 @@ contract Chocomint is MintableERC721Token {
     string description;
     string image;
     string blank;
-    uint256 exp;
     uint256 initialPrice;
     uint256[] fees;
     address[] recipients;
@@ -26,15 +25,11 @@ contract Chocomint is MintableERC721Token {
   }
 
   mapping(uint256 => Choco) public chocos;
+
   string public name = "Chocomint";
   string public symbol = "CM";
 
-  function time() public view returns (uint256) {
-    return block.timestamp;
-  }
-
   function mint(Choco memory choco) public payable {
-    require(block.timestamp <= choco.exp, "Must not be expired");
     require(msg.value == choco.initialPrice, "Must pay initial_price");
     require(
       choco.fees.length <= choco.recipients.length,
@@ -47,7 +42,6 @@ contract Chocomint is MintableERC721Token {
     if (choco.sub != address(0x0)) {
       require(msg.sender == choco.sub, "Must be minted by sub");
     }
-
     bytes32 hash =
       keccak256(
         abi.encodePacked(
@@ -57,7 +51,6 @@ contract Chocomint is MintableERC721Token {
           choco.description,
           choco.image,
           choco.blank,
-          choco.exp,
           choco.initialPrice,
           choco.fees,
           choco.recipients,
@@ -76,6 +69,10 @@ contract Chocomint is MintableERC721Token {
     choco.iss.transfer(choco.initialPrice);
   }
 
+  function burn(uint256 tokenId) public payable {
+    _burn(msg.sender, tokenId);
+  }
+
   function tokenURI(uint256 tokenId) public view returns (string memory) {
     Choco memory choco = chocos[tokenId];
     bytes memory anchor;
@@ -88,8 +85,7 @@ contract Chocomint is MintableERC721Token {
         '{"chainId":"',
         uintToString(getChainID()),
         '","address":"',
-        bytesToString(abi.encodePacked(address(this))),
-        '","name":"'
+        bytesToString(abi.encodePacked(address(this)))
       );
     }
     {
@@ -106,19 +102,17 @@ contract Chocomint is MintableERC721Token {
     }
     {
       uints = abi.encodePacked(
-        '","exp":"',
-        uintToString(choco.exp),
         '","initialPrice":"',
         uintToString(choco.initialPrice),
-        '","fees":"',
+        '","fees":[',
         uintArrayToString(choco.fees)
       );
     }
     {
       addresses = abi.encodePacked(
-        '","recipients":"',
+        '],"recipients":[',
         addressArrayToString(choco.recipients),
-        '","iss":"',
+        '],"iss":"',
         bytesToString(abi.encodePacked(choco.iss)),
         '","sub":"',
         bytesToString(abi.encodePacked(choco.sub))
