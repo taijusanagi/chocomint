@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
-import "hardhat/console.sol";
-
 contract ChocoMint is ERC721 {
   using ECDSA for bytes32;
   using Strings for uint256;
@@ -17,7 +15,6 @@ contract ChocoMint is ERC721 {
     string name;
     string description;
     string image;
-    string blankSpace;
     uint256 exp;
     uint256 initialPrice;
     uint256[] fees;
@@ -68,7 +65,6 @@ contract ChocoMint is ERC721 {
           choco.name,
           choco.description,
           choco.image,
-          choco.blankSpace,
           choco.exp,
           choco.initialPrice,
           choco.fees,
@@ -95,44 +91,66 @@ contract ChocoMint is ERC721 {
     returns (string memory)
   {
     Choco memory choco = chocos[tokenId];
+    bytes memory anchor;
+    bytes memory strings;
+    bytes memory uints;
+    bytes memory addresses;
+    bytes memory verification;
+    {
+      anchor = abi.encodePacked(
+        '{"chainId":"',
+        getChainID().toString(),
+        '","address":"',
+        bytesToString(abi.encodePacked(address(this))),
+        '","name":"'
+      );
+    }
+    {
+      strings = abi.encodePacked(
+        '","name":"',
+        choco.name,
+        '","description":"',
+        choco.description,
+        '","image":"',
+        choco.image,
+        '","exp":"'
+      );
+    }
+    {
+      uints = abi.encodePacked(
+        '","initialPrice":"',
+        choco.initialPrice.toString(),
+        '","fees":"',
+        uintArrayToString(choco.fees)
+      );
+    }
+    {
+      addresses = abi.encodePacked(
+        '","recipients":"',
+        addressArrayToString(choco.recipients),
+        '","iss":"',
+        bytesToString(abi.encodePacked(choco.iss)),
+        '","sub":"',
+        bytesToString(abi.encodePacked(choco.sub))
+      );
+    }
+    {
+      verification = abi.encodePacked(
+        '","root":"',
+        bytesToString(abi.encodePacked(choco.root)),
+        '","proof":[',
+        bytes32ArrayToString(choco.proof),
+        '],"signature":"',
+        bytesToString(choco.signature),
+        '"}'
+      );
+    }
     return
       string(
         abi.encodePacked(
           baseTokenUri,
           getCid(
-            abi.encodePacked(
-              '{"chainId":"',
-              getChainID().toString(),
-              '","address":"',
-              bytesToString(abi.encodePacked(address(this))),
-              '","name":"',
-              choco.name,
-              '","description":"',
-              choco.description,
-              '","image":"',
-              choco.image,
-              '","blankSpace":"',
-              choco.blankSpace,
-              '","exp":"',
-              choco.exp.toString(),
-              '","initialPrice":"',
-              choco.initialPrice.toString(),
-              '","fees":"',
-              uintArrayToString(choco.fees),
-              '","recipients":"',
-              addressArrayToString(choco.recipients),
-              '","iss":"',
-              bytesToString(abi.encodePacked(choco.iss)),
-              '","sub":"',
-              bytesToString(abi.encodePacked(choco.sub)),
-              '","root":"',
-              bytesToString(abi.encodePacked(choco.root)),
-              '","proof":[',
-              bytes32ArrayToString(choco.proof),
-              '],"signature":"',
-              bytesToString(choco.signature),
-              '"}'
-            )
+            abi.encodePacked(anchor, strings, uints, addresses, verification)
           )
         )
       );
