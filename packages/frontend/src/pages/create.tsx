@@ -2,6 +2,8 @@ import React from "react";
 import IPFS, { IPFS as IPFSType } from "ipfs-core";
 import Web3Modal from "web3modal";
 import { ethers } from "ethers";
+import { MerkleTree } from "merkletreejs";
+const keccak256 = require("keccak256");
 
 type networkType = "LOCAL" | "ETH" | "MATIC" | "BSC";
 
@@ -31,7 +33,7 @@ export const Create: React.FC = () => {
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initialPrice, setInitialPrice] = React.useState("");
-  const [creatorFee, setCreatorFee] = React.useState("");
+  const [royality, setRoyality] = React.useState("");
 
   React.useEffect(() => {
     IPFS.create().then((created) => setIpfs(created));
@@ -64,10 +66,8 @@ export const Create: React.FC = () => {
     setInitialPrice(event.target.value);
   };
 
-  const handleCreatorFeeChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setCreatorFee(event.target.value);
+  const handleRoyalityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRoyality(event.target.value);
   };
 
   const getPreviewImageSrc = (file?: File) => {
@@ -94,37 +94,74 @@ export const Create: React.FC = () => {
       const web3ModalProvider = await web3Modal.connect();
       const web3Provider = new ethers.providers.Web3Provider(web3ModalProvider);
       const signer = web3Provider.getSigner();
-
       const chainId = networkConfigs[network].chainId;
       const address = networkConfigs[network].address;
+      const iss = (await signer.getAddress()).toLowerCase();
       const choco = {
         chainId,
         address,
+        tokenId: "",
         name,
         description,
         image,
+        blank: "",
         initialPrice,
-        creatorFee,
-        creator: (await signer.getAddress()).toLowerCase(),
+        fees: [royality],
+        recipients: [iss],
+        iss,
+        sub: "0x0000000000000000000000000000000000000000",
+        root: "",
+        proof: [""],
         signature: "",
       };
       const messageHash = ethers.utils.solidityKeccak256(
-        ["string", "string", "string", "uint256", "uint256", "address"],
         [
+          "uint256",
+          "address",
+          "string",
+          "string",
+          "string",
+          "string",
+          "uint256",
+          "uint256[]",
+          "address[]",
+          "address",
+          "address",
+        ],
+        [
+          chainId,
+          address,
           choco.name,
           choco.description,
           choco.image,
+          choco.blank,
           choco.initialPrice,
-          choco.creatorFee,
-          choco.creator,
+          choco.fees,
+          choco.recipients,
+          choco.iss,
+          choco.sub,
         ]
       );
       const messageHashBinary = ethers.utils.arrayify(messageHash);
-      choco.signature = await signer.signMessage(messageHashBinary);
-      const metadataBuffer = Buffer.from(JSON.stringify(choco));
-      const { cid: metadataCid } = await ipfs.add(metadataBuffer);
-      const tokenId = ethers.BigNumber.from(messageHash).toString();
-      console.log(`Congraturation! Your NFT: ${tokenId} is created!`);
+      const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
+      const leaves = [messageHashBinaryBuffer];
+      const tree = new MerkleTree(leaves, keccak256, { sort: true });
+      console.log(messageHashBinaryBuffer);
+      choco.root = tree.getHexRoot();
+      choco.proof = tree.getHexProof(messageHashBinaryBuffer);
+      choco.signature = await signer.signMessage(
+        ethers.utils.arrayify(choco.root)
+      );
+      const tokenIdHex = ethers.utils.solidityKeccak256(
+        ["bytes32", "bytes32"],
+        [messageHash, choco.root]
+      );
+      choco.tokenId = ethers.BigNumber.from(tokenIdHex).toString();
+      const metadataString = JSON.stringify({
+        ...choco,
+      });
+      const { cid: metadataCid } = await ipfs.add(metadataString);
+      console.log(`Congraturation! Your NFT: ${choco.tokenId} is created!`);
       console.log(
         `Verified on IPFS: https://ipfs.io/ipfs/${metadataCid.toString()}`
       );
@@ -170,12 +207,12 @@ export const Create: React.FC = () => {
         />
       </div>
       <div>
-        <label>Creator Fee</label>
+        <label>Royality</label>
         <input
           type="number"
-          name="creator_fee"
-          id="creator_fee"
-          onChange={handleCreatorFeeChange}
+          name="royality"
+          id="royality"
+          onChange={handleRoyalityChange}
         />
       </div>
       <button onClick={uploadToIpfs}>Create NFT</button>

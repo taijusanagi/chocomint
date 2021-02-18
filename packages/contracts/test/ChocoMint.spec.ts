@@ -85,13 +85,6 @@ describe("Token contract", function () {
     choco.signature = await signer.signMessage(
       ethers.utils.arrayify(choco.root)
     );
-    const metadataString = JSON.stringify({
-      chainId: chainId.toString(),
-      address: chocomint.address.toLowerCase(),
-      ...choco,
-    });
-    const metadataBuffer = Buffer.from(metadataString);
-    const cid = await ipfs.add(metadataBuffer);
     await chocomint.mint(
       [
         choco.name,
@@ -115,6 +108,14 @@ describe("Token contract", function () {
       ["bytes32", "bytes32"],
       [messageHash, choco.root]
     );
+    const metadataString = JSON.stringify({
+      chainId: chainId.toString(),
+      address: chocomint.address.toLowerCase(),
+      tokenId: ethers.BigNumber.from(tokenId).toString(),
+      ...choco,
+    });
+    const metadataBuffer = Buffer.from(metadataString);
+    const cid = await ipfs.add(metadataBuffer);
     const tokenURI = await chocomint.tokenURI(tokenId);
     expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
     const { data } = await axios.get(tokenURI);

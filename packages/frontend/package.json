@@ -8,6 +8,8 @@
     "autoprefixer": "^9",
     "ethers": "^5.0.31",
     "ipfs-core": "^0.5.2",
+    "keccak256": "^1.0.2",
+    "merkletreejs": "^0.2.13",
     "postcss": "^7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",

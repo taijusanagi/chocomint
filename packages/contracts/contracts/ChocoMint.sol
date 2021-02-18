@@ -85,7 +85,9 @@ contract Chocomint is MintableERC721Token {
         '{"chainId":"',
         uintToString(getChainID()),
         '","address":"',
-        bytesToString(abi.encodePacked(address(this)))
+        bytesToString(abi.encodePacked(address(this))),
+        '","tokenId":"',
+        uintToString(tokenId)
       );
     }
     {
