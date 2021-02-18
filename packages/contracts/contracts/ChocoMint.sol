@@ -41,9 +41,9 @@ contract ChocoMint is ERC721 {
   function test(
     bytes32[] memory proof,
     bytes32 root,
-    bytes memory leaf
+    bytes32 leaf
   ) public pure returns (bool) {
-    return MerkleProof.verify(proof, root, keccak256(abi.encodePacked(leaf)));
+    return MerkleProof.verify(proof, root, leaf);
   }
 
   function mint(Choco memory choco) public payable {

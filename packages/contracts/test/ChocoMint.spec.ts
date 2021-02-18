@@ -5,7 +5,9 @@ import * as IPFS from "ipfs-mini";
 import axios from "axios";
 chai.use(solidity);
 const { expect } = chai;
-const { MerkleTree } = require("../modules/merkleTree.js");
+
+import { MerkleTree } from "merkletreejs";
+const keccak256 = require("keccak256");
 
 describe("Token contract", function () {
   let chocoMint;
@@ -27,36 +29,20 @@ describe("Token contract", function () {
       description: "description",
       image: "image",
     };
-    const message1 = ethers.utils.solidityPack(
+    const message = ethers.utils.solidityPack(
       ["string", "string", "string"],
       [choco1.name, choco1.description, choco1.image]
     );
-    const messageHash1 = ethers.utils.solidityKeccak256(
+    const messageHash = ethers.utils.solidityKeccak256(
       ["string", "string", "string"],
       [choco1.name, choco1.description, choco1.image]
     );
-    const choco2 = {
-      name: "name #2",
-      description: "description",
-      image: "image",
-    };
-    const message2 = ethers.utils.solidityPack(
-      ["string", "string", "string"],
-      [choco2.name, choco2.description, choco2.image]
-    );
-    const messageHash2 = ethers.utils.solidityKeccak256(
-      ["string", "string", "string"],
-      [choco2.name, choco2.description, choco2.image]
-    );
-    console.log(messageHash1);
-    console.log(messageHash2);
-    const elements = [Buffer.from(message1), Buffer.from(message2)];
-    const merkleTree = new MerkleTree(elements);
-    const root = merkleTree.getHexRoot();
-    const proof1 = merkleTree.getHexProof(elements[0]);
-    const proof2 = merkleTree.getHexProof(elements[1]);
-    console.log(await chocoMint.test(proof1, root, message1));
-    console.log(await chocoMint.test(proof2, root, message2));
+    const leaves = [Buffer.from(ethers.utils.arrayify(messageHash))];
+    const tree = new MerkleTree(leaves, keccak256, { sort: true });
+    const root = tree.getHexRoot();
+    const leaf = keccak256(message);
+    const proof = tree.getHexProof(leaf);
+    expect(await chocoMint.test(proof, root, leaf)).to.equal(true);
   });
 
   it("case: mint is ok / check: tokenURI", async function () {
