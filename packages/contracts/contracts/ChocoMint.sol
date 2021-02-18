@@ -28,14 +28,6 @@ contract ChocoMint is ERC721 {
 
   mapping(uint256 => Choco) public chocos;
 
-  string public baseTokenUri = "https://ipfs.io/ipfs/";
-  bytes public prefix1 = hex"0a";
-  bytes public prefix2 = hex"080212";
-  bytes public postfix = hex"18";
-  bytes public sha256MultiHash = hex"1220";
-  bytes public ALPHABET =
-    "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
   function time() public view returns (uint256) {
@@ -148,7 +140,7 @@ contract ChocoMint is ERC721 {
     return
       string(
         abi.encodePacked(
-          baseTokenUri,
+          "https://ipfs.io/ipfs/",
           getCid(
             abi.encodePacked(anchor, strings, uints, addresses, verification)
           )
@@ -165,14 +157,24 @@ contract ChocoMint is ERC721 {
   }
 
   function getCid(bytes memory input) private view returns (bytes memory) {
+    bytes memory alphabet =
+      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     bytes memory len = lengthEncode(input.length);
     bytes memory len2 = lengthEncode(input.length + 4 + 2 * len.length);
     bytes memory source =
       abi.encodePacked(
-        sha256MultiHash,
+        hex"1220",
         abi.encodePacked(
           sha256(
-            abi.encodePacked(prefix1, len2, prefix2, len, input, postfix, len)
+            abi.encodePacked(
+              hex"0a",
+              len2,
+              hex"080212",
+              len,
+              input,
+              hex"18",
+              len
+            )
           )
         )
       );
@@ -194,7 +196,7 @@ contract ChocoMint is ERC721 {
       }
     }
     for (uint256 k = 0; k < digitlength; k++) {
-      output[k] = ALPHABET[digits[digitlength - 1 - k]];
+      output[k] = alphabet[digits[digitlength - 1 - k]];
     }
     return output;
   }
