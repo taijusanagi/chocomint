@@ -37,7 +37,7 @@ describe("Token contract", function () {
       name: "name",
       description: "description",
       image: "image",
-      initial_price: "10000",
+      initialPrice: "10000",
       exp: "9999999999",
       iss: signer.address.toLowerCase(),
       sub: "0x0000000000000000000000000000000000000000",
@@ -64,7 +64,7 @@ describe("Token contract", function () {
         choco.name,
         choco.description,
         choco.image,
-        choco.initial_price,
+        choco.initialPrice,
         choco.exp,
         choco.iss,
         choco.sub,
@@ -94,7 +94,7 @@ describe("Token contract", function () {
         choco.name,
         choco.description,
         choco.image,
-        choco.initial_price,
+        choco.initialPrice,
         choco.exp,
         choco.iss,
         choco.sub,
@@ -103,7 +103,7 @@ describe("Token contract", function () {
         choco.signature,
       ],
       {
-        value: choco.initial_price,
+        value: choco.initialPrice,
       }
     );
     const tokenURI = await chocoMint.tokenURI(messageHash);

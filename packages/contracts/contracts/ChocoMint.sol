@@ -13,20 +13,17 @@ contract ChocoMint is ERC721 {
   using ECDSA for bytes32;
   using Strings for uint256;
 
-  struct Fee {
-    address payable recipient;
-    uint256 value;
-  }
-
   struct Choco {
     string name;
     string description;
     string image;
-    uint256 initialPrice;
-    Fee[] fees;
+    string blankSpace;
     uint256 exp;
+    uint256 initialPrice;
+    uint256[] fees;
+    address[] recipients;
     address payable iss;
-    address payable sub;
+    address sub;
     bytes32 root;
     bytes32[] proof;
     bytes signature;
@@ -51,15 +48,16 @@ contract ChocoMint is ERC721 {
   function mint(Choco memory choco) public payable {
     require(block.timestamp <= choco.exp, "Must not be expired");
     require(msg.value == choco.initialPrice, "Must pay initial_price");
+    require(
+      choco.fees.length <= choco.recipients.length,
+      "Must be same length"
+    );
+    for (uint256 i = 0; i < choco.fees.length; i++) {
+      require(choco.fees[i] != 0, "Must not be zero");
+      require(choco.recipients[i] != address(0x0), "Must not be null address");
+    }
     if (choco.sub != address(0x0)) {
       require(msg.sender == choco.sub, "Must be minted by sub");
-    }
-    for (uint256 i = 0; i < choco.fees.length; i++) {
-      require(
-        choco.fees[i].recipient != address(0x0),
-        "Must not be null address"
-      );
-      require(choco.fees[i].value != 0, "Must not be zero");
     }
 
     bytes32 hash =
@@ -70,9 +68,11 @@ contract ChocoMint is ERC721 {
           choco.name,
           choco.description,
           choco.image,
+          choco.blankSpace,
+          choco.exp,
           choco.initialPrice,
           choco.fees,
-          choco.exp,
+          choco.recipients,
           choco.iss,
           choco.sub
         )
@@ -96,43 +96,38 @@ contract ChocoMint is ERC721 {
   {
     Choco memory choco = chocos[tokenId];
 
-    bytes memory proof;
-    for (uint256 i; i < choco.proof.length; i++) {
-      proof = abi.encodePacked(
-        proof,
-        i > 0 ? "," : "",
-        '"',
-        bytesToUTF8String(abi.encodePacked(choco.proof[i])),
-        '"'
-      );
-    }
-
     bytes memory metadata =
       abi.encodePacked(
         '{"chainId":"',
         getChainID().toString(),
         '","address":"',
-        bytesToUTF8String(abi.encodePacked(address(this))),
+        bytesToString(abi.encodePacked(address(this))),
         '","name":"',
         choco.name,
         '","description":"',
         choco.description,
         '","image":"',
         choco.image,
-        '","initial_price":"',
-        choco.initialPrice.toString(),
+        '","blankSpace":"',
+        choco.blankSpace,
         '","exp":"',
         choco.exp.toString(),
+        '","initialPrice":"',
+        choco.initialPrice.toString(),
+        '","fees":"',
+        uintArrayToString(choco.fees),
+        '","recipients":"',
+        addressArrayToString(choco.recipients),
         '","iss":"',
-        bytesToUTF8String(abi.encodePacked(choco.iss)),
+        bytesToString(abi.encodePacked(choco.iss)),
         '","sub":"',
-        bytesToUTF8String(abi.encodePacked(choco.sub)),
+        bytesToString(abi.encodePacked(choco.sub)),
         '","root":"',
-        bytesToUTF8String(abi.encodePacked(choco.root)),
+        bytesToString(abi.encodePacked(choco.root)),
         '","proof":[',
-        string(proof),
+        bytes32ArrayToString(choco.proof),
         '],"signature":"',
-        bytesToUTF8String(choco.signature),
+        bytesToString(choco.signature),
         '"}'
       );
 
@@ -207,19 +202,73 @@ contract ChocoMint is ERC721 {
     }
   }
 
-  function bytesToUTF8String(bytes memory data)
+  function uintArrayToString(uint256[] memory input)
+    private
+    pure
+    returns (string memory)
+  {
+    bytes memory output;
+    for (uint256 i; i < input.length; i++) {
+      output = abi.encodePacked(
+        output,
+        i > 0 ? "," : "",
+        '"',
+        input[i].toString(),
+        '"'
+      );
+    }
+    return string(output);
+  }
+
+  function addressArrayToString(address[] memory input)
+    private
+    pure
+    returns (string memory)
+  {
+    bytes memory output;
+    for (uint256 i; i < input.length; i++) {
+      output = abi.encodePacked(
+        output,
+        i > 0 ? "," : "",
+        '"',
+        bytesToString(abi.encodePacked(input[i])),
+        '"'
+      );
+    }
+    return string(output);
+  }
+
+  function bytes32ArrayToString(bytes32[] memory input)
+    private
+    pure
+    returns (string memory)
+  {
+    bytes memory output;
+    for (uint256 i; i < input.length; i++) {
+      output = abi.encodePacked(
+        output,
+        i > 0 ? "," : "",
+        '"',
+        bytesToString(abi.encodePacked(input[i])),
+        '"'
+      );
+    }
+    return string(output);
+  }
+
+  function bytesToString(bytes memory input)
     private
     pure
     returns (string memory)
   {
     bytes memory alphabet = "0123456789abcdef";
-    bytes memory str = new bytes(2 + data.length * 2);
-    str[0] = "0";
-    str[1] = "x";
-    for (uint256 i = 0; i < data.length; i++) {
-      str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
-      str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
+    bytes memory output = new bytes(2 + input.length * 2);
+    output[0] = "0";
+    output[1] = "x";
+    for (uint256 i = 0; i < input.length; i++) {
+      output[2 + i * 2] = alphabet[uint256(uint8(input[i] >> 4))];
+      output[3 + i * 2] = alphabet[uint256(uint8(input[i] & 0x0f))];
     }
-    return string(str);
+    return string(output);
   }
 }
