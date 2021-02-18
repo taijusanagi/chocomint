@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.4;
+pragma solidity >=0.5.17;
 pragma experimental ABIEncoderV2;
 
+import "@0x/contracts-erc721/contracts/src/MintableERC721Token.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
-contract ChocoMint is ERC721 {
+contract Chocomint is MintableERC721Token {
   using ECDSA for bytes32;
-  using Strings for uint256;
 
   struct Choco {
     string name;
     string description;
     string image;
+    string blank;
     uint256 exp;
     uint256 initialPrice;
     uint256[] fees;
@@ -27,8 +26,8 @@ contract ChocoMint is ERC721 {
   }
 
   mapping(uint256 => Choco) public chocos;
-
-  constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
+  string public name = "Chocomint";
+  string public symbol = "CM";
 
   function time() public view returns (uint256) {
     return block.timestamp;
@@ -57,6 +56,7 @@ contract ChocoMint is ERC721 {
           choco.name,
           choco.description,
           choco.image,
+          choco.blank,
           choco.exp,
           choco.initialPrice,
           choco.fees,
@@ -76,12 +76,7 @@ contract ChocoMint is ERC721 {
     choco.iss.transfer(choco.initialPrice);
   }
 
-  function tokenURI(uint256 tokenId)
-    public
-    view
-    override
-    returns (string memory)
-  {
+  function tokenURI(uint256 tokenId) public view returns (string memory) {
     Choco memory choco = chocos[tokenId];
     bytes memory anchor;
     bytes memory strings;
@@ -91,7 +86,7 @@ contract ChocoMint is ERC721 {
     {
       anchor = abi.encodePacked(
         '{"chainId":"',
-        getChainID().toString(),
+        uintToString(getChainID()),
         '","address":"',
         bytesToString(abi.encodePacked(address(this))),
         '","name":"'
@@ -105,13 +100,16 @@ contract ChocoMint is ERC721 {
         choco.description,
         '","image":"',
         choco.image,
-        '","exp":"'
+        '","blank":"',
+        choco.blank
       );
     }
     {
       uints = abi.encodePacked(
+        '","exp":"',
+        uintToString(choco.exp),
         '","initialPrice":"',
-        choco.initialPrice.toString(),
+        uintToString(choco.initialPrice),
         '","fees":"',
         uintArrayToString(choco.fees)
       );
@@ -224,6 +222,25 @@ contract ChocoMint is ERC721 {
     }
   }
 
+  function uintToString(uint256 value) internal pure returns (string memory) {
+    if (value == 0) {
+      return "0";
+    }
+    uint256 temp = value;
+    uint256 digits;
+    while (temp != 0) {
+      digits++;
+      temp /= 10;
+    }
+    bytes memory buffer = new bytes(digits);
+    while (value != 0) {
+      digits -= 1;
+      buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+      value /= 10;
+    }
+    return string(buffer);
+  }
+
   function uintArrayToString(uint256[] memory input)
     private
     pure
@@ -235,7 +252,7 @@ contract ChocoMint is ERC721 {
         output,
         i > 0 ? "," : "",
         '"',
-        input[i].toString(),
+        uintToString(input[i]),
         '"'
       );
     }

@@ -3,5 +3,13 @@ import "@nomiclabs/hardhat-ethers";
 import "hardhat-typechain";
 
 module.exports = {
-  solidity: "0.7.4",
+  solidity: {
+    version: "0.5.17",
+    // settings: {
+    //   optimizer: {
+    //     enabled: true,
+    //     runs: 1000,
+    //   },
+    // },
+  },
 };
