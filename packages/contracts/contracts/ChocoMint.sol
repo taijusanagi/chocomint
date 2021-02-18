@@ -82,7 +82,7 @@ contract ChocoMint is ERC721 {
     bytes32 messageHash = choco.root.toEthSignedMessageHash();
     address signer = messageHash.recover(choco.signature);
     require(signer == choco.iss, "Must be signed by iss");
-    uint256 tokenId = uint256(hash);
+    uint256 tokenId = uint256(keccak256(abi.encodePacked(hash, choco.root)));
     chocos[tokenId] = choco;
     _mint(msg.sender, tokenId);
     choco.iss.transfer(choco.initialPrice);
@@ -95,45 +95,47 @@ contract ChocoMint is ERC721 {
     returns (string memory)
   {
     Choco memory choco = chocos[tokenId];
-
-    bytes memory metadata =
-      abi.encodePacked(
-        '{"chainId":"',
-        getChainID().toString(),
-        '","address":"',
-        bytesToString(abi.encodePacked(address(this))),
-        '","name":"',
-        choco.name,
-        '","description":"',
-        choco.description,
-        '","image":"',
-        choco.image,
-        '","blankSpace":"',
-        choco.blankSpace,
-        '","exp":"',
-        choco.exp.toString(),
-        '","initialPrice":"',
-        choco.initialPrice.toString(),
-        '","fees":"',
-        uintArrayToString(choco.fees),
-        '","recipients":"',
-        addressArrayToString(choco.recipients),
-        '","iss":"',
-        bytesToString(abi.encodePacked(choco.iss)),
-        '","sub":"',
-        bytesToString(abi.encodePacked(choco.sub)),
-        '","root":"',
-        bytesToString(abi.encodePacked(choco.root)),
-        '","proof":[',
-        bytes32ArrayToString(choco.proof),
-        '],"signature":"',
-        bytesToString(choco.signature),
-        '"}'
+    return
+      string(
+        abi.encodePacked(
+          baseTokenUri,
+          getCid(
+            abi.encodePacked(
+              '{"chainId":"',
+              getChainID().toString(),
+              '","address":"',
+              bytesToString(abi.encodePacked(address(this))),
+              '","name":"',
+              choco.name,
+              '","description":"',
+              choco.description,
+              '","image":"',
+              choco.image,
+              '","blankSpace":"',
+              choco.blankSpace,
+              '","exp":"',
+              choco.exp.toString(),
+              '","initialPrice":"',
+              choco.initialPrice.toString(),
+              '","fees":"',
+              uintArrayToString(choco.fees),
+              '","recipients":"',
+              addressArrayToString(choco.recipients),
+              '","iss":"',
+              bytesToString(abi.encodePacked(choco.iss)),
+              '","sub":"',
+              bytesToString(abi.encodePacked(choco.sub)),
+              '","root":"',
+              bytesToString(abi.encodePacked(choco.root)),
+              '","proof":[',
+              bytes32ArrayToString(choco.proof),
+              '],"signature":"',
+              bytesToString(choco.signature),
+              '"}'
+            )
+          )
+        )
       );
-
-    console.log(string(metadata));
-    bytes memory cid = getCid(metadata);
-    return string(abi.encodePacked(baseTokenUri, cid));
   }
 
   function getChainID() public pure returns (uint256) {
