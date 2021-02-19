@@ -5,6 +5,9 @@ import { ethers } from "ethers";
 import { MerkleTree } from "merkletreejs";
 const keccak256 = require("keccak256");
 
+import Ceramic from "@ceramicnetwork/http-client";
+console.log(Ceramic);
+
 type networkType = "LOCAL" | "ETH" | "MATIC" | "BSC";
 
 const networkConfigs = {
