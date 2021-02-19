@@ -13,6 +13,8 @@ export const threeID = new ThreeIdConnect();
 
 import { IDX } from "@ceramicstudio/idx";
 
+import { definitions } from "../config.json";
+
 type networkType = "LOCAL" | "ETH" | "MATIC" | "BSC";
 
 const networkConfigs = {
@@ -36,6 +38,7 @@ const networkConfigs = {
 
 export const Create: React.FC = () => {
   const [ipfs, setIpfs] = React.useState<IPFSType>();
+  const [idx, setIdx] = React.useState<IDX>();
   const [imageFile, setImage] = React.useState<File>();
   const [animationFile, setAnimationFile] = React.useState<File>();
   const [network, setNetwork] = React.useState<networkType>("ETH");
@@ -206,7 +209,21 @@ export const Create: React.FC = () => {
     await threeID.connect(new EthereumAuthProvider(ethProvider, addresses[0]));
     const threeIDProvider = threeID.getDidProvider();
     await ceramic.setDIDProvider(threeIDProvider);
-    console.log(new IDX({ ceramic }));
+    setIdx(new IDX({ ceramic, aliases: definitions }));
+  };
+
+  const add = async () => {
+    if (!idx) {
+      return;
+    }
+    await idx.set("createdChocomint", { chocomints: ["ok"] });
+  };
+
+  const get = async () => {
+    if (!idx) {
+      return;
+    }
+    console.log(await idx.get("createdChocomint"));
   };
 
   return (
@@ -214,6 +231,13 @@ export const Create: React.FC = () => {
       <button id="connect" onClick={connectIdx}>
         Connect
       </button>
+      <button id="connect" onClick={add}>
+        Add
+      </button>
+      <button id="connect" onClick={get}>
+        Get
+      </button>
+      <p>{idx && idx.id}</p>
       <label>Upload file</label>
       <input type="file" id="image" name="image" onChange={handleImageChange} />
       <img src={getPreviewImageSrc(imageFile)} />

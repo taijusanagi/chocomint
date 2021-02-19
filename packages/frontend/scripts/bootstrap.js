@@ -9,10 +9,15 @@ const CERAMIC_URL = "https://ceramic-clay.3boxlabs.com";
 const ChocomintCreatedSchema = {
   $schema: "http://json-schema.org/draft-07/schema#",
   title: "ChocomintCreated",
-  type: "array",
-  items: { type: "string" },
-  uniqueItems: true,
-  default: [],
+  type: "object",
+  properties: {
+    chocomints: {
+      type: "array",
+      items: { type: "string" },
+      uniqueItems: true,
+      default: [],
+    },
+  },
 };
 
 async function run() {
@@ -24,18 +29,18 @@ async function run() {
   ]);
 
   const ChocomintCreatedDefinition = await createDefinition(ceramic, {
-    name: "chocomint",
-    description: "Chocomint ",
+    name: "createdChocomint",
+    description: "Created Chocomint",
     schema: chocomintCreatedSchema.commitId.toUrl(),
   });
 
   // Write config to JSON file
   const config = {
     definitions: {
-      created: ChocomintCreatedDefinition.id.toString(),
+      createdChocomint: ChocomintCreatedDefinition.id.toString(),
     },
     schemas: {
-      created: chocomintCreatedSchema.commitId.toUrl(),
+      createdChocomint: chocomintCreatedSchema.commitId.toUrl(),
     },
   };
   await writeFile("./src/config.json", JSON.stringify(config));

@@ -1,1 +1,8 @@
-{"definitions":{"created":"kjzl6cwe1jw14af4haq7999b7n8winc4lt6pz6mk8fr6mic3gn4seu5zi6fkoa7"},"schemas":{"created":"ceramic://k3y52l7qbv1frxi2q7eu0reporyn9aj38yo0qx5jyvasiqg0uzl848cowcsm06t4w"}}
+{
+  "definitions": {
+    "createdChocomint": "kjzl6cwe1jw148w1l2qh7sylkoeuhfmnelsk9gvmeovkyqolavn16sxex2tl1pv"
+  },
+  "schemas": {
+    "createdChocomint": "ceramic://k3y52l7qbv1frymjob7x1gdug1o0d5we4q5j570x44gxxm067bkishy92mlqofdvk"
+  }
+}
