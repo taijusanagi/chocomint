@@ -54,6 +54,8 @@ export const Asset: React.FC = () => {
       <p>{choco.network}</p>
       <p>{choco.name}</p>
       <p>{choco.description}</p>
+      <p>{choco.chainId}</p>
+      <p>{choco.address}</p>
       <p>{choco.iss}</p>
       <p>{choco.initialPrice}</p>
       <button onClick={mintNft}>MINT NFT!</button>

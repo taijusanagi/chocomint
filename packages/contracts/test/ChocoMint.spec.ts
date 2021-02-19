@@ -11,8 +11,8 @@ const keccak256 = require("keccak256");
 
 describe("Token contract", function () {
   let chocomint;
-  const contractName = "Chocomint";
-  const contractSymbol = "CM";
+  const contractName = "NFT";
+  const contractSymbol = "NFT";
   this.beforeAll("initialization.", async function () {
     const Chocomint = await ethers.getContractFactory("Chocomint");
     chocomint = await Chocomint.deploy();
@@ -29,13 +29,13 @@ describe("Token contract", function () {
       port: 5001,
       protocol: "https",
     });
-    const baseTokenUri = "https://ipfs.io/ipfs/";
+    const baseTokenUri = "ipfs://";
     const [signer] = await ethers.getSigners();
     const iss = signer.address.toLowerCase();
     const choco = {
       name: "name",
       description: "description",
-      image: "image",
+      image: "ipfs://QmfA8YURMek3M4JkjXdY1K468ryFGUGuF6EC2U5L7V25Bu/nft.png",
       blank: "",
       initialPrice: "10000",
       fees: ["100"],
@@ -47,7 +47,7 @@ describe("Token contract", function () {
       signature: "",
     };
 
-    const chainId = await chocomint.getChainID();
+    const chainId = await chocomint.getChainId();
     const messageHash = ethers.utils.solidityKeccak256(
       [
         "uint256",
@@ -114,11 +114,12 @@ describe("Token contract", function () {
       tokenId: ethers.BigNumber.from(tokenId).toString(),
       ...choco,
     });
+    console.log(metadataString);
     const metadataBuffer = Buffer.from(metadataString);
     const cid = await ipfs.add(metadataBuffer);
+    console.log(cid);
     const tokenURI = await chocomint.tokenURI(tokenId);
+    console.log(await chocomint.getMetadata(tokenId));
     expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
-    const { data } = await axios.get(tokenURI);
-    expect(metadataString).to.equal(JSON.stringify(data));
   });
 });

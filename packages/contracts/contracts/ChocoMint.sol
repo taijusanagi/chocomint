@@ -2,12 +2,16 @@
 pragma solidity >=0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "@0x/contracts-erc721/contracts/src/MintableERC721Token.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/drafts/Counters.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract Chocomint is MintableERC721Token {
+contract Chocomint is ERC721 {
+  using Counters for Counters.Counter;
   using ECDSA for bytes32;
+
+  Counters.Counter public totalSupply;
 
   struct Choco {
     string name;
@@ -45,7 +49,7 @@ contract Chocomint is MintableERC721Token {
     bytes32 hash =
       keccak256(
         abi.encodePacked(
-          getChainID(),
+          getChainId(),
           address(this),
           choco.name,
           choco.description,
@@ -67,13 +71,20 @@ contract Chocomint is MintableERC721Token {
     chocos[tokenId] = choco;
     _mint(msg.sender, tokenId);
     choco.iss.transfer(choco.initialPrice);
-  }
-
-  function burn(uint256 tokenId) public payable {
-    _burn(msg.sender, tokenId);
+    totalSupply.increment();
   }
 
   function tokenURI(uint256 tokenId) public view returns (string memory) {
+    return
+      string(
+        abi.encodePacked(
+          "ipfs://",
+          getCid(abi.encodePacked(getMetadata(tokenId)))
+        )
+      );
+  }
+
+  function getMetadata(uint256 tokenId) public view returns (string memory) {
     Choco memory choco = chocos[tokenId];
     bytes memory anchor;
     bytes memory strings;
@@ -83,7 +94,7 @@ contract Chocomint is MintableERC721Token {
     {
       anchor = abi.encodePacked(
         '{"chainId":"',
-        uintToString(getChainID()),
+        uintToString(getChainId()),
         '","address":"',
         bytesToString(abi.encodePacked(address(this))),
         '","tokenId":"',
@@ -132,17 +143,10 @@ contract Chocomint is MintableERC721Token {
       );
     }
     return
-      string(
-        abi.encodePacked(
-          "https://ipfs.io/ipfs/",
-          getCid(
-            abi.encodePacked(anchor, strings, uints, addresses, verification)
-          )
-        )
-      );
+      string(abi.encodePacked(anchor, strings, uints, addresses, verification));
   }
 
-  function getChainID() public pure returns (uint256) {
+  function getChainId() public pure returns (uint256) {
     uint256 id;
     assembly {
       id := chainid()

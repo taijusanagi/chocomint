@@ -14,7 +14,7 @@ const networkConfigs = {
   },
   ETH: {
     chainId: "4",
-    address: "0x0F527785e39B22911946feDf580d87a4E00465f0",
+    address: "0x79C42a0742733f61F110EaBAB2836397714AbBA1",
   },
   MATIC: {
     chainId: "80001",
@@ -29,7 +29,7 @@ const networkConfigs = {
 export const Create: React.FC = () => {
   const [ipfs, setIpfs] = React.useState<IPFSType>();
   const [file, setFile] = React.useState<File>();
-  const [network, setNetwork] = React.useState<networkType>("LOCAL");
+  const [network, setNetwork] = React.useState<networkType>("ETH");
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initialPrice, setInitialPrice] = React.useState("");
@@ -47,6 +47,7 @@ export const Create: React.FC = () => {
   };
 
   const handleNetworkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(event.target.value);
     setNetwork(event.target.value as networkType);
   };
 
@@ -89,7 +90,7 @@ export const Create: React.FC = () => {
         path: `images/nft.${type}`,
         content: imageBuffer,
       });
-      const image = `https://ipfs.io/ipfs/${imageCid.toString()}/nft.${type}`;
+      const image = `ipfs://${imageCid.toString()}/nft.${type}`;
       const web3Modal = new Web3Modal();
       const web3ModalProvider = await web3Modal.connect();
       const web3Provider = new ethers.providers.Web3Provider(web3ModalProvider);
@@ -105,7 +106,7 @@ export const Create: React.FC = () => {
         description,
         image,
         blank: "",
-        initialPrice,
+        initialPrice: ethers.utils.parseEther(initialPrice).toString(),
         fees: [royality],
         recipients: [iss],
         iss,

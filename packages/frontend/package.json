@@ -9,6 +9,7 @@
     "axios": "^0.21.1",
     "ethers": "^5.0.31",
     "ipfs-core": "^0.5.2",
+    "ipfs-mini": "^1.1.5",
     "keccak256": "^1.0.2",
     "merkletreejs": "^0.2.13",
     "postcss": "^7",
