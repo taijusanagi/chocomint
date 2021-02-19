@@ -9,6 +9,10 @@ module.exports = {
     version: "0.5.17",
   },
   networks: {
+    mainnet: {
+      url: `https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149`,
+      accounts: [devPrivateKey],
+    },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149`,
       accounts: [devPrivateKey],

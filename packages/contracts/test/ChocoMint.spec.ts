@@ -35,9 +35,9 @@ describe("Token contract", function () {
     const choco = {
       name: "name",
       description: "description",
-      image: "ipfs://QmfA8YURMek3M4JkjXdY1K468ryFGUGuF6EC2U5L7V25Bu/nft.png",
-      blank: "",
-      initialPrice: "10000",
+      image: "ipfs://QmSFz63TvjvzeZApFi4Eq4XKv6E7PkzeLyzEFE7vwGXhcp",
+      animation_url: "",
+      initial_price: "10000",
       fees: ["100"],
       recipients: [iss],
       iss: iss,
@@ -68,8 +68,8 @@ describe("Token contract", function () {
         choco.name,
         choco.description,
         choco.image,
-        choco.blank,
-        choco.initialPrice,
+        choco.animation_url,
+        choco.initial_price,
         choco.fees,
         choco.recipients,
         choco.iss,
@@ -90,8 +90,8 @@ describe("Token contract", function () {
         choco.name,
         choco.description,
         choco.image,
-        choco.blank,
-        choco.initialPrice,
+        choco.animation_url,
+        choco.initial_price,
         choco.fees,
         choco.recipients,
         choco.iss,
@@ -101,7 +101,7 @@ describe("Token contract", function () {
         choco.signature,
       ],
       {
-        value: choco.initialPrice,
+        value: choco.initial_price,
       }
     );
     const tokenId = ethers.utils.solidityKeccak256(

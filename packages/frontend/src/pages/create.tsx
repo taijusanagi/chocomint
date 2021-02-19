@@ -14,7 +14,7 @@ const networkConfigs = {
   },
   ETH: {
     chainId: "4",
-    address: "0x79C42a0742733f61F110EaBAB2836397714AbBA1",
+    address: "0xb6b18cae509fcf3542ff6975c2da06caac9773c5",
   },
   MATIC: {
     chainId: "80001",
@@ -28,22 +28,42 @@ const networkConfigs = {
 
 export const Create: React.FC = () => {
   const [ipfs, setIpfs] = React.useState<IPFSType>();
-  const [file, setFile] = React.useState<File>();
+  const [imageFile, setImage] = React.useState<File>();
+  const [animationFile, setAnimationFile] = React.useState<File>();
   const [network, setNetwork] = React.useState<networkType>("ETH");
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [initialPrice, setInitialPrice] = React.useState("");
+  const [initial_price, setInitialPrice] = React.useState("");
   const [royality, setRoyality] = React.useState("");
 
   React.useEffect(() => {
     IPFS.create().then((created) => setIpfs(created));
   }, []);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const readAsArrayBufferAsync = (file: File) => {
+    return new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        resolve(fr.result);
+      };
+      fr.readAsArrayBuffer(file);
+    });
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) {
       return;
     }
-    setFile(event.target.files[0]);
+    setImage(event.target.files[0]);
+  };
+
+  const handleAnimationUrlChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!event.target.files) {
+      return;
+    }
+    setAnimationFile(event.target.files[0]);
   };
 
   const handleNetworkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,107 +99,109 @@ export const Create: React.FC = () => {
   };
 
   const createNft = async () => {
-    if (!ipfs || !file || !name || !description) {
+    if (!ipfs || !imageFile || !animationFile || !name || !description) {
       return;
     }
-    const type = file.name.split(".")[1];
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const imageBuffer = new Uint8Array(reader.result as Buffer);
-      const { cid: imageCid } = await ipfs.add({
-        path: `images/nft.${type}`,
-        content: imageBuffer,
-      });
-      const image = `ipfs://${imageCid.toString()}/nft.${type}`;
-      const web3Modal = new Web3Modal();
-      const web3ModalProvider = await web3Modal.connect();
-      const web3Provider = new ethers.providers.Web3Provider(web3ModalProvider);
-      const signer = web3Provider.getSigner();
-      const chainId = networkConfigs[network].chainId;
-      const address = networkConfigs[network].address;
-      const iss = (await signer.getAddress()).toLowerCase();
-      const choco = {
+    const imageBuffer = await readAsArrayBufferAsync(imageFile);
+    const imageUint8Array = new Uint8Array(imageBuffer as Buffer);
+    const { cid: imageCid } = await ipfs.add(imageUint8Array);
+    const image = `ipfs://${imageCid.toString()}`;
+    const animationBuffer = await readAsArrayBufferAsync(animationFile);
+    const animationUint8Array = new Uint8Array(animationBuffer as Buffer);
+    const { cid: animationCid } = await ipfs.add({
+      path: `images/nft.glb`,
+      content: animationUint8Array,
+    });
+
+    const animation_url = `ipfs://${animationCid.toString()}/nft.glb`;
+    const web3Modal = new Web3Modal();
+    const web3ModalProvider = await web3Modal.connect();
+    const web3Provider = new ethers.providers.Web3Provider(web3ModalProvider);
+    const signer = web3Provider.getSigner();
+    const chainId = networkConfigs[network].chainId;
+    const address = networkConfigs[network].address;
+    const iss = (await signer.getAddress()).toLowerCase();
+    const choco = {
+      chainId,
+      address,
+      tokenId: "",
+      name,
+      description,
+      image,
+      animation_url,
+      initial_price: ethers.utils.parseEther(initial_price).toString(),
+      fees: [royality],
+      recipients: [iss],
+      iss,
+      sub: "0x0000000000000000000000000000000000000000",
+      root: "",
+      proof: [""],
+      signature: "",
+    };
+    const messageHash = ethers.utils.solidityKeccak256(
+      [
+        "uint256",
+        "address",
+        "string",
+        "string",
+        "string",
+        "string",
+        "uint256",
+        "uint256[]",
+        "address[]",
+        "address",
+        "address",
+      ],
+      [
         chainId,
         address,
-        tokenId: "",
-        name,
-        description,
-        image,
-        blank: "",
-        initialPrice: ethers.utils.parseEther(initialPrice).toString(),
-        fees: [royality],
-        recipients: [iss],
-        iss,
-        sub: "0x0000000000000000000000000000000000000000",
-        root: "",
-        proof: [""],
-        signature: "",
-      };
-      const messageHash = ethers.utils.solidityKeccak256(
-        [
-          "uint256",
-          "address",
-          "string",
-          "string",
-          "string",
-          "string",
-          "uint256",
-          "uint256[]",
-          "address[]",
-          "address",
-          "address",
-        ],
-        [
-          chainId,
-          address,
-          choco.name,
-          choco.description,
-          choco.image,
-          choco.blank,
-          choco.initialPrice,
-          choco.fees,
-          choco.recipients,
-          choco.iss,
-          choco.sub,
-        ]
-      );
-      const messageHashBinary = ethers.utils.arrayify(messageHash);
-      const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
-      const leaves = [messageHashBinaryBuffer];
-      const tree = new MerkleTree(leaves, keccak256, { sort: true });
-      choco.root = tree.getHexRoot();
-      choco.proof = tree.getHexProof(messageHashBinaryBuffer);
-      choco.signature = await signer.signMessage(
-        ethers.utils.arrayify(choco.root)
-      );
-      const tokenIdHex = ethers.utils.solidityKeccak256(
-        ["bytes32", "bytes32"],
-        [messageHash, choco.root]
-      );
-      choco.tokenId = ethers.BigNumber.from(tokenIdHex).toString();
-      const metadataString = JSON.stringify({
-        ...choco,
-      });
-      const { cid: metadataCid } = await ipfs.add(metadataString);
-      console.log(
-        `Congraturation! Your NFT is on : ${
-          window.location.origin
-        }/asset?cid=${metadataCid.toString()}`
-      );
-    };
-    reader.readAsArrayBuffer(file);
+        choco.name,
+        choco.description,
+        choco.image,
+        choco.animation_url,
+        choco.initial_price,
+        choco.fees,
+        choco.recipients,
+        choco.iss,
+        choco.sub,
+      ]
+    );
+    const messageHashBinary = ethers.utils.arrayify(messageHash);
+    const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
+    const leaves = [messageHashBinaryBuffer];
+    const tree = new MerkleTree(leaves, keccak256, { sort: true });
+    choco.root = tree.getHexRoot();
+    choco.proof = tree.getHexProof(messageHashBinaryBuffer);
+    choco.signature = await signer.signMessage(
+      ethers.utils.arrayify(choco.root)
+    );
+    const tokenIdHex = ethers.utils.solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [messageHash, choco.root]
+    );
+    choco.tokenId = ethers.BigNumber.from(tokenIdHex).toString();
+    const metadataString = JSON.stringify({
+      ...choco,
+    });
+    const { cid: metadataCid } = await ipfs.add(metadataString);
+    console.log(
+      `Congraturation! Your NFT is on : ${
+        window.location.origin
+      }/asset?cid=${metadataCid.toString()}`
+    );
   };
 
   return (
     <div>
       <label>Upload file</label>
+      <input type="file" id="image" name="image" onChange={handleImageChange} />
+      <img src={getPreviewImageSrc(imageFile)} />
       <input
         type="file"
-        id="uploadedFile"
-        name="uploadedFile"
-        onChange={handleFileChange}
+        id="animationUrl"
+        name="animationUrl"
+        onChange={handleAnimationUrlChange}
       />
-      <img src={getPreviewImageSrc(file)} />
       <div onChange={handleNetworkChange}>
         <input type="radio" value="LOCAL" name="network" /> Local
         <input type="radio" value="ETH" name="network" /> Ethereum

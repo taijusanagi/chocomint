@@ -21,8 +21,8 @@ export const Asset: React.FC = () => {
         choco.name,
         choco.description,
         choco.image,
-        choco.blank,
-        choco.initialPrice,
+        choco.animation_url,
+        choco.initial_price,
         choco.fees,
         choco.recipients,
         choco.iss,
@@ -31,7 +31,7 @@ export const Asset: React.FC = () => {
         choco.proof,
         choco.signature,
       ],
-      { value: choco.initialPrice }
+      { value: choco.initial_price }
     );
   };
 

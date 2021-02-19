@@ -17,8 +17,8 @@ contract Chocomint is ERC721 {
     string name;
     string description;
     string image;
-    string blank;
-    uint256 initialPrice;
+    string animation_url;
+    uint256 initial_price;
     uint256[] fees;
     address[] recipients;
     address payable iss;
@@ -28,13 +28,17 @@ contract Chocomint is ERC721 {
     bytes signature;
   }
 
+  function uri() public view returns (string memory str) {
+    return "";
+  }
+
   mapping(uint256 => Choco) public chocos;
 
   string public name = "NFT";
   string public symbol = "NFT";
 
   function mint(Choco memory choco) public payable {
-    require(msg.value == choco.initialPrice, "Must pay initial_price");
+    require(msg.value == choco.initial_price, "Must pay initial_price");
     require(
       choco.fees.length <= choco.recipients.length,
       "Must be same length"
@@ -54,8 +58,8 @@ contract Chocomint is ERC721 {
           choco.name,
           choco.description,
           choco.image,
-          choco.blank,
-          choco.initialPrice,
+          choco.animation_url,
+          choco.initial_price,
           choco.fees,
           choco.recipients,
           choco.iss,
@@ -70,7 +74,7 @@ contract Chocomint is ERC721 {
     uint256 tokenId = uint256(keccak256(abi.encodePacked(hash, choco.root)));
     chocos[tokenId] = choco;
     _mint(msg.sender, tokenId);
-    choco.iss.transfer(choco.initialPrice);
+    choco.iss.transfer(choco.initial_price);
     totalSupply.increment();
   }
 
@@ -109,14 +113,14 @@ contract Chocomint is ERC721 {
         choco.description,
         '","image":"',
         choco.image,
-        '","blank":"',
-        choco.blank
+        '","animation_url":"',
+        choco.animation_url
       );
     }
     {
       uints = abi.encodePacked(
-        '","initialPrice":"',
-        uintToString(choco.initialPrice),
+        '","initial_price":"',
+        uintToString(choco.initial_price),
         '","fees":[',
         uintArrayToString(choco.fees)
       );
