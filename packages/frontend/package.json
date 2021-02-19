@@ -22,7 +22,7 @@
     ]
   },
   "dependencies": {
-    "3id-connect": "^0.1.0",
+    "3id-connect": "1.0.0-alpha.15",
     "@ceramicnetwork/cli": "^0.20.8",
     "@ceramicnetwork/http-client": "^0.9.6",
     "@ceramicstudio/idx": "^0.7.0",

@@ -6,7 +6,12 @@ import { MerkleTree } from "merkletreejs";
 const keccak256 = require("keccak256");
 
 import Ceramic from "@ceramicnetwork/http-client";
-console.log(Ceramic);
+const ceramic = new Ceramic("https://ceramic-clay.3boxlabs.com");
+
+import { ThreeIdConnect, EthereumAuthProvider } from "3id-connect";
+export const threeID = new ThreeIdConnect();
+
+import { IDX } from "@ceramicstudio/idx";
 
 type networkType = "LOCAL" | "ETH" | "MATIC" | "BSC";
 
@@ -194,8 +199,21 @@ export const Create: React.FC = () => {
     );
   };
 
+  const connectIdx = async () => {
+    const web3Modal = new Web3Modal();
+    const ethProvider = await web3Modal.connect();
+    const addresses = await ethProvider.enable();
+    await threeID.connect(new EthereumAuthProvider(ethProvider, addresses[0]));
+    const threeIDProvider = threeID.getDidProvider();
+    await ceramic.setDIDProvider(threeIDProvider);
+    console.log(new IDX({ ceramic }));
+  };
+
   return (
     <div>
+      <button id="connect" onClick={connectIdx}>
+        Connect
+      </button>
       <label>Upload file</label>
       <input type="file" id="image" name="image" onChange={handleImageChange} />
       <img src={getPreviewImageSrc(imageFile)} />
