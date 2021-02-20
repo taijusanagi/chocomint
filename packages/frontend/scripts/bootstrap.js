@@ -92,9 +92,9 @@ async function run() {
       followedChocomint: followedChocominterSchema.commitId.toUrl(),
     },
   };
-  await writeFile("./src/config.json", JSON.stringify(config));
+  await writeFile("./src/configs/idx.json", JSON.stringify(config));
 
-  console.log("Config written to src/config.json file:", config);
+  console.log("Config written to src/configs/idx.json file:", config);
   process.exit(0);
 }
 

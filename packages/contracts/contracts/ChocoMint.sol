@@ -99,7 +99,7 @@ contract Chocomint is ERC721 {
       anchor = abi.encodePacked(
         '{"chainId":"',
         uintToString(getChainId()),
-        '","address":"',
+        '","contractAddress":"',
         bytesToString(abi.encodePacked(address(this))),
         '","tokenId":"',
         uintToString(tokenId)

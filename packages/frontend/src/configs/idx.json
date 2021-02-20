@@ -1,0 +1,12 @@
+{
+  "definitions": {
+    "createdChocomint": "kjzl6cwe1jw1487fmkpl5ejtr7enfki4cw3we7scnvx99d5o3h3zryg9z1dv8zk",
+    "likedChocomint": "kjzl6cwe1jw1493k7p9gb1qcnwr6293godagwjdd5aq7chc6935yp2xu1939x5r",
+    "followedChocomint": "kjzl6cwe1jw146if7clo1hqomyyfkoojs7sdpzoppbr7mxzqgocudl0iuiroitj"
+  },
+  "schemas": {
+    "createdChocomint": "ceramic://k3y52l7qbv1fry1zg724ez1upzio96y4191pm8st825nzuglqutl9idljij3zrxmo",
+    "likedChocomint": "ceramic://k3y52l7qbv1frxtwforfsc5kp9vfh0ut7vxyisuuvpkab2l79fh20ukujy0zyg074",
+    "followedChocomint": "ceramic://k3y52l7qbv1frxlmycclhmw36tup7kzi5g19kzy1yhh75arlgbgeh9z2pa9d01v5s"
+  }
+}

@@ -1,44 +1,34 @@
 import React from "react";
-import IPFS from "ipfs-core";
 import { ethers } from "ethers";
 import { MerkleTree } from "merkletreejs";
 const keccak256 = require("keccak256");
-
-import { Signer } from "../modules/web3";
+import { IPFS } from "ipfs-core";
+import {
+  useIpfs,
+  Signer,
+  NetworkType,
+  getNetworkConfig,
+} from "../modules/web3";
 const signer = new Signer();
 
-type networkType = "LOCAL" | "ETH" | "MATIC" | "BSC";
-
-const networkConfigs = {
-  LOCAL: {
-    chainId: "31337",
-    address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  },
-  ETH: {
-    chainId: "4",
-    address: "0xb6b18cae509fcf3542ff6975c2da06caac9773c5",
-  },
-  MATIC: {
-    chainId: "80001",
-    address: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
-  },
-  BSC: {
-    chainId: "97",
-    address: "0x38F6F2caE52217101D7CA2a5eC040014b4164E6C",
-  },
-};
-
 export const Create: React.FC = () => {
-  const [imageFile, setImage] = React.useState<File>();
-  const [animationFile, setAnimationFile] = React.useState<File>();
-  const [network, setNetwork] = React.useState<networkType>("ETH");
+  const [did, setDid] = React.useState("");
+  const [image, setImage] = React.useState("");
+  const [animation_url, setAnimationUrl] = React.useState("");
+  const [imagePreview, setImagePreview] = React.useState("");
+  const [network, setNetwork] = React.useState<NetworkType>("ETH");
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initial_price, setInitialPrice] = React.useState("");
   const [royality, setRoyality] = React.useState("");
 
-  const getFileType = (file: File) => {
-    return file.name.split(".")[1];
+  const ipfs = useIpfs() as IPFS;
+
+  const connect = async () => {
+    await signer.init();
+    const did = signer.idx.id;
+    setDid(did);
+    console.log("did", did);
   };
 
   const readAsArrayBufferAsync = (file: File) => {
@@ -51,93 +41,78 @@ export const Create: React.FC = () => {
     });
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files) {
-      return;
-    }
-    setImage(event.target.files[0]);
+  const uploadFileToIpfs = async (file: File) => {
+    const fileType = file.name.split(".")[1];
+    const fileBuffer = await readAsArrayBufferAsync(file);
+    const fileUint8Array = new Uint8Array(fileBuffer as Buffer);
+    const imageFileName = `${fileType}.${fileType}`;
+    const { cid } = await ipfs.add({
+      path: `media/${imageFileName}`,
+      content: fileUint8Array,
+    });
+    return `ipfs://${cid.toString()}/${imageFileName}`;
   };
 
-  const handleAnimationUrlChange = (
+  const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    if (!event.target.files) {
-      return;
-    }
-    setAnimationFile(event.target.files[0]);
+    //This can be processed when file presents
+    const file = event.target.files![0];
+    const preview = URL.createObjectURL(file);
+    setImagePreview(preview);
+    const image = await uploadFileToIpfs(file);
+    setImage(image);
+    console.log("image", image);
+  };
+
+  const handleAnimationUrlChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    //This can be processed when file presents
+    const file = event.target.files![0];
+    const animation_url = await uploadFileToIpfs(file);
+    setAnimationUrl(animation_url);
+    console.log("animation_url", animation_url);
   };
 
   const handleNetworkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(event.target.value);
-    setNetwork(event.target.value as networkType);
+    //This can be selected fixed radio button
+    setNetwork(event.target.value as NetworkType);
+    console.log("network", event.target.value);
   };
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
+    console.log("name", event.target.value);
   };
 
   const handleDescriptionChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
     setDescription(event.target.value);
+    console.log("description", event.target.value);
   };
 
   const handleInitialPriceChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setInitialPrice(event.target.value);
+    console.log("initialPrice", event.target.value);
   };
 
   const handleRoyalityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRoyality(event.target.value);
-  };
-
-  const getPreviewImageSrc = (file?: File) => {
-    if (!file) {
-      return "";
-    }
-    return URL.createObjectURL(file);
+    console.log("royality", event.target.value);
   };
 
   const createNft = async () => {
     console.log("createNft");
-    if (!imageFile || !name || !description) {
-      return;
-    }
-
-    const ipfs = await IPFS.create();
-    console.log(ipfs, "ipfs");
-    const imageType = getFileType(imageFile);
-    const imageBuffer = await readAsArrayBufferAsync(imageFile);
-    const imageUint8Array = new Uint8Array(imageBuffer as Buffer);
-    const imageFileName = `${imageType}.${imageType}`;
-    const { cid: imageCid } = await ipfs.add({
-      path: `images/${imageFileName}`,
-      content: imageUint8Array,
-    });
-    const image = `ipfs://${imageCid.toString()}/${imageFileName}`;
-    console.log(image, "image");
-    let animation_url = "";
-    if (animationFile) {
-      const animationType = getFileType(animationFile);
-      const animationBuffer = await readAsArrayBufferAsync(animationFile);
-      const animationUint8Array = new Uint8Array(animationBuffer as Buffer);
-      const animationFileName = `${animationType}.${animationType}`;
-      const { cid: animationCid } = await ipfs.add({
-        path: `images/${animationFileName}`,
-        content: animationUint8Array,
-      });
-      animation_url = `ipfs://${animationCid.toString()}/${animationFileName}`;
-    }
-    console.log(animation_url, "animation_url");
-    const { address } = await signer.init();
-    const chainId = networkConfigs[network].chainId;
-    const contractAddress = networkConfigs[network].address;
-    const iss = address;
+    const iss = await signer.ethers.getAddress();
+    const { chainId, contractAddress } = getNetworkConfig(network);
     const choco = {
       chainId,
       contractAddress,
-      tokenId: "",
+      tokenId: "", //calculated later
       name,
       description,
       image,
@@ -146,10 +121,10 @@ export const Create: React.FC = () => {
       fees: [royality],
       recipients: [iss],
       iss,
-      sub: "0x0000000000000000000000000000000000000000",
-      root: "",
-      proof: [""],
-      signature: "",
+      sub: "0x0000000000000000000000000000000000000000", //advanced feature
+      root: "", //calculated later
+      proof: [""], //calculated later
+      signature: "", //calculated later
     };
     const messageHash = ethers.utils.solidityKeccak256(
       [
@@ -167,7 +142,7 @@ export const Create: React.FC = () => {
       ],
       [
         chainId,
-        address,
+        contractAddress,
         choco.name,
         choco.description,
         choco.image,
@@ -198,11 +173,9 @@ export const Create: React.FC = () => {
     });
     const { cid: metadataCid } = await ipfs.add(metadataString);
     const chocomints = (await signer.idx.get("createdChocomint")) as any;
-
     if (!chocomints.chocomints.includes(metadataString)) {
       chocomints.unshift(metadataString);
     }
-
     await signer.idx.set("createdChocomint", { chocomints: [metadataString] });
     console.log(
       `Congraturation! Your NFT is on : ${
@@ -213,52 +186,68 @@ export const Create: React.FC = () => {
 
   return (
     <div>
-      <label>Upload file</label>
-      <input type="file" id="image" name="image" onChange={handleImageChange} />
-      <img src={getPreviewImageSrc(imageFile)} />
-      <input
-        type="file"
-        id="animationUrl"
-        name="animationUrl"
-        onChange={handleAnimationUrlChange}
-      />
-      <div onChange={handleNetworkChange}>
-        <input type="radio" value="LOCAL" name="network" /> Local
-        <input type="radio" value="ETH" name="network" /> Ethereum
-        <input type="radio" value="MATIC" name="network" /> Matic
-        <input type="radio" value="BSN" name="network" /> BSC
-      </div>
-      <div>
-        <label>Name</label>
-        <input type="text" name="name" id="name" onChange={handleNameChange} />
-      </div>
-      <div>
-        <label>Description</label>
-        <textarea
-          name="description"
-          id="description"
-          onChange={handleDescriptionChange}
-        />
-      </div>
-      <div>
-        <label>Initial Price</label>
-        <input
-          type="number"
-          name="initial_price"
-          id="initial_price"
-          onChange={handleInitialPriceChange}
-        />
-      </div>
-      <div>
-        <label>Royality</label>
-        <input
-          type="number"
-          name="royality"
-          id="royality"
-          onChange={handleRoyalityChange}
-        />
-      </div>
-      <button onClick={createNft}>CREATE NFT</button>
+      {!did || !ipfs ? (
+        <button id="connect" onClick={connect}>
+          Connect
+        </button>
+      ) : (
+        <div>
+          <label>Upload file</label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            onChange={handleImageChange}
+          />
+          <img src={imagePreview} />
+          <input
+            type="file"
+            id="animationUrl"
+            name="animationUrl"
+            onChange={handleAnimationUrlChange}
+          />
+          <div onChange={handleNetworkChange}>
+            <input type="radio" value="ETH" name="network" /> Ethereum
+            <input type="radio" value="MATIC" name="network" /> Matic
+          </div>
+          <div>
+            <label>Name</label>
+            <input
+              type="text"
+              name="name"
+              id="name"
+              onChange={handleNameChange}
+            />
+          </div>
+          <div>
+            <label>Description</label>
+            <textarea
+              name="description"
+              id="description"
+              onChange={handleDescriptionChange}
+            />
+          </div>
+          <div>
+            <label>Initial Price</label>
+            <input
+              type="number"
+              name="initial_price"
+              id="initial_price"
+              onChange={handleInitialPriceChange}
+            />
+          </div>
+          <div>
+            <label>Royality</label>
+            <input
+              type="number"
+              name="royality"
+              id="royality"
+              onChange={handleRoyalityChange}
+            />
+          </div>
+          <button onClick={createNft}>CREATE NFT</button>
+        </div>
+      )}
     </div>
   );
 };
