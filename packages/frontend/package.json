@@ -6,6 +6,8 @@
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
     "start": "cross-env BROWSER=none craco start",
     "build": "craco build",
+    "predeploy": "yarn build",
+    "deploy": "gh-pages -d build",
     "storybook": "start-storybook -p 6006 -s public",
     "build-storybook": "build-storybook -s public"
   },
@@ -32,6 +34,7 @@
     "autoprefixer": "^9",
     "axios": "^0.21.1",
     "ethers": "^5.0.31",
+    "gh-pages": "^3.1.0",
     "ipfs-core": "^0.5.2",
     "ipfs-only-hash": "^2.0.1",
     "keccak256": "^1.0.2",

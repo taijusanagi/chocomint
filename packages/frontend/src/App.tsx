@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { HashRouter as Router, Route, Switch } from "react-router-dom";
 
 import Create from "./pages/create";
 import Gallery from "./pages/gallery";
@@ -8,7 +8,7 @@ import Nft from "./pages/nft";
 
 const App: React.FC = () => {
   return (
-    <Router>
+    <Router basename="/">
       <Switch>
         <Route path="/create" exact>
           <Create />

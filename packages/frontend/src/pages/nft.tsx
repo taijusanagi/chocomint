@@ -16,17 +16,17 @@ export const Asset: React.FC = () => {
       setChoco(data);
       ipfsHash
         .of(Buffer.from(JSON.stringify(data)))
-        .then((calculatedCid: string) =>
-          setIpfsVerified(cid === calculatedCid)
-        );
+        .then((calculatedCid: string) => {
+          console.log("calculatedCid", calculatedCid);
+          setIpfsVerified(cid === calculatedCid);
+        });
       const { tokenId, contractAddress, chainId } = data;
-      console.log(tokenId, contractAddress, chainId);
       const contract = getContract(contractAddress, chainId);
       contract
         .tokenURI(tokenId)
-        .then((data: string) => {
-          console.log(data);
-          setBlockchainVerified(cid === data.split("//")[1]);
+        .then((tokenUri: string) => {
+          console.log("tokenUri", tokenUri);
+          setBlockchainVerified(cid === tokenUri.split("//")[1]);
         })
         .catch((_err: Error) => console.log("NFT did not minted"));
     });
