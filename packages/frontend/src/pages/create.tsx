@@ -13,6 +13,9 @@ const signer = new Signer();
 
 export const Create: React.FC = () => {
   const [did, setDid] = React.useState("");
+  const [createdChocomint, setCreatedChocomint] = React.useState<
+    undefined | string[]
+  >(undefined);
   const [image, setImage] = React.useState("");
   const [animation_url, setAnimationUrl] = React.useState("");
   const [imagePreview, setImagePreview] = React.useState("");
@@ -29,6 +32,11 @@ export const Create: React.FC = () => {
     const did = signer.idx.id;
     setDid(did);
     console.log("did", did);
+    console.log("getting createdChocomint...");
+    const oldRecord = await signer.idx.get("createdChocomint");
+    console.log("got createdChocomint");
+    const chocomints = oldRecord ? oldRecord.chocomints : [];
+    setCreatedChocomint(chocomints);
   };
 
   const readAsArrayBufferAsync = (file: File) => {
@@ -107,6 +115,11 @@ export const Create: React.FC = () => {
 
   const createNft = async () => {
     console.log("createNft");
+    if (!createdChocomint || !image || !animation_url) {
+      console.log("not ready");
+      return;
+    }
+
     const iss = await signer.ethers.getAddress();
     const { chainId, contractAddress } = getNetworkConfig(network);
     const choco = {
@@ -168,19 +181,21 @@ export const Create: React.FC = () => {
       [messageHash, choco.root]
     );
     choco.tokenId = ethers.BigNumber.from(tokenIdHex).toString();
-    const metadataString = JSON.stringify({
-      ...choco,
-    });
-    const { cid: metadataCid } = await ipfs.add(metadataString);
-    const chocomints = (await signer.idx.get("createdChocomint")) as any;
-    if (!chocomints.chocomints.includes(metadataString)) {
-      chocomints.unshift(metadataString);
+    const metadataString = JSON.stringify(choco);
+    const { cid } = await ipfs.add(metadataString);
+
+    if (!createdChocomint.includes(metadataString)) {
+      createdChocomint.unshift(metadataString);
+      console.log("setting createdChocomint...");
+      await signer.idx.set("createdChocomint", {
+        chocomints: createdChocomint,
+      });
+      console.log("set createdChocomint");
     }
-    await signer.idx.set("createdChocomint", { chocomints: [metadataString] });
     console.log(
       `Congraturation! Your NFT is on : ${
         window.location.origin
-      }/nft?cid=${metadataCid.toString()}`
+      }/nft?cid=${cid.toString()}`
     );
   };
 
@@ -192,7 +207,7 @@ export const Create: React.FC = () => {
         </button>
       ) : (
         <div>
-          <label>Upload file</label>
+          <label>Upload image</label>
           <input
             type="file"
             id="image"
@@ -200,6 +215,7 @@ export const Create: React.FC = () => {
             onChange={handleImageChange}
           />
           <img src={imagePreview} />
+          <label>Upload Movie/Music/3D model</label>
           <input
             type="file"
             id="animationUrl"

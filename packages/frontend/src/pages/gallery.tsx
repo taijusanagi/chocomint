@@ -10,7 +10,7 @@ import { IDX } from "@ceramicstudio/idx";
 import { ThreeIdConnect, EthereumAuthProvider } from "3id-connect";
 export const threeID = new ThreeIdConnect();
 
-import { definitions } from "../config.json";
+import { definitions } from "../configs/idx.json";
 const idx = new IDX({ ceramic, aliases: definitions });
 
 export const Asset: React.FC = () => {
