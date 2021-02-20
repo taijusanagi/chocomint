@@ -1,6 +1,5 @@
 import React from "react";
-import { Signer } from "../modules/web3";
-const signer = new Signer();
+import { getIdxSigner } from "../modules/web3";
 
 export const MyPage: React.FC = () => {
   const [did, setDid] = React.useState("");
@@ -9,12 +8,12 @@ export const MyPage: React.FC = () => {
   >(undefined);
 
   const connect = async () => {
-    await signer.init();
-    const did = signer.idx.id;
+    const idx = await getIdxSigner();
+    const did = idx.id;
     setDid(did);
     console.log("did", did);
     console.log("get createdChocomint");
-    signer.idx.get("createdChocomint").then(({ chocomints }: any) => {
+    idx.get("createdChocomint").then(({ chocomints }: any) => {
       console.log("get createdChocomint done", chocomints);
       setCreatedChocomint(chocomints);
     });

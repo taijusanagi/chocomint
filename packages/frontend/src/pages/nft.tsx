@@ -3,8 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 const ipfsHash = require("ipfs-only-hash");
 
-import { ipfsBaseUrl, Signer, getContract } from "../modules/web3";
-const signer = new Signer();
+import { ipfsBaseUrl, getEthersSigner, getContract } from "../modules/web3";
 
 export const Asset: React.FC = () => {
   const { cid } = useParams<{ cid: string }>();
@@ -34,9 +33,9 @@ export const Asset: React.FC = () => {
   }, []);
 
   const mintNft = async () => {
-    await signer.init();
-    const contract = getContract(choco.contractAddress).connect(signer.ethers);
-    const hash = contract.mint(
+    const signer = await getEthersSigner();
+    const contract = getContract(choco.contractAddress).connect(signer);
+    const { hash } = await contract.mint(
       [
         choco.name,
         choco.description,

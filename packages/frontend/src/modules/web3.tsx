@@ -44,22 +44,22 @@ export const useIpfs = () => {
   return ipfs;
 };
 
-export class Signer {
-  public ethers: any;
-  public idx: any;
-  public connected: boolean = false;
+export const getEthersSigner = async () => {
+  const web3Modal = new Web3Modal();
+  const web3ModalProvider = await web3Modal.connect();
+  await web3ModalProvider.enable();
+  const web3EthersProvider = new ethers.providers.Web3Provider(
+    web3ModalProvider
+  );
+  return web3EthersProvider.getSigner();
+};
 
-  init = async () => {
-    const web3Modal = new Web3Modal();
-    const web3ModalProvider = await web3Modal.connect();
-    const [address] = await web3ModalProvider.enable();
-    const web3EthersProvider = new ethers.providers.Web3Provider(
-      web3ModalProvider
-    );
-    this.ethers = web3EthersProvider.getSigner();
-    await threeID.connect(new EthereumAuthProvider(web3ModalProvider, address));
-    const threeIDProvider = threeID.getDidProvider();
-    await ceramic.setDIDProvider(threeIDProvider);
-    this.idx = new IDX({ ceramic, aliases: definitions });
-  };
-}
+export const getIdxSigner = async () => {
+  const web3Modal = new Web3Modal();
+  const web3ModalProvider = await web3Modal.connect();
+  const [address] = await web3ModalProvider.enable();
+  await threeID.connect(new EthereumAuthProvider(web3ModalProvider, address));
+  const threeIDProvider = threeID.getDidProvider();
+  await ceramic.setDIDProvider(threeIDProvider);
+  return new IDX({ ceramic, aliases: definitions });
+};

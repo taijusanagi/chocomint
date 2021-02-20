@@ -5,12 +5,12 @@ const keccak256 = require("keccak256");
 import { IPFS } from "ipfs-core";
 import {
   useIpfs,
-  Signer,
+  getEthersSigner,
+  getIdxSigner,
   ChainIdType,
   getNetworkConfig,
   ipfsBaseUrl,
 } from "../modules/web3";
-const signer = new Signer();
 
 export const Create: React.FC = () => {
   const [did, setDid] = React.useState("");
@@ -28,12 +28,12 @@ export const Create: React.FC = () => {
   const ipfs = useIpfs() as IPFS;
 
   const connect = async () => {
-    await signer.init();
-    const did = signer.idx.id;
+    const idx = await getIdxSigner();
+    const did = idx.id;
     setDid(did);
     console.log("did", did);
     console.log("get createdChocomint");
-    const oldRecord = await signer.idx.get("createdChocomint");
+    const oldRecord: any = await idx.get("createdChocomint");
     console.log("got createdChocomint done", oldRecord);
     const chocomints = oldRecord ? oldRecord.chocomints : [];
     setCreatedChocomint(chocomints);
@@ -114,8 +114,9 @@ export const Create: React.FC = () => {
       console.log("not ready");
       return;
     }
-
-    const iss = await signer.ethers.getAddress();
+    const signer = await getEthersSigner();
+    const idx = await getIdxSigner();
+    const iss = await signer.getAddress();
     const { contractAddress } = getNetworkConfig(chainId);
     const choco = {
       chainId,
@@ -168,7 +169,7 @@ export const Create: React.FC = () => {
     const tree = new MerkleTree(leaves, keccak256, { sort: true });
     choco.root = tree.getHexRoot();
     choco.proof = tree.getHexProof(messageHashBinaryBuffer);
-    choco.signature = await signer.ethers.signMessage(
+    choco.signature = await signer.signMessage(
       ethers.utils.arrayify(choco.root)
     );
     const tokenIdHex = ethers.utils.solidityKeccak256(
@@ -182,7 +183,7 @@ export const Create: React.FC = () => {
     if (!createdChocomint.includes(metadataString)) {
       createdChocomint.unshift(metadataString);
       console.log("set createdChocomint", createdChocomint);
-      await signer.idx.set("createdChocomint", {
+      await idx.set("createdChocomint", {
         chocomints: createdChocomint,
       });
       console.log("set createdChocomint done");
