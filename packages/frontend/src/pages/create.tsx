@@ -36,6 +36,12 @@ const networkConfigs = {
   },
 };
 
+const Box = require("3box");
+const config = Box.getConfig("0x84E9445f43995b0C6a4D4C1d40bb123571c2Eb06").then(
+  console.log
+);
+console.log(config);
+
 export const Create: React.FC = () => {
   const [ipfs, setIpfs] = React.useState<IPFSType>();
   const [idx, setIdx] = React.useState<IDX>();
@@ -110,21 +116,29 @@ export const Create: React.FC = () => {
   };
 
   const createNft = async () => {
-    if (!ipfs || !imageFile || !animationFile || !name || !description) {
+    if (
+      !ipfs ||
+      !imageFile ||
+      // !animationFile ||
+      !name ||
+      !description ||
+      !idx
+    ) {
       return;
     }
     const imageBuffer = await readAsArrayBufferAsync(imageFile);
     const imageUint8Array = new Uint8Array(imageBuffer as Buffer);
     const { cid: imageCid } = await ipfs.add(imageUint8Array);
     const image = `ipfs://${imageCid.toString()}`;
-    const animationBuffer = await readAsArrayBufferAsync(animationFile);
-    const animationUint8Array = new Uint8Array(animationBuffer as Buffer);
-    const { cid: animationCid } = await ipfs.add({
-      path: `images/nft.glb`,
-      content: animationUint8Array,
-    });
+    // const animationBuffer = await readAsArrayBufferAsync(animationFile);
+    // const animationUint8Array = new Uint8Array(animationBuffer as Buffer);
+    // const { cid: animationCid } = await ipfs.add({
+    //   path: `images/nft.glb`,
+    //   content: animationUint8Array,
+    // });
 
-    const animation_url = `ipfs://${animationCid.toString()}/nft.glb`;
+    // const animation_url = `ipfs://${animationCid.toString()}/nft.glb`;
+    const animation_url = "";
     const web3Modal = new Web3Modal();
     const web3ModalProvider = await web3Modal.connect();
     const web3Provider = new ethers.providers.Web3Provider(web3ModalProvider);
@@ -195,10 +209,17 @@ export const Create: React.FC = () => {
       ...choco,
     });
     const { cid: metadataCid } = await ipfs.add(metadataString);
+    const { chocomints } = (await idx.get("createdChocomint")) as any;
+    console.log(chocomints);
+    console.log(!chocomints.includes(metadataString));
+    if (!chocomints.includes(metadataString)) {
+      chocomints.unshift(metadataString);
+    }
+    await idx.set("createdChocomint", { chocomints });
     console.log(
       `Congraturation! Your NFT is on : ${
         window.location.origin
-      }/asset?cid=${metadataCid.toString()}`
+      }/nft?cid=${metadataCid.toString()}`
     );
   };
 
@@ -212,18 +233,13 @@ export const Create: React.FC = () => {
     setIdx(new IDX({ ceramic, aliases: definitions }));
   };
 
-  const add = async () => {
-    if (!idx) {
-      return;
-    }
-    await idx.set("createdChocomint", { chocomints: ["ok"] });
-  };
-
   const get = async () => {
     if (!idx) {
       return;
     }
-    console.log(await idx.get("createdChocomint"));
+    console.log(await idx.get("basicProfile"));
+    console.log(await idx.get("cryptoAccounts"));
+    console.log(await idx.get("threeIdKeychain"));
   };
 
   return (
@@ -231,10 +247,7 @@ export const Create: React.FC = () => {
       <button id="connect" onClick={connectIdx}>
         Connect
       </button>
-      <button id="connect" onClick={add}>
-        Add
-      </button>
-      <button id="connect" onClick={get}>
+      <button id="get" onClick={get}>
         Get
       </button>
       <p>{idx && idx.id}</p>

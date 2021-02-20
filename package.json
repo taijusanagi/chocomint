@@ -8,5 +8,8 @@
   ],
   "resolitions": {
     "multicodec": "2.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }
