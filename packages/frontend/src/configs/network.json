@@ -1,10 +1,14 @@
 {
-  "ETH": {
-    "chainId": "4",
-    "contractAddress": "0xb6b18cae509fcf3542ff6975c2da06caac9773c5"
+  "4": {
+    "contractAddress": "0xB6B18cae509Fcf3542FF6975C2Da06CAAc9773c5",
+    "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149"
   },
-  "MATIC": {
-    "chainId": "80001",
-    "contractAddress": "0x0165878A594ca255338adfa4d48449f69242Eb8F"
+  "31337": {
+    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "rpc": "http://127.0.0.1:8545"
+  },
+  "80001": {
+    "contractAddress": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+    "rpc": "https://rpc-mumbai.matic.today"
   }
 }

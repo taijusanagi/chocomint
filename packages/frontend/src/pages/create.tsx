@@ -6,8 +6,9 @@ import { IPFS } from "ipfs-core";
 import {
   useIpfs,
   Signer,
-  NetworkType,
+  ChainIdType,
   getNetworkConfig,
+  ipfsBaseUrl,
 } from "../modules/web3";
 const signer = new Signer();
 
@@ -19,11 +20,10 @@ export const Create: React.FC = () => {
   const [image, setImage] = React.useState("");
   const [animation_url, setAnimationUrl] = React.useState("");
   const [imagePreview, setImagePreview] = React.useState("");
-  const [network, setNetwork] = React.useState<NetworkType>("ETH");
+  const [chainId, setChainId] = React.useState<ChainIdType>("4");
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initial_price, setInitialPrice] = React.useState("");
-  const [royality, setRoyality] = React.useState("");
 
   const ipfs = useIpfs() as IPFS;
 
@@ -58,7 +58,7 @@ export const Create: React.FC = () => {
       path: `media/${imageFileName}`,
       content: fileUint8Array,
     });
-    return `ipfs://${cid.toString()}/${imageFileName}`;
+    return `${ipfsBaseUrl}${cid.toString()}/${imageFileName}`;
   };
 
   const handleImageChange = async (
@@ -85,7 +85,7 @@ export const Create: React.FC = () => {
 
   const handleNetworkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     //This can be selected fixed radio button
-    setNetwork(event.target.value as NetworkType);
+    setChainId(event.target.value as ChainIdType);
     console.log("network", event.target.value);
   };
 
@@ -108,11 +108,6 @@ export const Create: React.FC = () => {
     console.log("initialPrice", event.target.value);
   };
 
-  const handleRoyalityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRoyality(event.target.value);
-    console.log("royality", event.target.value);
-  };
-
   const createNft = async () => {
     console.log("createNft");
     if (!createdChocomint || !image || !animation_url) {
@@ -121,19 +116,19 @@ export const Create: React.FC = () => {
     }
 
     const iss = await signer.ethers.getAddress();
-    const { chainId, contractAddress } = getNetworkConfig(network);
+    const { contractAddress } = getNetworkConfig(chainId);
     const choco = {
       chainId,
-      contractAddress,
+      contractAddress: contractAddress.toLowerCase(),
       tokenId: "", //calculated later
       name,
       description,
       image,
       animation_url,
       initial_price: ethers.utils.parseEther(initial_price).toString(),
-      fees: [royality],
-      recipients: [iss],
-      iss,
+      fees: ["100"], //advanced feature
+      recipients: [iss.toLowerCase()],
+      iss: iss.toLowerCase(),
       sub: "0x0000000000000000000000000000000000000000", //advanced feature
       root: "", //calculated later
       proof: [""], //calculated later
@@ -195,7 +190,7 @@ export const Create: React.FC = () => {
     console.log(
       `Congraturation! Your NFT is on : ${
         window.location.origin
-      }/nft?cid=${cid.toString()}`
+      }/nft/${cid.toString()}`
     );
   };
 
@@ -223,8 +218,10 @@ export const Create: React.FC = () => {
             onChange={handleAnimationUrlChange}
           />
           <div onChange={handleNetworkChange}>
-            <input type="radio" value="ETH" name="network" /> Ethereum
-            <input type="radio" value="MATIC" name="network" /> Matic
+            <input type="radio" value="4" name="chainId" defaultChecked />
+            Rinkeby
+            <input type="radio" value="80001" name="chainId" /> Mumbai
+            <input type="radio" value="31337" name="chainId" /> Local (dev only)
           </div>
           <div>
             <label>Name</label>
@@ -250,15 +247,6 @@ export const Create: React.FC = () => {
               name="initial_price"
               id="initial_price"
               onChange={handleInitialPriceChange}
-            />
-          </div>
-          <div>
-            <label>Royality</label>
-            <input
-              type="number"
-              name="royality"
-              id="royality"
-              onChange={handleRoyalityChange}
             />
           </div>
           <button onClick={createNft}>CREATE NFT</button>

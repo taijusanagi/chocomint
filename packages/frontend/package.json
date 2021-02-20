@@ -33,7 +33,7 @@
     "axios": "^0.21.1",
     "ethers": "^5.0.31",
     "ipfs-core": "^0.5.2",
-    "ipfs-mini": "^1.1.5",
+    "ipfs-only-hash": "^2.0.1",
     "keccak256": "^1.0.2",
     "key-did-provider-ed25519": "^1.0.0",
     "merkletreejs": "^0.2.13",

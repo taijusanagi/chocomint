@@ -1,18 +1,15 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
-import Asset from "./pages/asset";
 import Create from "./pages/create";
 import Gallery from "./pages/gallery";
 import Mypage from "./pages/mypage";
+import Nft from "./pages/nft";
 
 const App: React.FC = () => {
   return (
     <Router>
       <Switch>
-        <Route path="/asset/:cid" exact>
-          <Asset />
-        </Route>
         <Route path="/create" exact>
           <Create />
         </Route>
@@ -21,6 +18,9 @@ const App: React.FC = () => {
         </Route>
         <Route path="/mypage" exact>
           <Mypage />
+        </Route>
+        <Route path="/nft/:cid" exact>
+          <Nft />
         </Route>
       </Switch>
     </Router>

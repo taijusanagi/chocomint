@@ -1,58 +1,30 @@
 import React from "react";
 import { useParams } from "react-router-dom";
+import { idx } from "../modules/web3";
 
-import Web3Modal from "web3modal";
-import Ceramic from "@ceramicnetwork/http-client";
-const ceramic = new Ceramic("https://ceramic-clay.3boxlabs.com");
-
-import { IDX } from "@ceramicstudio/idx";
-
-import { ThreeIdConnect, EthereumAuthProvider } from "3id-connect";
-export const threeID = new ThreeIdConnect();
-
-import { definitions } from "../configs/idx.json";
-const idx = new IDX({ ceramic, aliases: definitions });
-
-export const Asset: React.FC = () => {
-  const [basicProfile, setBasicProfile] = React.useState<any>();
-  const [createdChocomint, setCreatedChocomint] = React.useState<any>();
-  const [likedChocomint, setLikedChocomint] = React.useState<any>();
-  const [followedChocominter, setFollowedChocominter] = React.useState<any>();
+export const Gallery: React.FC = () => {
   const { did } = useParams<{ did: string }>();
+  const [createdChocomint, setCreatedChocomint] = React.useState<
+    undefined | string[]
+  >(undefined);
+
   React.useEffect(() => {
-    idx
-      .get("basicProfile", did)
-      .then((basicProfile) => setBasicProfile(basicProfile));
-    idx
-      .get("createdChocomint", did)
-      .then(({ chocomints }: any) => setCreatedChocomint(chocomints));
-    idx
-      .get("likedChocomint", did)
-      .then(({ chocomints }: any) => setLikedChocomint(chocomints));
-    idx
-      .get("followedChocominter", did)
-      .then(({ chocomints }: any) => setFollowedChocominter(chocomints));
+    console.log("get createdChocomint");
+    idx.get("createdChocomint", did).then(({ chocomints }: any) => {
+      console.log("get createdChocomint done", chocomints);
+      setCreatedChocomint(chocomints);
+    });
   }, []);
 
   return (
     <div>
-      {basicProfile && (
-        <>
-          <p>{basicProfile.name}</p>
-          <p>{basicProfile.description}</p>
-        </>
-      )}
-      {createdChocomint && (
-        <>
-          <ul>
-            {createdChocomint.map((chocomint: string, i: number) => {
-              return <li key={i}>{chocomint}</li>;
-            })}
-          </ul>
-        </>
-      )}
+      <p>{did}</p>
+      {createdChocomint &&
+        createdChocomint.map((chocomint, i) => {
+          return <p key={i}>{chocomint}</p>;
+        })}
     </div>
   );
 };
 
-export default Asset;
+export default Gallery;

@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/drafts/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
+import "hardhat/console.sol";
+
 contract Chocomint is ERC721 {
   using Counters for Counters.Counter;
   using ECDSA for bytes32;
@@ -79,6 +81,8 @@ contract Chocomint is ERC721 {
   }
 
   function tokenURI(uint256 tokenId) public view returns (string memory) {
+    require(_exists(tokenId), "Must exist");
+    console.log(getMetadata(tokenId));
     return
       string(
         abi.encodePacked(
@@ -146,6 +150,7 @@ contract Chocomint is ERC721 {
         '"}'
       );
     }
+
     return
       string(abi.encodePacked(anchor, strings, uints, addresses, verification));
   }

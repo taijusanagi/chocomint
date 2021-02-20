@@ -2,8 +2,6 @@ import React from "react";
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 
-import { abi } from "../Chocomint.json";
-
 import Ceramic from "@ceramicnetwork/http-client";
 const ceramic = new Ceramic("https://ceramic-clay.3boxlabs.com");
 
@@ -13,19 +11,24 @@ export const threeID = new ThreeIdConnect();
 import { IDX } from "@ceramicstudio/idx";
 import { definitions } from "../configs/idx.json";
 import networkConfig from "../configs/network.json";
+import { abi } from "../Chocomint.json";
 
 export const idx = new IDX({ ceramic, aliases: definitions });
-export const contract = new ethers.Contract(
-  "0x0000000000000000000000000000000000000000",
-  abi
-);
 
 import ipfsInstance, { IPFS } from "ipfs-core";
+export const ipfsBaseUrl = "https://ipfs.io/ipfs/";
 
-export type NetworkType = "ETH" | "MATIC";
+export type ChainIdType = "4" | "80001";
 
-export const getNetworkConfig = (network: NetworkType) => {
-  return networkConfig[network];
+export const getNetworkConfig = (chainId: ChainIdType) => {
+  return networkConfig[chainId];
+};
+
+export const getContract = (address: string, chainId?: ChainIdType) => {
+  const provider = chainId
+    ? new ethers.providers.JsonRpcProvider(getNetworkConfig(chainId).rpc)
+    : undefined;
+  return new ethers.Contract(address, abi, provider);
 };
 
 export const useIpfs = () => {

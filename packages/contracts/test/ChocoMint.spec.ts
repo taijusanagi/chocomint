@@ -1,8 +1,8 @@
 import { ethers } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
-import * as IPFS from "ipfs-mini";
-import axios from "axios";
+import * as ipfsHash from "ipfs-only-hash";
+
 chai.use(solidity);
 const { expect } = chai;
 
@@ -24,11 +24,6 @@ describe("Token contract", function () {
   });
 
   it("case: mint is ok / check: tokenURI", async function () {
-    const ipfs = new IPFS({
-      host: "ipfs.infura.io",
-      port: 5001,
-      protocol: "https",
-    });
     const baseTokenUri = "ipfs://";
     const [signer] = await ethers.getSigners();
     const iss = signer.address.toLowerCase();
@@ -46,7 +41,6 @@ describe("Token contract", function () {
       proof: [],
       signature: "",
     };
-
     const chainId = await chocomint.getChainId();
     const messageHash = ethers.utils.solidityKeccak256(
       [
@@ -110,16 +104,13 @@ describe("Token contract", function () {
     );
     const metadataString = JSON.stringify({
       chainId: chainId.toString(),
-      address: chocomint.address.toLowerCase(),
+      contractAddress: chocomint.address.toLowerCase(),
       tokenId: ethers.BigNumber.from(tokenId).toString(),
       ...choco,
     });
-    console.log(metadataString);
     const metadataBuffer = Buffer.from(metadataString);
-    const cid = await ipfs.add(metadataBuffer);
-    console.log(cid);
+    const cid = await ipfsHash.of(metadataBuffer);
     const tokenURI = await chocomint.tokenURI(tokenId);
-    console.log(await chocomint.getMetadata(tokenId));
     expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
   });
 });
