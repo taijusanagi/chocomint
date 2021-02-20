@@ -1,22 +1,11 @@
 import React from "react";
-import IPFS, { IPFS as IPFSType } from "ipfs-core";
-import Web3Modal from "web3modal";
+import IPFS from "ipfs-core";
 import { ethers } from "ethers";
 import { MerkleTree } from "merkletreejs";
 const keccak256 = require("keccak256");
 
-import Ceramic from "@ceramicnetwork/http-client";
-const ceramic = new Ceramic("https://ceramic-clay.3boxlabs.com");
-
-import { ThreeIdConnect, EthereumAuthProvider } from "3id-connect";
-export const threeID = new ThreeIdConnect();
-
-import { IDX } from "@ceramicstudio/idx";
-
-import { definitions } from "../config.json";
-import { Header } from "../components/header";
-
-import { signer } from "../modules/web3";
+import { Signer } from "../modules/web3";
+const signer = new Signer();
 
 type networkType = "LOCAL" | "ETH" | "MATIC" | "BSC";
 
@@ -40,8 +29,6 @@ const networkConfigs = {
 };
 
 export const Create: React.FC = () => {
-  const [ipfs, setIpfs] = React.useState<IPFSType>();
-  const [idx, setIdx] = React.useState<IDX>();
   const [imageFile, setImage] = React.useState<File>();
   const [animationFile, setAnimationFile] = React.useState<File>();
   const [network, setNetwork] = React.useState<networkType>("ETH");
@@ -50,9 +37,9 @@ export const Create: React.FC = () => {
   const [initial_price, setInitialPrice] = React.useState("");
   const [royality, setRoyality] = React.useState("");
 
-  React.useEffect(() => {
-    IPFS.create().then((created) => setIpfs(created));
-  }, []);
+  const getFileType = (file: File) => {
+    return file.name.split(".")[1];
+  };
 
   const readAsArrayBufferAsync = (file: File) => {
     return new Promise((resolve) => {
@@ -113,39 +100,43 @@ export const Create: React.FC = () => {
   };
 
   const createNft = async () => {
-    if (
-      !ipfs ||
-      !imageFile ||
-      // !animationFile ||
-      !name ||
-      !description ||
-      !idx
-    ) {
+    console.log("createNft");
+    if (!imageFile || !name || !description) {
       return;
     }
+
+    const ipfs = await IPFS.create();
+    console.log(ipfs, "ipfs");
+    const imageType = getFileType(imageFile);
     const imageBuffer = await readAsArrayBufferAsync(imageFile);
     const imageUint8Array = new Uint8Array(imageBuffer as Buffer);
-    const { cid: imageCid } = await ipfs.add(imageUint8Array);
-    const image = `ipfs://${imageCid.toString()}`;
-    // const animationBuffer = await readAsArrayBufferAsync(animationFile);
-    // const animationUint8Array = new Uint8Array(animationBuffer as Buffer);
-    // const { cid: animationCid } = await ipfs.add({
-    //   path: `images/nft.glb`,
-    //   content: animationUint8Array,
-    // });
-
-    // const animation_url = `ipfs://${animationCid.toString()}/nft.glb`;
-    const animation_url = "";
-    const web3Modal = new Web3Modal();
-    const web3ModalProvider = await web3Modal.connect();
-    const web3Provider = new ethers.providers.Web3Provider(web3ModalProvider);
-    const signer = web3Provider.getSigner();
+    const imageFileName = `${imageType}.${imageType}`;
+    const { cid: imageCid } = await ipfs.add({
+      path: `images/${imageFileName}`,
+      content: imageUint8Array,
+    });
+    const image = `ipfs://${imageCid.toString()}/${imageFileName}`;
+    console.log(image, "image");
+    let animation_url = "";
+    if (animationFile) {
+      const animationType = getFileType(animationFile);
+      const animationBuffer = await readAsArrayBufferAsync(animationFile);
+      const animationUint8Array = new Uint8Array(animationBuffer as Buffer);
+      const animationFileName = `${animationType}.${animationType}`;
+      const { cid: animationCid } = await ipfs.add({
+        path: `images/${animationFileName}`,
+        content: animationUint8Array,
+      });
+      animation_url = `ipfs://${animationCid.toString()}/${animationFileName}`;
+    }
+    console.log(animation_url, "animation_url");
+    const { address } = await signer.init();
     const chainId = networkConfigs[network].chainId;
-    const address = networkConfigs[network].address;
-    const iss = (await signer.getAddress()).toLowerCase();
+    const contractAddress = networkConfigs[network].address;
+    const iss = address;
     const choco = {
       chainId,
-      address,
+      contractAddress,
       tokenId: "",
       name,
       description,
@@ -194,7 +185,7 @@ export const Create: React.FC = () => {
     const tree = new MerkleTree(leaves, keccak256, { sort: true });
     choco.root = tree.getHexRoot();
     choco.proof = tree.getHexProof(messageHashBinaryBuffer);
-    choco.signature = await signer.signMessage(
+    choco.signature = await signer.ethers.signMessage(
       ethers.utils.arrayify(choco.root)
     );
     const tokenIdHex = ethers.utils.solidityKeccak256(
@@ -206,13 +197,13 @@ export const Create: React.FC = () => {
       ...choco,
     });
     const { cid: metadataCid } = await ipfs.add(metadataString);
-    const { chocomints } = (await idx.get("createdChocomint")) as any;
-    console.log(chocomints);
-    console.log(!chocomints.includes(metadataString));
-    if (!chocomints.includes(metadataString)) {
+    const chocomints = (await signer.idx.get("createdChocomint")) as any;
+
+    if (!chocomints.chocomints.includes(metadataString)) {
       chocomints.unshift(metadataString);
     }
-    await idx.set("createdChocomint", { chocomints });
+
+    await signer.idx.set("createdChocomint", { chocomints: [metadataString] });
     console.log(
       `Congraturation! Your NFT is on : ${
         window.location.origin
@@ -220,29 +211,8 @@ export const Create: React.FC = () => {
     );
   };
 
-  const connectIdx = async () => {
-    console.log(signer);
-  };
-
-  const get = async () => {
-    if (!idx) {
-      return;
-    }
-    console.log(await idx.get("basicProfile"));
-    console.log(await idx.get("cryptoAccounts"));
-    console.log(await idx.get("threeIdKeychain"));
-  };
-
   return (
     <div>
-      <Header />
-      <button id="connect" onClick={connectIdx}>
-        Connect
-      </button>
-      <button id="get" onClick={get}>
-        Get
-      </button>
-      <p>{idx && idx.id}</p>
       <label>Upload file</label>
       <input type="file" id="image" name="image" onChange={handleImageChange} />
       <img src={getPreviewImageSrc(imageFile)} />

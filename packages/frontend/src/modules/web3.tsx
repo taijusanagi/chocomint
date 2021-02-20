@@ -1,5 +1,3 @@
-import React from "react";
-
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 
@@ -21,7 +19,7 @@ export const contract = new ethers.Contract(
 );
 
 export class Signer {
-  public web3: any;
+  public ethers: any;
   public idx: any;
   public connected: boolean = false;
 
@@ -32,14 +30,13 @@ export class Signer {
     const web3EthersProvider = new ethers.providers.Web3Provider(
       web3ModalProvider
     );
-    this.web3 = web3EthersProvider.getSigner();
+    this.ethers = web3EthersProvider.getSigner();
     await threeID.connect(new EthereumAuthProvider(web3ModalProvider, address));
     const threeIDProvider = threeID.getDidProvider();
     await ceramic.setDIDProvider(threeIDProvider);
     this.idx = new IDX({ ceramic, aliases: definitions });
     this.connected = true;
-    return { did: this.idx.id };
+    console.log(address, "check small");
+    return { did: this.idx.id, address };
   };
 }
-
-export const signer = new Signer();

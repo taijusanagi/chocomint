@@ -1,12 +1,12 @@
 {
   "definitions": {
-    "createdChocomint": "kjzl6cwe1jw14bhq0tsx8zyqxggwamlm3hxmwdm71e4rea5q97upre0ib2htaa3",
-    "likedChocomint": "kjzl6cwe1jw1468d23wvrhx11sk0unyivzey6rri9lv48zpgt5ix08ytg5vjiq0",
-    "followedChocomint": "kjzl6cwe1jw147vgts9kd8ovf1s31poaqt49745hw7dq8khk9hk8w81wxqzqtvn"
+    "createdChocomint": "kjzl6cwe1jw147a2q86q626gsbkk2pxpwq2dxx4alnd5jxo644rsxfozzeb7f8c",
+    "likedChocomint": "kjzl6cwe1jw146733qulrz8ysfdvldrbi77s5hh9lmddg0rvliko47i0ysh6do2",
+    "followedChocomint": "kjzl6cwe1jw149mteg24ev91dqjnlna66lwaxi79qama8op1jdnhidvqwab32fi"
   },
   "schemas": {
-    "createdChocomint": "ceramic://k3y52l7qbv1fryepv1li1yf60abhlw023josih1fogroun4edo9ubgez1zl2dmn0g",
-    "likedChocomint": "ceramic://k3y52l7qbv1frxxg1xcys5687ftqbo2z9qycome66413ggpyryk4beczord3jqlfk",
-    "followedChocominter": "ceramic://k3y52l7qbv1fry8i56waola473qnt66vd5skti5v522mo1qy06xtwqaslignrsgsg"
+    "createdChocomint": "ceramic://k3y52l7qbv1frye2af6y8ejls99puqzlo5kjsypa025yikwto1lb4pwe5z7p938qo",
+    "likedChocomint": "ceramic://k3y52l7qbv1fryb4wdxowev34vlh8eg80lk8n1i901eltt1z02o95h0ju0gjc5zwg",
+    "followedChocomint": "ceramic://k3y52l7qbv1frxq8ly3mewo8k4wtbw1380xa8g3uqsdrc8s0txjuvl5m3bzj396o0"
   }
 }

@@ -6,7 +6,6 @@ import Web3Modal from "web3modal";
 import { ethers } from "ethers";
 
 import { abi } from "../Chocomint.json";
-import { Header } from "../components/header";
 
 export const Asset: React.FC = () => {
   const [choco, setChoco] = React.useState<any>({});
@@ -52,7 +51,6 @@ export const Asset: React.FC = () => {
   }, []);
   return (
     <div>
-      <Header />
       <img src={choco.image} />
       <p>{choco.network}</p>
       <p>{choco.name}</p>

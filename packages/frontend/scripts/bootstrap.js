@@ -89,7 +89,7 @@ async function run() {
     schemas: {
       createdChocomint: createdChocomintSchema.commitId.toUrl(),
       likedChocomint: likedChocomintSchema.commitId.toUrl(),
-      followedChocominter: followedChocominterSchema.commitId.toUrl(),
+      followedChocomint: followedChocominterSchema.commitId.toUrl(),
     },
   };
   await writeFile("./src/config.json", JSON.stringify(config));
