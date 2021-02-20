@@ -32,9 +32,9 @@ export const Create: React.FC = () => {
     const did = signer.idx.id;
     setDid(did);
     console.log("did", did);
-    console.log("getting createdChocomint...");
+    console.log("get createdChocomint");
     const oldRecord = await signer.idx.get("createdChocomint");
-    console.log("got createdChocomint");
+    console.log("got createdChocomint done", oldRecord);
     const chocomints = oldRecord ? oldRecord.chocomints : [];
     setCreatedChocomint(chocomints);
   };
@@ -186,11 +186,11 @@ export const Create: React.FC = () => {
 
     if (!createdChocomint.includes(metadataString)) {
       createdChocomint.unshift(metadataString);
-      console.log("setting createdChocomint...");
+      console.log("set createdChocomint", createdChocomint);
       await signer.idx.set("createdChocomint", {
         chocomints: createdChocomint,
       });
-      console.log("set createdChocomint");
+      console.log("set createdChocomint done");
     }
     console.log(
       `Congraturation! Your NFT is on : ${
