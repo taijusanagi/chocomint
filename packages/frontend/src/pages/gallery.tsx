@@ -12,6 +12,7 @@ export const threeID = new ThreeIdConnect();
 
 import { definitions } from "../config.json";
 const idx = new IDX({ ceramic, aliases: definitions });
+import { Header } from "../components/header";
 
 export const Asset: React.FC = () => {
   const [basicProfile, setBasicProfile] = React.useState<any>();
@@ -36,6 +37,7 @@ export const Asset: React.FC = () => {
 
   return (
     <div>
+      <Header />
       {basicProfile && (
         <>
           <p>{basicProfile.name}</p>

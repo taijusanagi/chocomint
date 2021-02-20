@@ -14,6 +14,9 @@ export const threeID = new ThreeIdConnect();
 import { IDX } from "@ceramicstudio/idx";
 
 import { definitions } from "../config.json";
+import { Header } from "../components/header";
+
+import { signer } from "../modules/web3";
 
 type networkType = "LOCAL" | "ETH" | "MATIC" | "BSC";
 
@@ -35,12 +38,6 @@ const networkConfigs = {
     address: "0x38F6F2caE52217101D7CA2a5eC040014b4164E6C",
   },
 };
-
-const Box = require("3box");
-const config = Box.getConfig("0x84E9445f43995b0C6a4D4C1d40bb123571c2Eb06").then(
-  console.log
-);
-console.log(config);
 
 export const Create: React.FC = () => {
   const [ipfs, setIpfs] = React.useState<IPFSType>();
@@ -224,13 +221,7 @@ export const Create: React.FC = () => {
   };
 
   const connectIdx = async () => {
-    const web3Modal = new Web3Modal();
-    const ethProvider = await web3Modal.connect();
-    const addresses = await ethProvider.enable();
-    await threeID.connect(new EthereumAuthProvider(ethProvider, addresses[0]));
-    const threeIDProvider = threeID.getDidProvider();
-    await ceramic.setDIDProvider(threeIDProvider);
-    setIdx(new IDX({ ceramic, aliases: definitions }));
+    console.log(signer);
   };
 
   const get = async () => {
@@ -244,6 +235,7 @@ export const Create: React.FC = () => {
 
   return (
     <div>
+      <Header />
       <button id="connect" onClick={connectIdx}>
         Connect
       </button>

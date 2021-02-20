@@ -6,6 +6,7 @@ import Web3Modal from "web3modal";
 import { ethers } from "ethers";
 
 import { abi } from "../Chocomint.json";
+import { Header } from "../components/header";
 
 export const Asset: React.FC = () => {
   const [choco, setChoco] = React.useState<any>({});
@@ -13,6 +14,7 @@ export const Asset: React.FC = () => {
   const mintNft = async () => {
     const web3Modal = new Web3Modal();
     const web3ModalProvider = await web3Modal.connect();
+
     const web3Provider = new ethers.providers.Web3Provider(web3ModalProvider);
     const signer = web3Provider.getSigner();
     const contract = new ethers.Contract(choco.address, abi, signer);
@@ -50,6 +52,7 @@ export const Asset: React.FC = () => {
   }, []);
   return (
     <div>
+      <Header />
       <img src={choco.image} />
       <p>{choco.network}</p>
       <p>{choco.name}</p>
