@@ -31,8 +31,19 @@ export const getContract = (address: string, chainId?: ChainIdType) => {
   return new ethers.Contract(address, abi, provider);
 };
 
+const createClient = require("ipfs-http-client");
+
+//TODO: This endpoint is too slow
+export const ipfs = createClient({
+  host: "ipfs.infura.io",
+  port: 5001,
+  protocol: "https",
+});
+
+//This is not working in iframe, but keeps this script for future use
 export const useIpfs = () => {
   const [ipfs, setIpfs] = React.useState<IPFS>();
+  console.log(ipfs);
   React.useEffect(() => {
     if (!ipfs) {
       ipfsInstance.create().then((created) => {

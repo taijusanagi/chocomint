@@ -6,8 +6,6 @@
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
     "start": "cross-env BROWSER=none craco start",
     "build": "craco build",
-    "predeploy": "yarn build",
-    "deploy": "gh-pages -d build",
     "storybook": "start-storybook -p 6006 -s public",
     "build-storybook": "build-storybook -s public"
   },

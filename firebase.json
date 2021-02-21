@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "predeploy": "yarn workspace frontend build",
+    "public": "packages/frontend/build",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

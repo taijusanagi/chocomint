@@ -10,6 +10,7 @@ import {
   ChainIdType,
   getNetworkConfig,
   ipfsBaseUrl,
+  ipfs,
 } from "../modules/web3";
 
 export const Create: React.FC = () => {
@@ -24,8 +25,6 @@ export const Create: React.FC = () => {
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initial_price, setInitialPrice] = React.useState("");
-
-  const ipfs = useIpfs() as IPFS;
 
   const connect = async () => {
     const idx = await getIdxSigner();
@@ -197,7 +196,7 @@ export const Create: React.FC = () => {
 
   return (
     <div>
-      {!did || !ipfs ? (
+      {!did ? (
         <button id="connect" onClick={connect}>
           Connect
         </button>
