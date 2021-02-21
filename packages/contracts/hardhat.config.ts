@@ -2,11 +2,19 @@ import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-typechain";
 
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey =
+  process.env.PRIVATE_KEY ||
+  "0x0000000000000000000000000000000000000000000000000000000000000000"; //avoid hardhat error
 
 module.exports = {
   solidity: {
-    version: "0.5.17",
+    version: "0.6.2",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
   },
   networks: {
     mainnet: {

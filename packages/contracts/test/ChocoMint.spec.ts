@@ -28,10 +28,12 @@ describe("Token contract", function () {
     const [signer] = await ethers.getSigners();
     const iss = signer.address.toLowerCase();
     const choco = {
-      name: "name",
-      description: "description",
-      image: "ipfs://QmSFz63TvjvzeZApFi4Eq4XKv6E7PkzeLyzEFE7vwGXhcp",
-      animation_url: "",
+      name: "The Innovators Key #500",
+      description: "",
+      image:
+        "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89",
+      animation_url:
+        "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89",
       initial_price: "10000",
       fees: ["100"],
       recipients: [iss],
@@ -80,20 +82,20 @@ describe("Token contract", function () {
       ethers.utils.arrayify(choco.root)
     );
     await chocomint.mint(
-      [
-        choco.name,
-        choco.description,
-        choco.image,
-        choco.animation_url,
-        choco.initial_price,
-        choco.fees,
-        choco.recipients,
-        choco.iss,
-        choco.sub,
-        choco.root,
-        choco.proof,
-        choco.signature,
-      ],
+      // [
+      // choco.name,
+      // choco.description,
+      // choco.image,
+      // choco.animation_url,
+      // choco.initial_price,
+      // choco.fees,
+      // choco.recipients,
+      // choco.iss,
+      // choco.sub,
+      // choco.root,
+      // choco.proof,
+      // choco.signature,
+      // ],
       {
         value: choco.initial_price,
       }

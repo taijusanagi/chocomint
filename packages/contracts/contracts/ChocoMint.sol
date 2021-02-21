@@ -1,83 +1,85 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.17;
+pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/drafts/Counters.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "./ERC721.sol";
 
 import "hardhat/console.sol";
 
 contract Chocomint is ERC721 {
-  using Counters for Counters.Counter;
   using ECDSA for bytes32;
 
-  Counters.Counter public totalSupply;
+  uint256 public totalSupply;
 
-  struct Choco {
-    string name;
-    string description;
-    string image;
-    string animation_url;
-    uint256 initial_price;
-    uint256[] fees;
-    address[] recipients;
-    address payable iss;
-    address sub;
-    bytes32 root;
-    bytes32[] proof;
-    bytes signature;
-  }
+  // struct Choco {
+  //   string strings;
+  // string description;
+  // string image;
+  // string animation_url;
+  // address payable iss;
+  // address sub;
+  // bytes32 root;
+  // bytes32[] proof;
+  // }
 
-  function uri() public view returns (string memory str) {
-    return "";
-  }
+  mapping(uint256 => bytes) bytesMemory;
+  mapping(uint256 => bytes32[2]) bytes32Memory;
 
-  mapping(uint256 => Choco) public chocos;
+  // bytes signature;
+  // uint256 initial_price;
+  // uint256[] fees;
+  // address[] recipients;
+
+  // mapping(uint256 => Choco) public chocos;
 
   string public name = "NFT";
   string public symbol = "NFT";
 
-  function mint(Choco memory choco) public payable {
-    require(msg.value == choco.initial_price, "Must pay initial_price");
-    require(
-      choco.fees.length <= choco.recipients.length,
-      "Must be same length"
-    );
-    for (uint256 i = 0; i < choco.fees.length; i++) {
-      require(choco.fees[i] != 0, "Must not be zero");
-      require(choco.recipients[i] != address(0x0), "Must not be null address");
-    }
-    if (choco.sub != address(0x0)) {
-      require(msg.sender == choco.sub, "Must be minted by sub");
-    }
-    bytes32 hash =
-      keccak256(
-        abi.encodePacked(
-          getChainId(),
-          address(this),
-          choco.name,
-          choco.description,
-          choco.image,
-          choco.animation_url,
-          choco.initial_price,
-          choco.fees,
-          choco.recipients,
-          choco.iss,
-          choco.sub
-        )
-      );
-    bool hashVerified = MerkleProof.verify(choco.proof, choco.root, hash);
-    require(hashVerified, "Must be included in merkle tree");
-    bytes32 messageHash = choco.root.toEthSignedMessageHash();
-    address signer = messageHash.recover(choco.signature);
-    require(signer == choco.iss, "Must be signed by iss");
-    uint256 tokenId = uint256(keccak256(abi.encodePacked(hash, choco.root)));
-    chocos[tokenId] = choco;
-    _mint(msg.sender, tokenId);
-    choco.iss.transfer(choco.initial_price);
-    totalSupply.increment();
+  mapping(address => uint256) test;
+
+  function mint() public payable {
+    // require(msg.value == choco.initial_price, "Must pay initial_price");
+    // require(
+    //   choco.fees.length <= choco.recipients.length,
+    //   "Must be same length"
+    // );
+    // for (uint256 i = 0; i < choco.fees.length; i++) {
+    //   require(choco.fees[i] != 0, "Must not be zero");
+    //   require(choco.recipients[i] != address(0x0), "Must not be null address");
+    // }
+    // if (choco.sub != address(0x0)) {
+    //   require(msg.sender == choco.sub, "Must be minted by sub");
+    // }
+    // bytes32 hash =
+    //   keccak256(
+    //     abi.encodePacked(
+    //       uint256(31337), //chainId
+    //       address(this),
+    //       choco.name,
+    //       choco.description,
+    //       choco.image,
+    //       choco.animation_url,
+    //       choco.initial_price,
+    //       choco.fees,
+    //       choco.recipients,
+    //       choco.iss,
+    //       choco.sub
+    //     )
+    //   );
+    // bool hashVerified = MerkleProof.verify(choco.proof, choco.root, hash);
+    // require(hashVerified, "Must be included in merkle tree");
+    // bytes32 messageHash = choco.root.toEthSignedMessageHash();
+    // address signer = messageHash.recover(choco.signature);
+    // require(signer == choco.iss, "Must be signed by iss");
+    // uint256 tokenId = uint256(keccak256(abi.encodePacked(hash, choco.root)));
+    // chocos[1] = choco;
+    // bytesMemory[1] = test;
+    // bytes32Memory[1] = tes2;
+    _mint(msg.sender, 1);
+    // choco.iss.transfer(choco.initial_price);
+    // totalSupply++;
   }
 
   function tokenURI(uint256 tokenId) public view returns (string memory) {
@@ -93,66 +95,66 @@ contract Chocomint is ERC721 {
   }
 
   function getMetadata(uint256 tokenId) public view returns (string memory) {
-    Choco memory choco = chocos[tokenId];
-    bytes memory anchor;
-    bytes memory strings;
-    bytes memory uints;
-    bytes memory addresses;
-    bytes memory verification;
-    {
-      anchor = abi.encodePacked(
-        '{"chainId":"',
-        uintToString(getChainId()),
-        '","contractAddress":"',
-        bytesToString(abi.encodePacked(address(this))),
-        '","tokenId":"',
-        uintToString(tokenId)
-      );
-    }
-    {
-      strings = abi.encodePacked(
-        '","name":"',
-        choco.name,
-        '","description":"',
-        choco.description,
-        '","image":"',
-        choco.image,
-        '","animation_url":"',
-        choco.animation_url
-      );
-    }
-    {
-      uints = abi.encodePacked(
-        '","initial_price":"',
-        uintToString(choco.initial_price),
-        '","fees":[',
-        uintArrayToString(choco.fees)
-      );
-    }
-    {
-      addresses = abi.encodePacked(
-        '],"recipients":[',
-        addressArrayToString(choco.recipients),
-        '],"iss":"',
-        bytesToString(abi.encodePacked(choco.iss)),
-        '","sub":"',
-        bytesToString(abi.encodePacked(choco.sub))
-      );
-    }
-    {
-      verification = abi.encodePacked(
-        '","root":"',
-        bytesToString(abi.encodePacked(choco.root)),
-        '","proof":[',
-        bytes32ArrayToString(choco.proof),
-        '],"signature":"',
-        bytesToString(choco.signature),
-        '"}'
-      );
-    }
-
-    return
-      string(abi.encodePacked(anchor, strings, uints, addresses, verification));
+    return "test";
+    // Choco memory choco = chocos[tokenId];
+    // bytes memory anchor;
+    // bytes memory strings;
+    // bytes memory uints;
+    // bytes memory addresses;
+    // bytes memory verification;
+    // {
+    //   anchor = abi.encodePacked(
+    //     '{"chainId":"',
+    //     uintToString(getChainId()),
+    //     '","contractAddress":"',
+    //     bytesToString(abi.encodePacked(address(this))),
+    //     '","tokenId":"',
+    //     uintToString(tokenId)
+    //   );
+    // }
+    // {
+    //   strings = abi.encodePacked(
+    //     '","name":"',
+    //     choco.name,
+    //     '","description":"',
+    //     choco.description,
+    //     '","image":"',
+    //     choco.image,
+    //     '","animation_url":"',
+    //     choco.animation_url
+    //   );
+    // }
+    // {
+    //   uints = abi.encodePacked(
+    //     '","initial_price":"',
+    //     uintToString(choco.initial_price),
+    //     '","fees":[',
+    //     uintArrayToString(choco.fees)
+    //   );
+    // }
+    // {
+    //   addresses = abi.encodePacked(
+    //     '],"recipients":[',
+    //     addressArrayToString(choco.recipients),
+    //     '],"iss":"',
+    //     bytesToString(abi.encodePacked(choco.iss)),
+    //     '","sub":"',
+    //     bytesToString(abi.encodePacked(choco.sub))
+    //   );
+    // }
+    // {
+    //   verification = abi.encodePacked(
+    //     '","root":"',
+    //     bytesToString(abi.encodePacked(choco.root)),
+    //     '","proof":[',
+    //     bytes32ArrayToString(choco.proof),
+    //     '],"signature":"',
+    //     bytesToString(choco.signature),
+    //     '"}'
+    //   );
+    // }
+    // return
+    //   string(abi.encodePacked(anchor, strings, uints, addresses, verification));
   }
 
   function getChainId() public pure returns (uint256) {
