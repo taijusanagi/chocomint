@@ -13,31 +13,29 @@ contract Chocomint is ERC721 {
 
   uint256 public totalSupply;
 
-  // struct Choco {
-  //   string strings;
-  // string description;
-  // string image;
-  // string animation_url;
-  // address payable iss;
-  // address sub;
-  // bytes32 root;
-  // bytes32[] proof;
-  // }
+  struct Choco {
+    bytes32 name;
+    bytes32 image;
+    bytes32 animation_url;
+    bytes32 external_url;
+    // address payable creator;
+    // address minter;
+    // bytes32 root;
+    // bytes32[] proof;
+  }
 
-  mapping(uint256 => bytes) bytesMemory;
-  mapping(uint256 => bytes32[2]) bytes32Memory;
-
-  // bytes signature;
-  // uint256 initial_price;
-  // uint256[] fees;
-  // address[] recipients;
-
-  // mapping(uint256 => Choco) public chocos;
+  mapping(uint256 => Choco) public chocos;
 
   string public name = "NFT";
   string public symbol = "NFT";
 
-  mapping(address => uint256) test;
+  function testSet2(Choco memory choco) public payable {
+    chocos[1] = choco;
+  }
+
+  function testGet() public view returns (string memory) {
+    return string(abi.encodePacked(chocos[1].name));
+  }
 
   function mint() public payable {
     // require(msg.value == choco.initial_price, "Must pay initial_price");
