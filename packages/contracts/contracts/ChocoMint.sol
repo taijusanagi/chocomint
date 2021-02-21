@@ -18,26 +18,29 @@ contract Chocomint is ERC721 {
     bytes32 image;
     bytes32 animation_url;
     bytes32 external_url;
-    // address payable creator;
-    // address minter;
+    address payable iss;
+    address sub;
     // bytes32 root;
     // bytes32[] proof;
+    bytes32 s;
+    bytes32 r;
+    uint8 v;
   }
 
   mapping(uint256 => Choco) public chocos;
+  mapping(uint256 => bytes32) public animation_urls;
+  mapping(uint256 => bytes32) public external_urls;
+  mapping(uint256 => bytes32[]) public merkles;
 
   string public name = "NFT";
   string public symbol = "NFT";
 
-  function testSet2(Choco memory choco) public payable {
-    chocos[1] = choco;
-  }
-
-  function testGet() public view returns (string memory) {
-    return string(abi.encodePacked(chocos[1].name));
-  }
-
-  function mint() public payable {
+  function mint(Choco memory choco, bytes32[] memory merkle)
+    public
+    payable
+  // bytes32 animation_url,
+  // bytes32 external_url
+  {
     // require(msg.value == choco.initial_price, "Must pay initial_price");
     // require(
     //   choco.fees.length <= choco.recipients.length,
@@ -72,10 +75,17 @@ contract Chocomint is ERC721 {
     // address signer = messageHash.recover(choco.signature);
     // require(signer == choco.iss, "Must be signed by iss");
     // uint256 tokenId = uint256(keccak256(abi.encodePacked(hash, choco.root)));
-    // chocos[1] = choco;
+    if (merkle.length > 0) {
+      merkles[1] = merkle;
+    }
+
+    // animation_urls[1] = animation_url;
+    // external_urls[1] = external_url;
+
+    chocos[1] = choco;
     // bytesMemory[1] = test;
     // bytes32Memory[1] = tes2;
-    _mint(msg.sender, 1);
+    // _mint(msg.sender, 1);
     // choco.iss.transfer(choco.initial_price);
     // totalSupply++;
   }
