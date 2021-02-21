@@ -33,14 +33,14 @@ export const getContract = (address: string, chainId?: ChainIdType) => {
 
 const createClient = require("ipfs-http-client");
 
-//TODO: This endpoint is too slow
+//this endpoint is too slow
 export const ipfs = createClient({
   host: "ipfs.infura.io",
   port: 5001,
   protocol: "https",
 });
 
-//This is not working in iframe, but keeps this script for future use
+//This is not working in iframe
 export const useIpfs = () => {
   const [ipfs, setIpfs] = React.useState<IPFS>();
   console.log(ipfs);

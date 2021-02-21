@@ -10,7 +10,6 @@ import {
   ChainIdType,
   getNetworkConfig,
   ipfsBaseUrl,
-  ipfs,
 } from "../modules/web3";
 
 export const Create: React.FC = () => {
@@ -25,6 +24,8 @@ export const Create: React.FC = () => {
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initial_price, setInitialPrice] = React.useState("");
+
+  const ipfs = useIpfs() as IPFS;
 
   const connect = async () => {
     const idx = await getIdxSigner();
@@ -109,7 +110,7 @@ export const Create: React.FC = () => {
 
   const createNft = async () => {
     console.log("createNft");
-    if (!createdChocomint || !image || !animation_url) {
+    if (!createdChocomint || !image) {
       console.log("not ready");
       return;
     }
