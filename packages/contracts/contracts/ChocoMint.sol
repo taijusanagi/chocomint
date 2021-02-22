@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity ^0.5.2;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
@@ -10,38 +10,35 @@ import "hardhat/console.sol";
 
 contract Chocomint is ERC721 {
   using ECDSA for bytes32;
-
   uint256 public totalSupply;
 
-  struct Choco {
-    bytes32 name;
-    bytes32 image;
-    bytes32 animation_url;
-    bytes32 external_url;
-    address payable iss;
-    address sub;
-    // bytes32 root;
-    // bytes32[] proof;
-    bytes32 s;
-    bytes32 r;
-    uint8 v;
-  }
+  mapping(uint256 => bytes32) public name;
+  mapping(uint256 => bytes32) public image;
+  mapping(uint256 => bytes32) public s;
+  mapping(uint256 => bytes32) public r;
+  mapping(uint256 => address) public iss;
+  mapping(uint256 => address) public sub;
+  mapping(uint256 => uint256) public fee;
+  mapping(uint256 => uint256) public v;
+  mapping(uint256 => bytes32[]) public merkleProof;
 
-  mapping(uint256 => Choco) public chocos;
-  mapping(uint256 => bytes32) public animation_urls;
-  mapping(uint256 => bytes32) public external_urls;
-  mapping(uint256 => bytes32[]) public merkles;
+  // string public name = "NFT";
+  // string public symbol = "NFT";
 
-  string public name = "NFT";
-  string public symbol = "NFT";
-
-  function mint(Choco memory choco, bytes32[] memory merkle)
-    public
-    payable
-  // bytes32 animation_url,
-  // bytes32 external_url
-  {
-    // require(msg.value == choco.initial_price, "Must pay initial_price");
+  function mint(
+    bytes32 _name,
+    bytes32 _image,
+    bytes32 _s,
+    bytes32 _r,
+    address _iss,
+    address _sub,
+    uint256 _fee,
+    uint256 _v,
+    bytes32[] memory _merkleProof
+  ) public payable {
+    if (_fee > 0) {
+      require(msg.value == _fee, "Must pay initial_price");
+    }
     // require(
     //   choco.fees.length <= choco.recipients.length,
     //   "Must be same length"
@@ -50,39 +47,60 @@ contract Chocomint is ERC721 {
     //   require(choco.fees[i] != 0, "Must not be zero");
     //   require(choco.recipients[i] != address(0x0), "Must not be null address");
     // }
-    // if (choco.sub != address(0x0)) {
-    //   require(msg.sender == choco.sub, "Must be minted by sub");
-    // }
-    // bytes32 hash =
-    //   keccak256(
-    //     abi.encodePacked(
-    //       uint256(31337), //chainId
-    //       address(this),
-    //       choco.name,
-    //       choco.description,
-    //       choco.image,
-    //       choco.animation_url,
-    //       choco.initial_price,
-    //       choco.fees,
-    //       choco.recipients,
-    //       choco.iss,
-    //       choco.sub
-    //     )
-    //   );
-    // bool hashVerified = MerkleProof.verify(choco.proof, choco.root, hash);
+    if (_sub != address(0x0)) {
+      require(msg.sender == _sub, "Must be minted by sub");
+    }
+
+    bytes32 hash =
+      keccak256(
+        abi.encodePacked(
+          uint256(31337), //chainId
+          address(this),
+          _name,
+          _iss
+        )
+      );
+
+    bytes32 hashSig = keccak256(abi.encodePacked(hash, _image, _sub, _fee));
+    // bool hashVerified = MerkleProof.verify(_merkleProof[1:], _merkleProof[0], hash);
     // require(hashVerified, "Must be included in merkle tree");
-    // bytes32 messageHash = choco.root.toEthSignedMessageHash();
-    // address signer = messageHash.recover(choco.signature);
-    // require(signer == choco.iss, "Must be signed by iss");
-    // uint256 tokenId = uint256(keccak256(abi.encodePacked(hash, choco.root)));
-    if (merkle.length > 0) {
-      merkles[1] = merkle;
+
+    address signer =
+      ecrecover(
+        keccak256(
+          abi.encodePacked(
+            uint256(31337), //chainId
+            address(this),
+            _name,
+            _image,
+            _iss
+          )
+        )
+          .toEthSignedMessageHash(),
+        uint8(_v),
+        _r,
+        _s
+      );
+    // require(signer == _iss, "Must be signed by iss");
+    uint256 tokenId = uint256(keccak256(abi.encodePacked(hash)));
+
+    name[tokenId] = _name;
+    image[tokenId] = _image;
+    s[tokenId] = _s;
+    r[tokenId] = _r;
+    iss[tokenId] = _iss;
+    sub[tokenId] = _sub;
+    fee[tokenId] = _fee;
+    v[tokenId] = _v;
+
+    if (_merkleProof.length > 0) {
+      merkleProof[tokenId] = _merkleProof;
     }
 
     // animation_urls[1] = animation_url;
     // external_urls[1] = external_url;
 
-    chocos[1] = choco;
+    // chocos[1] = choco;
     // bytesMemory[1] = test;
     // bytes32Memory[1] = tes2;
     // _mint(msg.sender, 1);

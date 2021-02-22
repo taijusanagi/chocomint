@@ -8,7 +8,7 @@ const privateKey =
 
 module.exports = {
   solidity: {
-    version: "0.6.2",
+    version: "0.5.17",
     settings: {
       optimizer: {
         enabled: true,
