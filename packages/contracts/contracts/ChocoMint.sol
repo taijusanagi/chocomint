@@ -22,7 +22,6 @@ contract Chocomint is ERC721 {
 
   string public name;
   string public symbol;
-  string constant ipfsBaseUrl = "ipfs://";
 
   constructor(string memory _name, string memory _symbol) public {
     name = _name;
@@ -65,24 +64,20 @@ contract Chocomint is ERC721 {
     totalSupply++;
   }
 
-  function getChainId() private pure returns (uint256) {
-    uint256 id;
-    assembly {
-      id := chainid()
+  function bytes32ToString(bytes32 _bytes32)
+    public
+    pure
+    returns (string memory)
+  {
+    uint8 i = 0;
+    while (i < 32 && _bytes32[i] != 0) {
+      i++;
     }
-    return id;
-  }
-
-  function tokenURI(uint256 tokenId) external view returns (string memory) {
-    require(_exists(tokenId), "token must exist");
-    console.log(getMetadata(tokenId));
-    return
-      string(
-        abi.encodePacked(
-          ipfsBaseUrl,
-          getCid(abi.encodePacked(getMetadata(tokenId)))
-        )
-      );
+    bytes memory bytesArray = new bytes(i);
+    for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
+      bytesArray[i] = _bytes32[i];
+    }
+    return string(bytesArray);
   }
 
   function getMetadata(uint256 tokenId) public view returns (string memory) {
@@ -96,10 +91,14 @@ contract Chocomint is ERC721 {
           '","tokenId":"',
           uintToString(tokenId),
           '","name":"',
-          string(abi.encodePacked(nameMemory[tokenId])),
+          bytes32ToString((nameMemory[tokenId])),
           '","image":"',
-          bytesToString(abi.encodePacked(imageMemory[tokenId])),
-          '","signatre":"',
+          string(
+            addIpfsBaseUrlPrefix(
+              bytesToBase58(addSha256FunctionCodePrefix(imageMemory[tokenId]))
+            )
+          ),
+          '","signature":"',
           bytesToString(
             abi.encodePacked(
               rMemory[tokenId],
@@ -108,39 +107,74 @@ contract Chocomint is ERC721 {
             )
           ),
           '","iss":"',
-          bytesToString(abi.encodePacked(issMemory[tokenId]))
+          bytesToString(abi.encodePacked(issMemory[tokenId])),
+          '"}'
         )
       );
   }
 
-  function getCid(bytes memory input) private view returns (bytes memory) {
-    bytes memory alphabet =
-      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    bytes memory len = lengthEncode(input.length);
-    bytes memory len2 = lengthEncode(input.length + 4 + 2 * len.length);
-    bytes memory source =
-      abi.encodePacked(
-        hex"1220",
+  function tokenURI(uint256 tokenId) external view returns (string memory) {
+    require(_exists(tokenId), "token must exist");
+    string memory metadata = getMetadata(tokenId);
+    console.log(metadata);
+    bytes32 digest = digetIpfsContent(abi.encodePacked(metadata));
+
+    return
+      string(
         abi.encodePacked(
-          sha256(
-            abi.encodePacked(
-              hex"0a",
-              len2,
-              hex"080212",
-              len,
-              input,
-              hex"18",
-              len
-            )
+          addIpfsBaseUrlPrefix(
+            bytesToBase58(addSha256FunctionCodePrefix(digest))
           )
         )
       );
+  }
+
+  function getChainId() private pure returns (uint256) {
+    uint256 id;
+    assembly {
+      id := chainid()
+    }
+    return id;
+  }
+
+  function addIpfsBaseUrlPrefix(bytes memory input)
+    private
+    view
+    returns (bytes memory)
+  {
+    return abi.encodePacked("ipfs://", input);
+  }
+
+  function addSha256FunctionCodePrefix(bytes32 input)
+    private
+    view
+    returns (bytes memory)
+  {
+    return abi.encodePacked(hex"1220", input);
+  }
+
+  function digetIpfsContent(bytes memory input) private view returns (bytes32) {
+    bytes memory len = lengthEncode(input.length);
+    bytes memory len2 = lengthEncode(input.length + 4 + 2 * len.length);
+    return
+      sha256(
+        abi.encodePacked(hex"0a", len2, hex"080212", len, input, hex"18", len)
+      );
+  }
+
+  function bytesToBase58(bytes memory input)
+    private
+    view
+    returns (bytes memory)
+  {
+    bytes memory alphabet =
+      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     uint8[] memory digits = new uint8[](46);
     bytes memory output = new bytes(46);
     digits[0] = 0;
     uint8 digitlength = 1;
-    for (uint256 i = 0; i < source.length; ++i) {
-      uint256 carry = uint8(source[i]);
+    for (uint256 i = 0; i < input.length; ++i) {
+      uint256 carry = uint8(input[i]);
       for (uint256 j = 0; j < digitlength; ++j) {
         carry += uint256(digits[j]) * 256;
         digits[j] = uint8(carry % 58);

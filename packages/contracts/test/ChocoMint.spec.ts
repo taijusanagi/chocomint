@@ -60,8 +60,10 @@ describe("Token contract", function () {
       signature,
       iss,
     });
-    console.log(metadataString);
+    console.log(await chocomint.getMetadata(tokenId));
+    expect(await chocomint.getMetadata(tokenId)).to.equal(metadataString);
     const metadataBuffer = Buffer.from(metadataString);
+    console.log(metadataString);
     const cid = await ipfsHash.of(metadataBuffer);
     const tokenURI = await chocomint.tokenURI(tokenId);
     expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
