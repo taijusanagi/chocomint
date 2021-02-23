@@ -4,108 +4,57 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
-import "./ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import "hardhat/console.sol";
 
-contract Chocomint is ERC721 {
+contract ChocomintMaster is ERC721 {
   using ECDSA for bytes32;
   uint256 public totalSupply;
 
-  mapping(uint256 => bytes32) public name;
-  mapping(uint256 => bytes32) public image;
-  mapping(uint256 => bytes32) public s;
-  mapping(uint256 => bytes32) public r;
-  mapping(uint256 => address) public iss;
-  mapping(uint256 => address) public sub;
-  mapping(uint256 => uint256) public fee;
-  mapping(uint256 => uint256) public v;
-  mapping(uint256 => bytes32[]) public merkleProof;
+  mapping(uint256 => bytes32) public nameMemory;
+  mapping(uint256 => bytes32) public imageMemory;
+  mapping(uint256 => bytes32) public sMemory;
+  mapping(uint256 => bytes32) public rMemory;
+  mapping(uint256 => uint256) public vMemory;
+  mapping(uint256 => uint256) public feeMemory;
+  mapping(uint256 => address) public issMemory;
 
-  // string public name = "NFT";
-  // string public symbol = "NFT";
+  uint256 public constant chainId = 31337;
+  string public constant name = "ChocomintMaster";
+  string public constant symbol = "CMM";
 
   function mint(
     bytes32 _name,
     bytes32 _image,
     bytes32 _s,
     bytes32 _r,
-    address _iss,
-    address _sub,
-    uint256 _fee,
     uint256 _v,
-    bytes32[] memory _merkleProof
+    uint256 _fee,
+    address payable _iss
   ) public payable {
     if (_fee > 0) {
-      require(msg.value == _fee, "Must pay initial_price");
+      require(msg.value == _fee, "value must be equal to fee");
     }
-    // require(
-    //   choco.fees.length <= choco.recipients.length,
-    //   "Must be same length"
-    // );
-    // for (uint256 i = 0; i < choco.fees.length; i++) {
-    //   require(choco.fees[i] != 0, "Must not be zero");
-    //   require(choco.recipients[i] != address(0x0), "Must not be null address");
-    // }
-    if (_sub != address(0x0)) {
-      require(msg.sender == _sub, "Must be minted by sub");
-    }
-
     bytes32 hash =
       keccak256(
-        abi.encodePacked(
-          uint256(31337), //chainId
-          address(this),
-          _name,
-          _iss
-        )
+        abi.encodePacked(chainId, address(this), _name, _image, _fee, _iss)
       );
-
-    bytes32 hashSig = keccak256(abi.encodePacked(hash, _image, _sub, _fee));
-    // bool hashVerified = MerkleProof.verify(_merkleProof[1:], _merkleProof[0], hash);
-    // require(hashVerified, "Must be included in merkle tree");
-
-    address signer =
-      ecrecover(
-        keccak256(
-          abi.encodePacked(
-            uint256(31337), //chainId
-            address(this),
-            _name,
-            _image,
-            _iss
-          )
-        )
-          .toEthSignedMessageHash(),
-        uint8(_v),
-        _r,
-        _s
-      );
-    // require(signer == _iss, "Must be signed by iss");
-    uint256 tokenId = uint256(keccak256(abi.encodePacked(hash)));
-
-    name[tokenId] = _name;
-    image[tokenId] = _image;
-    s[tokenId] = _s;
-    r[tokenId] = _r;
-    iss[tokenId] = _iss;
-    sub[tokenId] = _sub;
-    fee[tokenId] = _fee;
-    v[tokenId] = _v;
-
-    if (_merkleProof.length > 0) {
-      merkleProof[tokenId] = _merkleProof;
-    }
-
-    // animation_urls[1] = animation_url;
-    // external_urls[1] = external_url;
-
-    // chocos[1] = choco;
-    // bytesMemory[1] = test;
-    // bytes32Memory[1] = tes2;
-    // _mint(msg.sender, 1);
-    // choco.iss.transfer(choco.initial_price);
-    // totalSupply++;
+    require(
+      ecrecover(hash.toEthSignedMessageHash(), uint8(_v), _r, _s) == _iss,
+      "signer must be equal to iss"
+    );
+    uint256 tokenId = uint256(hash);
+    nameMemory[tokenId] = _name;
+    imageMemory[tokenId] = _image;
+    sMemory[tokenId] = _s;
+    rMemory[tokenId] = _r;
+    vMemory[tokenId] = _v;
+    feeMemory[tokenId] = _fee;
+    issMemory[tokenId] = _iss;
+    _mint(msg.sender, tokenId);
+    _iss.transfer(_fee);
+    totalSupply++;
   }
 
   function tokenURI(uint256 tokenId) public view returns (string memory) {
