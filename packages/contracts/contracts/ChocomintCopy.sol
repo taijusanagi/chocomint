@@ -10,56 +10,67 @@ import "hardhat/console.sol";
 contract ChocomintCopy is ERC1155, ChocomintLibrary {
   ChocomintOriginal public chocomintOriginal;
 
-  // =C5*E5/D5/(A5+F5+C$2)
+  uint256 public constant BASE_RATIO = 1000000;
 
   uint256 public constant magic = 100;
   uint256 public constant royality = 100000;
   uint256 public constant weight = 100000;
-  uint256 public constant base = 1000000;
 
   uint256 supply = 0;
   uint256 deposit = 1000000000000000000;
 
-  mapping(uint256 => uint256) soldAt;
+  mapping(uint256 => mapping(uint256 => uint256)) priceRecords;
+  mapping(uint256 => uint256) supplies;
+  mapping(uint256 => uint256) pools;
 
   constructor(ChocomintOriginal _chocomintOriginal) ERC1155("") {
     chocomintOriginal = _chocomintOriginal;
   }
 
-  function getMintPrice() public view returns (uint256) {
-    // return deposit / ((weight * (supply + magic)) / base);
-
-    uint256 temp1 = supply + magic;
-    uint256 temp2 = deposit / (temp1 * weight);
-    return temp2 * base;
+  function getNewMintPrice(
+    uint256 _pool,
+    uint256 _supply,
+    uint256 _magic,
+    uint256 _weight
+  ) public view returns (uint256) {
+    return (_pool / ((_supply + _magic) * weight)) * BASE_RATIO;
   }
 
-  function getBurnPrice() public view returns (uint256) {
-    uint256 temp1 = supply + magic - 1;
-    uint256 temp2 = deposit / (temp1 * weight);
-    uint256 temp3 = temp2 * base;
-    console.log("temp3", temp3);
-    uint256 royalityFee = (temp3 * weight) / base;
-    uint256 addedToDeposit = temp3 - royalityFee;
-    return addedToDeposit;
+  function getRoyalityFromPrice(uint256 _price, uint256 _ratio)
+    public
+    pure
+    returns (uint256)
+  {
+    require(_ratio < BASE_RATIO, "ratio must be less than base");
+    return (_price * _ratio) / BASE_RATIO;
+  }
+
+  function getPoolFromPrice(uint256 _price, uint256 _ratio)
+    public
+    pure
+    returns (uint256)
+  {
+    require(_ratio < BASE_RATIO, "ratio must be less than base");
+    return (_price * (BASE_RATIO - _ratio)) / BASE_RATIO;
   }
 
   function mint(uint256 _originalId) public {
-    console.log(" ");
-    console.log("mint start");
-    uint256 price = getMintPrice();
-    console.log("supply", supply);
-    console.log("deposit", deposit);
-    console.log("price", price);
+    uint256 currentSupply = supplies[_originalId];
+    console.log("mint start current supply", currentSupply);
+    uint256 currentPool = pools[_originalId] > 0 ? pools[_originalId] : deposit;
+    uint256 price =
+      priceRecords[_originalId][currentSupply] > 0
+        ? priceRecords[_originalId][currentSupply]
+        : getNewMintPrice(currentPool, currentSupply, magic, weight);
 
-    uint256 royalityFee = (price * weight) / base;
-    console.log("royalityFee", royalityFee);
-    uint256 addedToDeposit = price - royalityFee;
-    console.log("addedToDeposit", addedToDeposit);
-    supply++;
-    soldAt[supply] = addedToDeposit;
-    console.log("now supply is changed to ", supply);
-    deposit = deposit + addedToDeposit;
+    console.log("price", price);
+    priceRecords[_originalId][currentSupply] = price;
+    uint256 royalityFee = getRoyalityFromPrice(price, royality);
+    uint256 poolIncrease = getPoolFromPrice(price, royality);
+
+    supplies[_originalId]++;
+    console.log("now supply is changed to ", supplies[_originalId]);
+    deposit += poolIncrease;
     console.log("now deposit is changed to ", deposit);
     require(
       chocomintOriginal.ownerOf(_originalId) != address(0x0),
@@ -70,18 +81,15 @@ contract ChocomintCopy is ERC1155, ChocomintLibrary {
   }
 
   function burn(uint256 _originalId) public {
-    console.log(" ");
-    console.log("burn start");
-    uint256 price = soldAt[supply];
-    console.log("current supply", supply);
-    console.log("deposit", deposit);
-    console.log("price", price);
+    uint256 currentSupply = supplies[_originalId];
+    console.log("burn start current supply", currentSupply);
+    uint256 price =
+      getPoolFromPrice(priceRecords[_originalId][currentSupply - 1], royality);
 
-    supply--;
-    console.log("now supply is changed to ", supply);
+    console.log("price", price);
     deposit = deposit - price;
     console.log("now deposit is changed to ", deposit);
-
+    supplies[_originalId]--;
     require(
       chocomintOriginal.ownerOf(_originalId) != address(0x0),
       "token must exist"
