@@ -6,116 +6,64 @@ import * as ipfsHash from "ipfs-only-hash";
 chai.use(solidity);
 const { expect } = chai;
 
-import { MerkleTree } from "merkletreejs";
-const keccak256 = require("keccak256");
-
 describe("Token contract", function () {
   let chocomint;
   const contractName = "NFT";
   const contractSymbol = "NFT";
   this.beforeAll("initialization.", async function () {
     const Chocomint = await ethers.getContractFactory("Chocomint");
-    chocomint = await Chocomint.deploy();
+    chocomint = await Chocomint.deploy(contractName, contractSymbol);
   });
 
-  
+  it("case: deploy is ok / check: name, symbol", async function () {
+    expect(await chocomint.name()).to.equal(contractName);
+    expect(await chocomint.symbol()).to.equal(contractSymbol);
+  });
 
-  // it("case: deploy is ok / check: name, symbol", async function () {
-  //   // expect(await chocomint.name()).to.equal(contractName);
-  //   // expect(await chocomint.symbol()).to.equal(contractSymbol);
-  // });
+  it("case: mint is ok / check: tokenURI", async function () {
+    const fee = 100;
+    const chainId = 31337;
+    const name = "name";
 
-  // it("case: mint is ok / check: tokenURI", async function () {
-  //   // await chocomint.testSet2([
-  //   //   ethers.utils.formatBytes32String("Innova Innova Innova #499"),
-  //   //   "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89",
-  //   //   "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89",
-  //   //   "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89",
-  //   // ]);
-  //   // console.log(await chocomint.testGet());
-  //   const baseTokenUri = "ipfs://";
-  //   const [signer] = await ethers.getSigners();
-  //   const iss = signer.address.toLowerCase();
-  //   const choco = {
-  //     name: ethers.utils.formatBytes32String("The Innovators Key #500"),
-  //     image:
-  //       "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89",
-  //     animation_url:
-  //       "0x0000000000000000000000000000000000000000000000000000000000000000",
-  //     external_url:
-  //       "0x0000000000000000000000000000000000000000000000000000000000000000",
-  //     // initial_price: "10000",
-  //     // fees: ["100"],
-  //     // recipients: [iss],
-  //     iss: iss,
-  //     sub: "0x0000000000000000000000000000000000000000",
-  //     root: "",
-  //     proof: [],
-  //     signature: "",
-  //   };
-  //   const chainId = await chocomint.getChainId();
-  //   const messageHash = ethers.utils.solidityKeccak256(
-  //     [
-  //       "uint256",
-  //       "address",
-  //       "bytes32",
-  //       "bytes32",
-  //       "bytes32",
-  //       "bytes32",
-  //       "address",
-  //       "address",
-  //     ],
-  //     [
-  //       chainId,
-  //       chocomint.address,
-  //       choco.name,
-  //       choco.image,
-  //       choco.animation_url,
-  //       choco.external_url,
-  //       choco.iss,
-  //       choco.sub,
-  //     ]
-  //   );
-  //   const messageHashBinary = ethers.utils.arrayify(messageHash);
-  //   const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
-  //   const leaves = [messageHashBinaryBuffer, messageHashBinaryBuffer];
-  //   const tree = new MerkleTree(leaves, keccak256, { sort: true });
-  //   choco.root = tree.getHexRoot();
-  //   choco.proof = tree.getHexProof(messageHashBinaryBuffer);
-  //   // choco.signature = await signer.signMessage(
-  //   //   ethers.utils.arrayify(choco.root)
-  //   // );
-  //   await chocomint.mint(
-  //     choco.name,
-  //     choco.image,
-  //     // choco.animation_url,
-  //     // choco.animation_url,
-  //     "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89",
-  //     "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89",
-  //     choco.iss,
-  //     choco.sub,
-  //     "0",
-  //     17,
-  //     [],
-  //     // Buffer.from("test"),
-  //     // "0x",
-  //     {
-  //       value: "0", //TODO
-  //     }
-  //   );
-  //   const tokenId = ethers.utils.solidityKeccak256(
-  //     ["bytes32", "bytes32"],
-  //     [messageHash, choco.root]
-  //   );
-  //   const metadataString = JSON.stringify({
-  //     chainId: chainId.toString(),
-  //     contractAddress: chocomint.address.toLowerCase(),
-  //     tokenId: ethers.BigNumber.from(tokenId).toString(),
-  //     ...choco,
-  //   });
-  //   const metadataBuffer = Buffer.from(metadataString);
-  //   const cid = await ipfsHash.of(metadataBuffer);
-  //   const tokenURI = await chocomint.tokenURI(tokenId);
-  //   expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
-  // });
+    const baseTokenUri = "ipfs://";
+    const imageCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz";
+    const imageHash =
+      "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
+    const [signer] = await ethers.getSigners();
+    const iss = signer.address.toLowerCase();
+    const choco = {
+      name: ethers.utils.formatBytes32String(name),
+      image: imageHash,
+      iss,
+    };
+    const messageHash = ethers.utils.solidityKeccak256(
+      ["uint256", "address", "uint256", "bytes32", "bytes32", "address"],
+      [chainId, chocomint.address, fee, choco.name, choco.image, choco.iss]
+    );
+    const messageHashBinary = ethers.utils.arrayify(messageHash);
+    const signature = await signer.signMessage(messageHashBinary);
+    const r = `0x${signature.substring(2, 66)}`;
+    const s = `0x${signature.substring(66, 130)}`;
+    const v = ethers.BigNumber.from(
+      `0x${signature.substring(130, 132)}`
+    ).toString();
+    await chocomint.mint(choco.name, choco.image, r, s, v, choco.iss, {
+      value: fee,
+    });
+    const tokenId = ethers.BigNumber.from(messageHash).toString();
+    const metadataString = JSON.stringify({
+      chainId: chainId.toString(),
+      contractAddress: chocomint.address.toLowerCase(),
+      tokenId,
+      name,
+      image: `${baseTokenUri}${imageCid}`,
+      signature,
+      iss,
+    });
+    console.log(metadataString);
+    const metadataBuffer = Buffer.from(metadataString);
+    const cid = await ipfsHash.of(metadataBuffer);
+    const tokenURI = await chocomint.tokenURI(tokenId);
+    expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
+  });
 });

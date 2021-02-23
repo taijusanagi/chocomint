@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 import "hardhat/console.sol";
 
-contract ChocomintMaster is ERC721 {
+contract Chocomint is ERC721 {
   using ECDSA for bytes32;
   uint256 public totalSupply;
 
@@ -20,25 +20,33 @@ contract ChocomintMaster is ERC721 {
   mapping(uint256 => uint256) public feeMemory;
   mapping(uint256 => address) public issMemory;
 
-  uint256 public constant chainId = 31337;
-  string public constant name = "ChocomintMaster";
-  string public constant symbol = "CMM";
+  string public name;
+  string public symbol;
+  string constant ipfsBaseUrl = "ipfs://";
+
+  constructor(string memory _name, string memory _symbol) public {
+    name = _name;
+    symbol = _symbol;
+  }
 
   function mint(
     bytes32 _name,
     bytes32 _image,
-    bytes32 _s,
     bytes32 _r,
+    bytes32 _s,
     uint256 _v,
-    uint256 _fee,
     address payable _iss
-  ) public payable {
-    if (_fee > 0) {
-      require(msg.value == _fee, "value must be equal to fee");
-    }
+  ) external payable {
     bytes32 hash =
       keccak256(
-        abi.encodePacked(chainId, address(this), _name, _image, _fee, _iss)
+        abi.encodePacked(
+          getChainId(),
+          address(this),
+          msg.value,
+          _name,
+          _image,
+          _iss
+        )
       );
     require(
       ecrecover(hash.toEthSignedMessageHash(), uint8(_v), _r, _s) == _iss,
@@ -50,94 +58,59 @@ contract ChocomintMaster is ERC721 {
     sMemory[tokenId] = _s;
     rMemory[tokenId] = _r;
     vMemory[tokenId] = _v;
-    feeMemory[tokenId] = _fee;
+    feeMemory[tokenId] = msg.value;
     issMemory[tokenId] = _iss;
     _mint(msg.sender, tokenId);
-    _iss.transfer(_fee);
+    _iss.transfer(msg.value);
     totalSupply++;
   }
 
-  function tokenURI(uint256 tokenId) public view returns (string memory) {
-    require(_exists(tokenId), "Must exist");
+  function getChainId() private pure returns (uint256) {
+    uint256 id;
+    assembly {
+      id := chainid()
+    }
+    return id;
+  }
+
+  function tokenURI(uint256 tokenId) external view returns (string memory) {
+    require(_exists(tokenId), "token must exist");
     console.log(getMetadata(tokenId));
     return
       string(
         abi.encodePacked(
-          "ipfs://",
+          ipfsBaseUrl,
           getCid(abi.encodePacked(getMetadata(tokenId)))
         )
       );
   }
 
   function getMetadata(uint256 tokenId) public view returns (string memory) {
-    return "test";
-    // Choco memory choco = chocos[tokenId];
-    // bytes memory anchor;
-    // bytes memory strings;
-    // bytes memory uints;
-    // bytes memory addresses;
-    // bytes memory verification;
-    // {
-    //   anchor = abi.encodePacked(
-    //     '{"chainId":"',
-    //     uintToString(getChainId()),
-    //     '","contractAddress":"',
-    //     bytesToString(abi.encodePacked(address(this))),
-    //     '","tokenId":"',
-    //     uintToString(tokenId)
-    //   );
-    // }
-    // {
-    //   strings = abi.encodePacked(
-    //     '","name":"',
-    //     choco.name,
-    //     '","description":"',
-    //     choco.description,
-    //     '","image":"',
-    //     choco.image,
-    //     '","animation_url":"',
-    //     choco.animation_url
-    //   );
-    // }
-    // {
-    //   uints = abi.encodePacked(
-    //     '","initial_price":"',
-    //     uintToString(choco.initial_price),
-    //     '","fees":[',
-    //     uintArrayToString(choco.fees)
-    //   );
-    // }
-    // {
-    //   addresses = abi.encodePacked(
-    //     '],"recipients":[',
-    //     addressArrayToString(choco.recipients),
-    //     '],"iss":"',
-    //     bytesToString(abi.encodePacked(choco.iss)),
-    //     '","sub":"',
-    //     bytesToString(abi.encodePacked(choco.sub))
-    //   );
-    // }
-    // {
-    //   verification = abi.encodePacked(
-    //     '","root":"',
-    //     bytesToString(abi.encodePacked(choco.root)),
-    //     '","proof":[',
-    //     bytes32ArrayToString(choco.proof),
-    //     '],"signature":"',
-    //     bytesToString(choco.signature),
-    //     '"}'
-    //   );
-    // }
-    // return
-    //   string(abi.encodePacked(anchor, strings, uints, addresses, verification));
-  }
-
-  function getChainId() public pure returns (uint256) {
-    uint256 id;
-    assembly {
-      id := chainid()
-    }
-    return id;
+    return
+      string(
+        abi.encodePacked(
+          '{"chainId":"',
+          uintToString(getChainId()),
+          '","contractAddress":"',
+          bytesToString(abi.encodePacked(address(this))),
+          '","tokenId":"',
+          uintToString(tokenId),
+          '","name":"',
+          string(abi.encodePacked(nameMemory[tokenId])),
+          '","image":"',
+          bytesToString(abi.encodePacked(imageMemory[tokenId])),
+          '","signatre":"',
+          bytesToString(
+            abi.encodePacked(
+              rMemory[tokenId],
+              sMemory[tokenId],
+              uint8(vMemory[tokenId])
+            )
+          ),
+          '","iss":"',
+          bytesToString(abi.encodePacked(issMemory[tokenId]))
+        )
+      );
   }
 
   function getCid(bytes memory input) private view returns (bytes memory) {
