@@ -8,18 +8,18 @@ const { expect } = chai;
 
 describe("Chocomint Original", function () {
   let chocomint;
-  // const contractName = "NFT";
-  // const contractSymbol = "NFT";
+  const contractName = "ChocoMintEthereum";
+  const contractSymbol = "CME";
   this.beforeAll("initialization.", async function () {
     const Chocomint = await ethers.getContractFactory("Chocomint");
-    // chocomint = await Chocomint.deploy(contractName, contractSymbol);
-    chocomint = await Chocomint.deploy();
+    chocomint = await Chocomint.deploy(contractName, contractSymbol);
+    // chocomint = await Chocomint.deploy();
   });
 
-  // it("case: deploy is ok / check: name, symbol", async function () {
-  //   expect(await chocomint.name()).to.equal(contractName);
-  //   expect(await chocomint.symbol()).to.equal(contractSymbol);
-  // });
+  it("case: deploy is ok / check: name, symbol", async function () {
+    expect(await chocomint.name()).to.equal(contractName);
+    expect(await chocomint.symbol()).to.equal(contractSymbol);
+  });
 
   it("case: mint is ok / check: tokenURI", async function () {
     const chainId = 31337;
@@ -36,21 +36,16 @@ describe("Chocomint Original", function () {
       iss,
     };
     const tokenHash = ethers.utils.solidityKeccak256(
-      ["uint256", "address", "bytes32", "bytes32", "address"],
-      [chainId, chocomint.address, choco.name, choco.image, choco.iss]
+      ["uint256", "address", "bytes32", "address"],
+      [chainId, chocomint.address, choco.image, choco.iss]
     );
     const tokenId = ethers.BigNumber.from(tokenHash).toString();
-    await chocomint.mint(choco.name, choco.image);
-
-    await chocomint.mint(
-      ethers.utils.formatBytes32String("name2"),
-      choco.image
-    );
+    await chocomint.mint(choco.image);
     const metadataString = JSON.stringify({
       chainId: chainId.toString(),
       contractAddress: chocomint.address.toLowerCase(),
       tokenId,
-      name,
+      name: `${contractName}#${tokenId}`,
       image: `${baseTokenUri}${imageCid}`,
       iss,
     });

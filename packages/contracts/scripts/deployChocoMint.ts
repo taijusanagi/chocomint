@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 
 const main = async () => {
   const Chocomint = await ethers.getContractFactory("Chocomint");
-  const chocomint = await Chocomint.deploy();
+  const chocomint = await Chocomint.deploy("NFT", "NFT");
   console.log("Chocomint deployed to:", chocomint.address);
 };
 

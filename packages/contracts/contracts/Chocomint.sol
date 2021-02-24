@@ -3,6 +3,7 @@ pragma solidity ^0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "hardhat/console.sol";
 
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
@@ -114,30 +115,23 @@ contract Chocomint is ERC721 {
   mapping(uint256 => bytes32) public imageMemory;
   mapping(uint256 => address) public issMemory;
 
-  // string public name;
-  // string public symbol;
+  string public name;
+  string public symbol;
 
   // uint256 totalSupply;
 
-  // constructor(string memory _name, string memory _symbol) public {
-  // name = _name;
-  // symbol = _symbol;
-  // }
+  constructor(string memory _name, string memory _symbol) public {
+    name = _name;
+    symbol = _symbol;
+  }
 
-  function mint(bytes32 _name, bytes32 _image) external {
+  function mint(bytes32 _image) external {
     uint256 tokenId =
       uint256(
         keccak256(
-          abi.encodePacked(
-            _getChainId(),
-            address(this),
-            _name,
-            _image,
-            msg.sender
-          )
+          abi.encodePacked(_getChainId(), address(this), _image, msg.sender)
         )
       );
-    nameMemory[tokenId] = _name;
     imageMemory[tokenId] = _image;
     issMemory[tokenId] = msg.sender;
     _mint(msg.sender, tokenId);
@@ -161,7 +155,7 @@ contract Chocomint is ERC721 {
                     '","tokenId":"',
                     _uintToString(tokenId),
                     '","name":"',
-                    _bytes32ToString(nameMemory[tokenId]),
+                    string(abi.encodePacked(name, "#", _uintToString(tokenId))),
                     '","image":"',
                     string(_ipfsDigestToIpfsUrl(imageMemory[tokenId])),
                     '","iss":"',
@@ -303,10 +297,15 @@ contract Chocomint is ERC721 {
     pure
     returns (bytes memory)
   {
-    return
-      _addIpfsBaseUrlPrefix(
-        _bytesToBase58(_addSha256FunctionCodePrefix(input))
-      );
+    return _addIpfsBaseUrlPrefix(_ipfsDigestToIpfsHash(input));
+  }
+
+  function _ipfsDigestToIpfsHash(bytes32 input)
+    private
+    pure
+    returns (bytes memory)
+  {
+    return _bytesToBase58(_addSha256FunctionCodePrefix(input));
   }
 
   function _uintToString(uint256 value) private pure returns (string memory) {

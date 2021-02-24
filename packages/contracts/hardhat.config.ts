@@ -25,12 +25,12 @@ module.exports = {
       url: `https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149`,
       accounts: [privateKey],
     },
-    matic_test: {
+    matic: {
       url: `https://rpc-mumbai.matic.today`,
       accounts: [privateKey],
     },
-    bsc_test: {
-      url: `https://data-seed-prebsc-1-s1.binance.org:8545/`,
+    matic_test: {
+      url: `https://rpc-mumbai.matic.today`,
       accounts: [privateKey],
     },
   },

@@ -9,7 +9,6 @@ import ipfsInstance, { IPFS } from "ipfs-core";
 export const ipfsBaseUrl = "ipfs://";
 export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";
 export const nullAddress = "0x0000000000000000000000000000000000000000";
-
 export type ChainIdType = "4" | "80001";
 
 export const getNetworkConfig = (chainId: ChainIdType) => {

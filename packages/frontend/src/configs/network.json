@@ -1,14 +1,10 @@
 {
-  "31337": {
-    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-    "rpc": "http://127.0.0.1:8545"
-  },
   "4": {
-    "contractAddress": "0x7D9555A57918E453F7069834473feDab767736cE",
+    "contractAddress": "0xeC1BB74f5799811c0c1Bff94Ef76Fb40abccbE4a",
     "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149"
   },
   "80001": {
-    "contractAddress": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+    "contractAddress": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
     "rpc": "https://rpc-mumbai.matic.today"
   }
 }
