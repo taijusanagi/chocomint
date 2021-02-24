@@ -7,7 +7,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <Switch>
-        <Route path="/create" exact>
+        <Route path="/" exact>
           <Create />
         </Route>
       </Switch>

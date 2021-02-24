@@ -155,7 +155,13 @@ contract Chocomint is ERC721 {
                     '","tokenId":"',
                     _uintToString(tokenId),
                     '","name":"',
-                    string(abi.encodePacked(name, "#", _uintToString(tokenId))),
+                    string(
+                      abi.encodePacked(
+                        symbol,
+                        "#",
+                        _ipfsDigestToIpfsHash(imageMemory[tokenId])
+                      )
+                    ),
                     '","image":"',
                     string(_ipfsDigestToIpfsUrl(imageMemory[tokenId])),
                     '","iss":"',
