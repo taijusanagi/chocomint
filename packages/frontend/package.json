@@ -31,6 +31,8 @@
     "@tailwindcss/postcss7-compat": "^2.0.3",
     "autoprefixer": "^9",
     "axios": "^0.21.1",
+    "base58": "^2.0.1",
+    "bs58": "^4.0.1",
     "ethers": "^5.0.31",
     "gh-pages": "^3.1.0",
     "ipfs-core": "^0.5.2",

@@ -2,26 +2,22 @@ import React from "react";
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 
-import Ceramic from "@ceramicnetwork/http-client";
-const ceramic = new Ceramic("https://ceramic-clay.3boxlabs.com");
-
-import { ThreeIdConnect, EthereumAuthProvider } from "3id-connect";
-export const threeID = new ThreeIdConnect();
-
-import { IDX } from "@ceramicstudio/idx";
-import { definitions } from "../configs/idx.json";
 import networkConfig from "../configs/network.json";
 import { abi } from "../Chocomint.json";
 
-export const idx = new IDX({ ceramic, aliases: definitions });
-
 import ipfsInstance, { IPFS } from "ipfs-core";
-export const ipfsBaseUrl = "https://ipfs.io/ipfs/";
+export const ipfsBaseUrl = "ipfs://";
+export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";
+export const nullAddress = "0x0000000000000000000000000000000000000000";
 
 export type ChainIdType = "4" | "80001";
 
 export const getNetworkConfig = (chainId: ChainIdType) => {
   return networkConfig[chainId];
+};
+
+export const getChainIds = () => {
+  return Object.keys(networkConfig) as ChainIdType[];
 };
 
 export const getContract = (address: string, chainId?: ChainIdType) => {
@@ -43,12 +39,10 @@ export const ipfs = createClient({
 //This is not working in iframe
 export const useIpfs = () => {
   const [ipfs, setIpfs] = React.useState<IPFS>();
-  console.log(ipfs);
   React.useEffect(() => {
     if (!ipfs) {
       ipfsInstance.create().then((created) => {
         setIpfs(created);
-        console.log("ipfs is ready...");
       });
     }
   }, []);
@@ -63,14 +57,4 @@ export const getEthersSigner = async () => {
     web3ModalProvider
   );
   return web3EthersProvider.getSigner();
-};
-
-export const getIdxSigner = async () => {
-  const web3Modal = new Web3Modal();
-  const web3ModalProvider = await web3Modal.connect();
-  const [address] = await web3ModalProvider.enable();
-  await threeID.connect(new EthereumAuthProvider(web3ModalProvider, address));
-  const threeIDProvider = threeID.getDidProvider();
-  await ceramic.setDIDProvider(threeIDProvider);
-  return new IDX({ ceramic, aliases: definitions });
 };

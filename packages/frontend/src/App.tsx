@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 import Create from "./pages/create";
 import Gallery from "./pages/gallery";
-import Mypage from "./pages/mypage";
 import Nft from "./pages/nft";
 
 const App: React.FC = () => {
@@ -13,11 +12,8 @@ const App: React.FC = () => {
         <Route path="/create" exact>
           <Create />
         </Route>
-        <Route path="/gallery/:did" exact>
+        <Route path="/gallery/:walletAddress" exact>
           <Gallery />
-        </Route>
-        <Route path="/mypage" exact>
-          <Mypage />
         </Route>
         <Route path="/nft/:cid" exact>
           <Nft />
