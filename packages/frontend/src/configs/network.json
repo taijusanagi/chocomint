@@ -1,10 +1,12 @@
 {
   "4": {
     "contractAddress": "0x408F924BAEC71cC3968614Cb2c58E155A35e6890",
-    "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149"
+    "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
+    "explore": "https://rinkeby.etherscan.io/tx/"
   },
   "80001": {
     "contractAddress": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
-    "rpc": "https://rpc-mumbai.matic.today"
+    "rpc": "https://rpc-mumbai.matic.today",
+    "explore": "https://explorer-mumbai.maticvigil.com/tx/"
   }
 }
