@@ -125,21 +125,26 @@ contract Chocomint is ERC721 {
     symbol = _symbol;
   }
 
-  function mint(bytes32 _image) external {
-    uint256 tokenId =
-      uint256(
-        keccak256(
-          abi.encodePacked(_getChainId(), address(this), _image, msg.sender)
-        )
-      );
-    imageMemory[tokenId] = _image;
-    issMemory[tokenId] = msg.sender;
-    _mint(msg.sender, tokenId);
+  function mint() external {
+    _mint(msg.sender, 1);
     // totalSupply++;
   }
 
   function tokenURI(uint256 tokenId) external view returns (string memory) {
-    require(_exists(tokenId), "token must exist");
+    // require(_exists(tokenId), "token must exist");
+
+    console.log(
+      string(
+        abi.encodePacked(
+          '{"image_data":"',
+          '<svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"400\\" height=\\"400\\" viewBox=\\"0 0 400 400\\"><rect width=\\"100%\\" height=\\"100%\\" fill=\\"#000\\"></rect><rect class=\\"target\\" fill=\\"#5cceee\\" height=\\"100\\" width=\\"100\\" y=\\"150\\" x=\\"50\\"></rect><rect class=\\"target\\" height=\\"100\\" width=\\"100\\" y=\\"150\\" x=\\"250\\" style=\\"fill: rgb(92, 206, 238);\\"></rect></svg>',
+          '","name":"',
+          "test",
+          '"}'
+        )
+      )
+    );
+
     return
       string(
         abi.encodePacked(
@@ -148,24 +153,10 @@ contract Chocomint is ERC721 {
               abi.encodePacked(
                 string(
                   abi.encodePacked(
-                    '{"chainId":"',
-                    _uintToString(_getChainId()),
-                    '","contractAddress":"',
-                    _bytesToString(abi.encodePacked(address(this))),
-                    '","tokenId":"',
-                    _uintToString(tokenId),
+                    '{"image_data":"',
+                    '<svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"400\\" height=\\"400\\" viewBox=\\"0 0 400 400\\"><rect width=\\"100%\\" height=\\"100%\\" fill=\\"#000\\"></rect><rect class=\\"target\\" fill=\\"#5cceee\\" height=\\"100\\" width=\\"100\\" y=\\"150\\" x=\\"50\\"></rect><rect class=\\"target\\" height=\\"100\\" width=\\"100\\" y=\\"150\\" x=\\"250\\" style=\\"fill: rgb(92, 206, 238);\\"></rect></svg>',
                     '","name":"',
-                    string(
-                      abi.encodePacked(
-                        symbol,
-                        "#",
-                        _ipfsDigestToIpfsHash(imageMemory[tokenId])
-                      )
-                    ),
-                    '","image":"',
-                    string(_ipfsDigestToIpfsUrl(imageMemory[tokenId])),
-                    '","iss":"',
-                    _bytesToString(abi.encodePacked(issMemory[tokenId])),
+                    "test",
                     '"}'
                   )
                 )

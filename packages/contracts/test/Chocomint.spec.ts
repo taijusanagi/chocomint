@@ -3,6 +3,15 @@ import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
 import * as ipfsHash from "ipfs-only-hash";
 
+const createClient = require("ipfs-http-client");
+
+//this endpoint is too slow
+export const ipfs = createClient({
+  host: "ipfs.infura.io",
+  port: 5001,
+  protocol: "https",
+});
+
 chai.use(solidity);
 const { expect } = chai;
 
@@ -16,42 +25,31 @@ describe("Chocomint Original", function () {
     // chocomint = await Chocomint.deploy();
   });
 
-  it("case: deploy is ok / check: name, symbol", async function () {
-    expect(await chocomint.name()).to.equal(contractName);
-    expect(await chocomint.symbol()).to.equal(contractSymbol);
-  });
+  // it('case: deploy is ok / check: name, symbol', async function () {
+  //   expect(await chocomint.name()).to.equal(contractName);
+  //   expect(await chocomint.symbol()).to.equal(contractSymbol);
+  // });
 
   it("case: mint is ok / check: tokenURI", async function () {
-    const chainId = 31337;
-    const name = "name1";
-    const baseTokenUri = "ipfs://";
-    const imageCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz";
-    const imageHash =
-      "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
-    const [signer] = await ethers.getSigners();
-    const iss = signer.address.toLowerCase();
-    const choco = {
-      name: ethers.utils.formatBytes32String(name),
-      image: imageHash,
-      iss,
+    const metadata = {
+      image_data: `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect width="100%" height="100%" fill="#000"></rect><rect class="target" fill="#5cceee" height="100" width="100" y="150" x="50"></rect><rect class="target" height="100" width="100" y="150" x="250" style="fill: rgb(92, 206, 238);"></rect></svg>`,
+      name: "test",
     };
-    const tokenHash = ethers.utils.solidityKeccak256(
-      ["uint256", "address", "bytes32", "address"],
-      [chainId, chocomint.address, choco.image, choco.iss]
-    );
-    const tokenId = ethers.BigNumber.from(tokenHash).toString();
-    await chocomint.mint(choco.image);
-    const metadataString = JSON.stringify({
-      chainId: chainId.toString(),
-      contractAddress: chocomint.address.toLowerCase(),
-      tokenId,
-      name: `${contractName}#${tokenId}`,
-      image: `${baseTokenUri}${imageCid}`,
-      iss,
-    });
-    const metadataBuffer = Buffer.from(metadataString);
-    const cid = await ipfsHash.of(metadataBuffer);
-    const tokenURI = await chocomint.tokenURI(tokenId);
-    expect(tokenURI).to.equal(`${baseTokenUri}${cid}`);
+    const { cid } = await ipfs.add(Buffer.from(JSON.stringify(metadata)));
+    console.log(JSON.stringify(metadata));
+    // console.log(cid);
+    await chocomint.mint();
+    // const metadataString = JSON.stringify({
+    //   chainId: chainId.toString(),
+    //   contractAddress: chocomint.address.toLowerCase(),
+    //   tokenId,
+    //   name: `${contractName}#${tokenId}`,
+    //   image: `${baseTokenUri}${imageCid}`,
+    //   iss,
+    // });
+    // const metadataBuffer = Buffer.from(metadataString);
+    // const cid = await ipfsHash.of(metadataBuffer);
+    const tokenURI = await chocomint.tokenURI(1);
+    expect(tokenURI).to.equal(`ipfs://${cid.toString()}`);
   });
 });
