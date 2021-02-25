@@ -4,7 +4,7 @@
     "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149"
   },
   "80001": {
-    "contractAddress": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+    "contractAddress": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
     "rpc": "https://rpc-mumbai.matic.today"
   }
 }

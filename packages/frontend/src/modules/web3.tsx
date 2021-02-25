@@ -1,6 +1,7 @@
 import React from "react";
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
+import WalletConnectProvider from "@walletconnect/web3-provider";
 
 import networkConfig from "../configs/network.json";
 import { abi } from "../Chocomint.json";
@@ -48,8 +49,17 @@ export const useIpfs = () => {
   return ipfs;
 };
 
+const providerOptions = {
+  walletconnect: {
+    package: WalletConnectProvider, // required
+    options: {
+      infuraId: "95f65ab099894076814e8526f52c9149", // required
+    },
+  },
+};
+
 export const getEthersSigner = async () => {
-  const web3Modal = new Web3Modal();
+  const web3Modal = new Web3Modal({ providerOptions });
   const web3ModalProvider = await web3Modal.connect();
   await web3ModalProvider.enable();
   const web3EthersProvider = new ethers.providers.Web3Provider(

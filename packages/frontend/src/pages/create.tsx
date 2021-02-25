@@ -15,6 +15,10 @@ export const Create: React.FC = () => {
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
+  const [
+    waitingTransactionConfirmation,
+    setWaitingTransactionConfirmation,
+  ] = React.useState(false);
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
 
@@ -60,7 +64,10 @@ export const Create: React.FC = () => {
   };
 
   const createNft = async () => {
-    console.log("test");
+    if (!name || !description || !imageUrl) {
+      return;
+    }
+    setWaitingTransactionConfirmation(true);
     const signer = await getEthersSigner();
     const chainId = await signer.getChainId();
     if (chainId != 4 && chainId != 80001) {
@@ -71,16 +78,16 @@ export const Create: React.FC = () => {
       chainId.toString() as ChainIdType
     );
     const choco = {
-      name: "choco",
-      description: "this is chocomint",
+      name,
+      description,
       image: imageUrl,
     };
     const metadataString = JSON.stringify(choco);
     const { cid } = await ipfs.add(metadataString);
     const contract = getContract(contractAddress).connect(signer);
     const digest = `0x${bs58.decode(cid.toString()).slice(2).toString("hex")}`;
-    const hash = await contract.mint(digest);
-    console.log("hash", hash);
+    const { hash } = await contract.mint(digest);
+    alert(`TxHash:${hash}`);
   };
 
   return (
@@ -98,6 +105,9 @@ export const Create: React.FC = () => {
             <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
               Let’s create NFTs!
             </h2>
+            <p className="text-center text-gray-500 text-sm">
+              Rinkeby & Mumbai is available
+            </p>
           </div>
           <div className="mt-2">
             <label
@@ -159,7 +169,10 @@ export const Create: React.FC = () => {
                   </svg>
                 ) : (
                   <img
-                    className="mx-auto h-20 w-20 rounded-xl border-b-4 border-green-700 shadow-md"
+                    className={`mx-auto h-20 w-20 rounded-xl border-b-4 border-green-700 shadow-md ${
+                      waitingTransactionConfirmation &&
+                      "animate-spin opacity-50"
+                    }`}
                     src={imagePreview}
                   />
                 )}
@@ -174,6 +187,7 @@ export const Create: React.FC = () => {
                       id="file"
                       name="file"
                       type="file"
+                      accept="image/*"
                       className="sr-only"
                     />
                   </label>
@@ -191,7 +205,7 @@ export const Create: React.FC = () => {
               disabled={!name || !description || !imageUrl}
               className="disabled:opacity-50 w-full rounded-xl max-w-md bg-green-500 text-white font-bold py-2 px-4 border-b-4 border-green-700 rounded shadow-2xl"
             >
-              Mint
+              {"Mint"}
             </button>
           </div>
         </div>
