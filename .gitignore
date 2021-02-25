@@ -120,4 +120,11 @@ packages/contracts/artifacts
 packages/contracts/cache
 packages/contracts/typechain
 
+# yarn
 yarn.lock
+
+# Firebase
+.firebase
+
+# misc
+.DS_Store
