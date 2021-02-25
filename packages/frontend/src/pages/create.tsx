@@ -159,13 +159,11 @@ export const Create: React.FC = () => {
       <div className="flex justify-center">
         <div className="w-full max-w-md p-4">
           <div>
-            <a href="https://chocomint.app">
-              <img
-                className="mx-auto h-20 rounded-xl w-auto border-b-4 border-green-700 shadow-md"
-                src={logo}
-                alt="logo"
-              />
-            </a>
+            <img
+              className="mx-auto h-20 rounded-xl w-auto border-b-4 border-green-700 shadow-md"
+              src={logo}
+              alt="logo"
+            />
             <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
               Let’s create NFTs!
             </h2>
