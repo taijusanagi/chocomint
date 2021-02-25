@@ -111,104 +111,32 @@ import "hardhat/console.sol";
 // rrtrrrrrrtrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrtrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrtrrtrrtr
 
 contract Chocomint is ERC721 {
-  mapping(uint256 => bytes32) public nameMemory;
-  mapping(uint256 => bytes32) public imageMemory;
-  mapping(uint256 => address) public issMemory;
+  mapping(uint256 => bytes32) public ipfsMemory;
 
   string public name;
   string public symbol;
 
-  // uint256 totalSupply;
+  uint256 public totalSupply;
 
   constructor(string memory _name, string memory _symbol) public {
     name = _name;
     symbol = _symbol;
   }
 
-  function mint() external {
-    _mint(msg.sender, 1);
-    // totalSupply++;
+  function mint(bytes32 _ipfs) external {
+    totalSupply++;
+    ipfsMemory[totalSupply] = _ipfs;
+    _mint(msg.sender, totalSupply);
   }
 
   function tokenURI(uint256 tokenId) external view returns (string memory) {
-    // require(_exists(tokenId), "token must exist");
-
-    console.log(
-      string(
-        abi.encodePacked(
-          '{"image_data":"',
-          '<svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"400\\" height=\\"400\\" viewBox=\\"0 0 400 400\\"><rect width=\\"100%\\" height=\\"100%\\" fill=\\"#000\\"></rect><rect class=\\"target\\" fill=\\"#5cceee\\" height=\\"100\\" width=\\"100\\" y=\\"150\\" x=\\"50\\"></rect><rect class=\\"target\\" height=\\"100\\" width=\\"100\\" y=\\"150\\" x=\\"250\\" style=\\"fill: rgb(92, 206, 238);\\"></rect></svg>',
-          '","name":"',
-          "test",
-          '"}'
-        )
-      )
-    );
-
+    require(_exists(tokenId), "token must exist");
     return
       string(
-        abi.encodePacked(
-          _ipfsDigestToIpfsUrl(
-            _bytesToIpfsDigest(
-              abi.encodePacked(
-                string(
-                  abi.encodePacked(
-                    '{"image_data":"',
-                    '<svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"400\\" height=\\"400\\" viewBox=\\"0 0 400 400\\"><rect width=\\"100%\\" height=\\"100%\\" fill=\\"#000\\"></rect><rect class=\\"target\\" fill=\\"#5cceee\\" height=\\"100\\" width=\\"100\\" y=\\"150\\" x=\\"50\\"></rect><rect class=\\"target\\" height=\\"100\\" width=\\"100\\" y=\\"150\\" x=\\"250\\" style=\\"fill: rgb(92, 206, 238);\\"></rect></svg>',
-                    '","name":"',
-                    "test",
-                    '"}'
-                  )
-                )
-              )
-            )
-          )
+        _addIpfsBaseUrlPrefix(
+          _bytesToBase58(_addSha256FunctionCodePrefix(ipfsMemory[tokenId]))
         )
       );
-  }
-
-  function _bytesToIpfsDigest(bytes memory input)
-    private
-    view
-    returns (bytes32)
-  {
-    bytes memory len = _lengthEncode(input.length);
-    bytes memory len2 = _lengthEncode(input.length + 4 + 2 * len.length);
-    return
-      sha256(
-        abi.encodePacked(hex"0a", len2, hex"080212", len, input, hex"18", len)
-      );
-  }
-
-  function _getChainId() private pure returns (uint256) {
-    uint256 id;
-    assembly {
-      id := chainid()
-    }
-    return id;
-  }
-
-  function _lengthEncode(uint256 length) private view returns (bytes memory) {
-    if (length < 128) {
-      return _uintToBinary(length);
-    } else {
-      return
-        abi.encodePacked(
-          _uintToBinary((length % 128) + 128),
-          _uintToBinary(length / 128)
-        );
-    }
-  }
-
-  function _uintToBinary(uint256 x) private view returns (bytes memory) {
-    if (x == 0) {
-      return new bytes(0);
-    } else {
-      bytes1 s = bytes1(uint8(x % 256));
-      bytes memory r = new bytes(1);
-      r[0] = s;
-      return abi.encodePacked(_uintToBinary(x / 256), r);
-    }
   }
 
   function _addIpfsBaseUrlPrefix(bytes memory input)
@@ -225,22 +153,6 @@ contract Chocomint is ERC721 {
     returns (bytes memory)
   {
     return abi.encodePacked(hex"1220", input);
-  }
-
-  function _bytes32ToString(bytes32 _bytes32)
-    private
-    pure
-    returns (string memory)
-  {
-    uint8 i = 0;
-    while (i < 32 && _bytes32[i] != 0) {
-      i++;
-    }
-    bytes memory bytesArray = new bytes(i);
-    for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
-      bytesArray[i] = _bytes32[i];
-    }
-    return string(bytesArray);
   }
 
   function _bytesToBase58(bytes memory input)
@@ -271,56 +183,5 @@ contract Chocomint is ERC721 {
       output[k] = alphabet[digits[digitlength - 1 - k]];
     }
     return output;
-  }
-
-  function _bytesToString(bytes memory input)
-    private
-    pure
-    returns (string memory)
-  {
-    bytes memory alphabet = "0123456789abcdef";
-    bytes memory output = new bytes(2 + input.length * 2);
-    output[0] = "0";
-    output[1] = "x";
-    for (uint256 i = 0; i < input.length; i++) {
-      output[2 + i * 2] = alphabet[uint256(uint8(input[i] >> 4))];
-      output[3 + i * 2] = alphabet[uint256(uint8(input[i] & 0x0f))];
-    }
-    return string(output);
-  }
-
-  function _ipfsDigestToIpfsUrl(bytes32 input)
-    private
-    pure
-    returns (bytes memory)
-  {
-    return _addIpfsBaseUrlPrefix(_ipfsDigestToIpfsHash(input));
-  }
-
-  function _ipfsDigestToIpfsHash(bytes32 input)
-    private
-    pure
-    returns (bytes memory)
-  {
-    return _bytesToBase58(_addSha256FunctionCodePrefix(input));
-  }
-
-  function _uintToString(uint256 value) private pure returns (string memory) {
-    if (value == 0) {
-      return "0";
-    }
-    uint256 temp = value;
-    uint256 digits;
-    while (temp != 0) {
-      digits++;
-      temp /= 10;
-    }
-    bytes memory buffer = new bytes(digits);
-    while (value != 0) {
-      digits -= 1;
-      buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-      value /= 10;
-    }
-    return string(buffer);
   }
 }
