@@ -184,7 +184,7 @@ export const Create: React.FC = () => {
               name="name"
               id="name"
               autoComplete="given-name"
-              className="mt-1 block w-full focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-xl"
+              className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             />
           </div>
           <div className="mt-2">
@@ -198,7 +198,7 @@ export const Create: React.FC = () => {
               onChange={handleDescriptionChange}
               id="description"
               name="description"
-              className="mt-1 block w-full focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-xl"
+              className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             ></textarea>
           </div>
 
@@ -241,7 +241,7 @@ export const Create: React.FC = () => {
                 <div className="flex text-sm text-gray-600">
                   <label
                     htmlFor="file"
-                    className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                    className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
                   >
                     <span>Upload a file</span>
                     <input
