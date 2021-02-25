@@ -28,6 +28,7 @@
     "@ceramicstudio/idx": "^0.7.0",
     "@ceramicstudio/idx-tools": "^0.7.0",
     "@craco/craco": "^6.1.1",
+    "@tailwindcss/forms": "^0.2.1",
     "@tailwindcss/postcss7-compat": "^2.0.3",
     "autoprefixer": "^9",
     "axios": "^0.21.1",
