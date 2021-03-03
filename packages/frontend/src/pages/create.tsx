@@ -1,31 +1,35 @@
 import React from "react";
+import { ethers } from "ethers";
 import {
   ipfs,
   getEthersSigner,
   ChainIdType,
   getNetwork,
-  ipfsBaseUrl,
-  getContract,
+  ipfsHttpsBaseUrl,
   nullAddress,
+  validateChainId,
 } from "../modules/web3";
+
+import { db } from "../modules/firebase";
+import { Minamints } from "../types";
+import { MerkleTree } from "merkletreejs";
+const keccak256 = require("keccak256");
 
 const bs58 = require("bs58");
 const logo = require("../assets/icon.png").default;
 
-export const Mint: React.FC = () => {
+export const Create: React.FC = () => {
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
-  const [
-    waitingTransactionConfirmation,
-    setWaitingTransactionConfirmation,
-  ] = React.useState(false);
+  const [waitingTransactionConfirmation, setWaitingTransactionConfirmation] = React.useState(false);
   const [alertStatus, setAlertStatus] = React.useState({
     category: "",
     msg: "",
   });
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
+  const [price, setPrice] = React.useState("");
   const [exploreUrl, setExploreUrl] = React.useState("");
 
   const readAsArrayBufferAsync = (file: File) => {
@@ -39,25 +43,43 @@ export const Mint: React.FC = () => {
   };
 
   const uploadFileToIpfs = async (file: File) => {
+    const { name } = file;
+    const type = name.substring(name.lastIndexOf(".") + 1);
     const fileBuffer = await readAsArrayBufferAsync(file);
     const fileUint8Array = new Uint8Array(fileBuffer as Buffer);
-    const { cid } = await ipfs.add(fileUint8Array);
-    return `${ipfsBaseUrl}${cid}`;
+    const path = `nft.${type}`;
+    const { cid } = await ipfs.add({
+      path: `images/${path}`,
+      content: fileUint8Array,
+    });
+    return `${ipfsHttpsBaseUrl}${cid}/${path}`;
   };
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
   };
 
-  const handleDescriptionChange = (
-    event: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
+  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPrice(event.target.value);
+  };
+
+  const isFormNotReady = () => {
+    return !name || !description || !imageUrl || !price;
+  };
+
+  const clearForm = () => {
+    setName("");
+    setDescription("");
+    setImageUrl("");
+    setImagePreview("");
+    setPrice("");
+  };
+
+  const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(event.target.value);
   };
 
-  const handleImageChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     //This can be processed when file presents
     setImagePreview("");
     setImageLoading(true);
@@ -70,18 +92,19 @@ export const Mint: React.FC = () => {
   };
 
   const createNft = async () => {
-    if (!name || !description || !imageUrl) {
+    if (isFormNotReady()) {
       return;
     }
     setWaitingTransactionConfirmation(true);
+    const value = ethers.utils.parseEther(price).toString();
     try {
       const signer = await getEthersSigner();
       const chainId = await signer.getChainId();
-      if (chainId != 4 && chainId != 31337) {
+      if (!validateChainId(chainId)) {
         setErrorAlert("Please connect to rinkeby network.");
         return;
       }
-      const { explore } = getNetwork(chainId.toString() as ChainIdType);
+      const { contractAddress } = getNetwork(chainId as ChainIdType);
       const choco = {
         name,
         description,
@@ -89,26 +112,49 @@ export const Mint: React.FC = () => {
       };
       const metadataString = JSON.stringify(choco);
       const { cid } = await ipfs.add(metadataString);
-      const contract = getContract(chainId.toString() as ChainIdType).connect(
-        signer
+      const creator = await signer.getAddress();
+      const metadataIpfsHash = `0x${bs58.decode(cid.toString()).slice(2).toString("hex")}`;
+      const recipient = nullAddress;
+      const messageHash = ethers.utils.solidityKeccak256(
+        ["uint256", "address", "bytes32", "uint256", "address"],
+        [chainId, contractAddress, metadataIpfsHash, value, recipient]
       );
-      const digest = `0x${bs58
-        .decode(cid.toString())
-        .slice(2)
-        .toString("hex")}`;
-      const { hash } = await contract.mint(digest, nullAddress);
-      setExploreUrl(`${explore}${hash}`);
-      setSuccessAlert(`TxHash: \n${hash}`);
+      const messageHashBinary = ethers.utils.arrayify(messageHash);
+      const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
+
+      const leaves = [messageHashBinaryBuffer];
+      const tree = new MerkleTree(leaves, keccak256, { sort: true });
+      const root = tree.getHexRoot();
+      const proof = tree.getHexProof(messageHashBinaryBuffer);
+      const signature = await signer.signMessage(ethers.utils.arrayify(root));
+      const record: Minamints = {
+        chainId,
+        contractAddress,
+        metadataIpfsHash,
+        value,
+        recipient,
+        root,
+        proof,
+        signature,
+        creator,
+        choco,
+      };
+      const orderId = ethers.utils.solidityKeccak256(
+        ["uint256", "address", "bytes32", "address"],
+        [chainId, contractAddress, metadataIpfsHash, creator]
+      );
+      await db.collection("minamints").doc(orderId).set(record);
+
+      // setExploreUrl(`${explore}${hash}`);
+      // setSuccessAlert(`TxHash: \n${hash}`);
     } catch (err) {
+      console.log(err);
       setErrorAlert(`Error: ${err.message}`);
     }
   };
 
   const setSuccessAlert = (msg: string) => {
     setWaitingTransactionConfirmation(false);
-    setName("");
-    setDescription("");
-    setImageUrl("");
     setAlertStatus({
       category: "success",
       msg,
@@ -133,7 +179,7 @@ export const Mint: React.FC = () => {
 
   return (
     <div className="mx-auto h-screen bg-white">
-      <div className="flex justify-center">
+      <div className="flex justify-center container mx-auto">
         <div className="w-full max-w-md p-4">
           <div>
             <img
@@ -141,23 +187,23 @@ export const Mint: React.FC = () => {
               src={logo}
               alt="logo"
             />
-            <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
-              Chocomint!
-            </h2>
+            <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">Chocomint!</h2>
+            <p className="text-center text-gray-500 text-sm">
+              クリエイターとNFT発行者のマッチングサービス
+            </p>
           </div>
           <div className="mt-2">
             <label
               htmlFor="name"
               className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
             >
-              Name
+              名前
             </label>
             <input
               onChange={handleNameChange}
               type="text"
               name="name"
               id="name"
-              autoComplete="given-name"
               className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             />
           </div>
@@ -166,7 +212,7 @@ export const Mint: React.FC = () => {
               htmlFor="description"
               className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
             >
-              Description
+              説明
             </label>
             <textarea
               onChange={handleDescriptionChange}
@@ -175,15 +221,13 @@ export const Mint: React.FC = () => {
               className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             ></textarea>
           </div>
-
           <div className="mt-2">
             <label
               htmlFor="cover_photo"
               className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
             >
-              Image
+              画像
             </label>
-
             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl">
               <div className="space-y-4 text-center">
                 {!imagePreview ? (
@@ -205,9 +249,8 @@ export const Mint: React.FC = () => {
                   </svg>
                 ) : (
                   <img
-                    className={`mx-auto h-20 w-20 rounded-xl border-b-4 border-gray-600 shadow-md ${
-                      waitingTransactionConfirmation &&
-                      "animate-spin opacity-50"
+                    className={`mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-600 shadow-md ${
+                      waitingTransactionConfirmation && "animate-spin opacity-50"
                     }`}
                     src={imagePreview}
                   />
@@ -217,7 +260,7 @@ export const Mint: React.FC = () => {
                     htmlFor="file"
                     className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
                   >
-                    <span>Upload a file</span>
+                    <span>NFTに登録する画像のアップロード</span>
                     <input
                       onChange={handleImageChange}
                       id="file"
@@ -227,34 +270,42 @@ export const Mint: React.FC = () => {
                       className="sr-only"
                     />
                   </label>
-                  <p className="pl-1">to ipfs. It takes some time.</p>
                 </div>
-                <p className="text-xs text-gray-500">
-                  PNG, JPG, GIF up to 10MB
-                </p>
               </div>
             </div>
           </div>
-
+          <div className="mt-2">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+            >
+              販売価格
+            </label>
+            <input
+              onChange={handlePriceChange}
+              type="number"
+              name="price"
+              id="price"
+              className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
+              placeholder="ETH"
+            />
+          </div>
           <div className="mt-8">
             <button
               onClick={createNft}
-              disabled={!name || !description || !imageUrl}
-              className="disabled:opacity-50 w-full rounded-xl max-w-md bg-green-500 text-white font-bold py-2 px-4 border-b-4 border-green-700 rounded shadow-2xl"
+              disabled={isFormNotReady()}
+              className="disabled:opacity-50 w-full rounded-xl max-w-md bg-green-500 text-white font-bold py-2 px-4 border-b-4 border-green-700 shadow-md"
             >
-              {"Mint"}
+              Let&apos;s Create!
             </button>
           </div>
-
           <div className="mt-8">
             {alertStatus.category == "success" && (
               <div className="rounded-md bg-green-50 p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">🎉</div>
                   <div className="ml-3 w-full">
-                    <h3 className="text-md font-medium text-green-800">
-                      Success
-                    </h3>
+                    <h3 className="text-md font-medium text-green-800">Success</h3>
                     <div className="mt-2 text-xs text-green-700">
                       <a href={exploreUrl}>
                         <p className="truncate w-60">{alertStatus.msg}</p>
@@ -304,4 +355,4 @@ export const Mint: React.FC = () => {
   );
 };
 
-export default Mint;
+export default Create;

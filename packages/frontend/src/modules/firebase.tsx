@@ -1,5 +1,6 @@
 import firebase from "firebase";
 
+import firebaseJson from "../../../../firebase.json";
 const firebaseConfig = {
   apiKey: "AIzaSyDThONNzesmZYFpnXvIoSBTn6eIm69I4tQ",
   authDomain: "chocomint-prod.firebaseapp.com",
@@ -11,4 +12,13 @@ const firebaseConfig = {
 };
 
 const app = firebase.initializeApp(firebaseConfig);
-export default app;
+
+const db = app.firestore();
+if (process.env.NODE_ENV === "development") {
+  db.settings({
+    host: `localhost:${firebaseJson.emulators.firestore.port}`,
+    ssl: false,
+  });
+}
+
+export { db };

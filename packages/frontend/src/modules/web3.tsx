@@ -12,14 +12,15 @@ export const ipfsBaseUrl = "ipfs://";
 export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";
 
 export const nullAddress = "0x0000000000000000000000000000000000000000";
-export type ChainIdType = "1" | "4" | "31337";
+export type ChainIdType = 1 | 4 | 31337;
 
 export const getNetwork = (chainId: ChainIdType) => {
   return network[chainId];
 };
 
 export const getContract = (chainId: ChainIdType) => {
-  const { rpc, contractAddress } = network[chainId];
+  const chainIdString = chainId.toString();
+  const { rpc, contractAddress } = network[chainIdString];
   const provider = new ethers.providers.JsonRpcProvider(rpc);
   return new ethers.Contract(contractAddress, abi, provider);
 };
@@ -43,8 +44,10 @@ export const getEthersSigner = async () => {
   const web3Modal = new Web3Modal({ providerOptions });
   const web3ModalProvider = await web3Modal.connect();
   await web3ModalProvider.enable();
-  const web3EthersProvider = new ethers.providers.Web3Provider(
-    web3ModalProvider
-  );
+  const web3EthersProvider = new ethers.providers.Web3Provider(web3ModalProvider);
   return web3EthersProvider.getSigner();
+};
+
+export const validateChainId = (chainId: number) => {
+  return chainId == 4 || chainId == 31337;
 };
