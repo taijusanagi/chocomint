@@ -16,3 +16,12 @@ export interface Minamints {
   creator: string;
   choco: Choco;
 }
+
+export interface MintEvent {
+  ipfsHash: string;
+  creator: string;
+  minter: string;
+  address: string;
+  tokenId: string;
+  string: string;
+}

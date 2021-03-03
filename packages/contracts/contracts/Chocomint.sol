@@ -246,8 +246,8 @@ contract Chocomint is ERC721 {
       "signer must be valid for creator"
     );
     uint256 tokenId = _mint(_ipfs, _creator, minter, _receiver);
-    if (msg.value > 0) {
-      _creator.transfer(msg.value);
+    if (price > 0) {
+      _creator.transfer(price);
     }
     emit Mint(_ipfs, _creator, minter, _receiver, tokenId, price);
   }

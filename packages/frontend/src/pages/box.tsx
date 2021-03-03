@@ -12,11 +12,13 @@ import {
   ChainIdType,
 } from "../modules/web3";
 
-import { Minamints } from "../types";
+import { Minamints, MintEvent } from "../types";
+
 import "./box.css";
 
 export const Box: React.FC = () => {
   const [minamints, setMinamints] = React.useState<Minamints[]>([]);
+  const [events, setEvents] = React.useState<MintEvent[]>([]);
 
   const { address } = useParams<{ address: string }>();
   React.useEffect(() => {
@@ -32,20 +34,18 @@ export const Box: React.FC = () => {
       });
 
     const contract = getContract(31337);
-    const filter = contract.filters.Mint(null, null, address);
+    const filter = contract.filters.Mint(null, address);
     contract.queryFilter(filter).then((events) => {
-      events.map((event) => {
-        const { ipfsHash } = event.args as any;
-        console.log(ipfsHash);
-      });
+      const args = events.map((event) => event.args);
+      setEvents(args as any);
     });
   }, []);
 
   const mint = async (i: number) => {
-    const choco = minamints[i];
+    const minamint = minamints[i];
     const signer = await getEthersSigner();
     const chainId = await signer.getChainId();
-    if (chainId != choco.chainId) {
+    if (chainId != minamint.chainId) {
       alert("chain id is invalid");
       return;
     }
@@ -53,14 +53,14 @@ export const Box: React.FC = () => {
     await contract
       .connect(signer)
       .minamint(
-        choco.metadataIpfsHash,
-        choco.creator,
-        choco.recipient,
-        choco.root,
-        choco.proof,
-        choco.signature,
+        minamint.metadataIpfsHash,
+        minamint.creator,
+        minamint.recipient,
+        minamint.root,
+        minamint.proof,
+        minamint.signature,
         {
-          value: choco.value,
+          value: minamint.value,
         }
       );
   };

@@ -7,6 +7,7 @@ const createClient = require("ipfs-http-client");
 import networkJson from "../../../contracts/network.json";
 const network = networkJson as any;
 import { abi } from "../../../contracts/artifacts/contracts/Chocomint.sol/Chocomint.json";
+import { Chocomint } from "../../../contracts/typechain/Chocomint";
 
 export const ipfsBaseUrl = "ipfs://";
 export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";
