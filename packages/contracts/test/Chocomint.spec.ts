@@ -58,8 +58,8 @@ describe("Chocomint", function () {
     );
   });
 
-  it("mint: mint by creator and same asset cannot be minted", async function () {
-    await chocomint.mint(metadataIpfsHash, creator, { from: creator });
+  it("mint: mint by creator and other receiver get the NFT", async function () {
+    await chocomint.mint(metadataIpfsHash, receiver, { from: creator });
     expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(receiver);
     expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(creator);
     expect(await chocomint.minterMemory(firstTokenIndex)).to.equal(creator);
@@ -74,7 +74,14 @@ describe("Chocomint", function () {
     );
   });
 
-  it("mint: mint by creator and other receiver get the NFT", async function () {
+  it("mint: mint by creator and same asset cannot be minted (reverted)", async function () {
+    await chocomint.mint(metadataIpfsHash, creator, { from: creator });
+    await expect(
+      chocomint.mint(metadataIpfsHash, creator, { from: creator })
+    ).to.be.revertedWith("this ipfsHash and creator NFT is already published");
+  });
+
+  it("gigamint: mint by creator and other receiver get the NFT", async function () {
     await chocomint.mint(metadataIpfsHash, receiver, { from: creator });
     expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(receiver);
     expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(creator);

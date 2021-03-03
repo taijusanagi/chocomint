@@ -193,7 +193,10 @@ contract Chocomint is ERC721 {
   ) internal {
     // chainId and contract address is not required in hash
     bytes32 hash = keccak256(abi.encodePacked(_ipfs, _creator));
-    require(publishedTokenId[hash] == 0, "already published");
+    require(
+      publishedTokenId[hash] == 0,
+      "this ipfsHash and creator NFT is already published"
+    );
     totalSupply = totalSupply.add(1);
     ipfsMemory[totalSupply] = _ipfs;
     creatorMemory[totalSupply] = _creator;
@@ -248,19 +251,34 @@ contract Chocomint is ERC721 {
       );
     }
     _mint(_ipfs, _creator, msg.sender, _receiver);
-    _creator.transfer(msg.value);
+    if (msg.value > 0) {
+      _creator.transfer(msg.value);
+    }
   }
 
   /**
-   * @dev bulk mint for gas efficiency, I'm still thinking whether this is really required
+   * @dev bulk mint for gas efficiency, this function is used for pro business case
+   *      for this pro purpose, I believe same receiver is enough
    */
-  function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
-    require(
-      _ipfs.length == _receiver.length,
-      "ipfs length and receiver length must be same"
-    );
+  function gigamint(bytes32[] memory _ipfs, address _receiver) public {
     for (uint256 i = 0; i < _ipfs.length; i++) {
-      mint(_ipfs[i], _receiver[i]);
+      mint(_ipfs[i], _receiver);
+    }
+  }
+
+  /**
+   * @dev bulk mint for gas efficiency, this function is used for pro business case
+   *      somecase creator and minter is different, in this case, creator just sign, and minter make transaction
+   *      I believe same creator, receiver, signature is enough
+   */
+  function gigaminamint(
+    bytes32[] memory _ipfs,
+    address payable _creator,
+    address _receiver,
+    bytes memory _signature
+  ) public {
+    for (uint256 i = 0; i < _ipfs.length; i++) {
+      minamint(_ipfs[i], _creator, _receiver, 0, false, _signature[i]);
     }
   }
 
