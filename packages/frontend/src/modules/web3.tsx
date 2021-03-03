@@ -2,23 +2,24 @@ import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 
-import networkConfig from "../../../contracts/network.json";
+const createClient = require("ipfs-http-client");
+
+import networkJson from "../../../contracts/network.json";
+const network = networkJson as any;
 import { abi } from "../../../contracts/artifacts/contracts/Chocomint.sol/Chocomint.json";
 
 export const ipfsBaseUrl = "ipfs://";
 export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";
 
 export const nullAddress = "0x0000000000000000000000000000000000000000";
-export type ChainIdType = "4" | "80001";
+export type ChainIdType = "1" | "4" | "31337";
 
-const createClient = require("ipfs-http-client");
-
-export const getNetworkConfig = (chainId: ChainIdType) => {
-  return networkConfig[chainId];
+export const getNetwork = (chainId: ChainIdType) => {
+  return network[chainId];
 };
 
 export const getContract = (chainId: ChainIdType) => {
-  const { rpc, contractAddress } = networkConfig[chainId];
+  const { rpc, contractAddress } = network[chainId];
   const provider = new ethers.providers.JsonRpcProvider(rpc);
   return new ethers.Contract(contractAddress, abi, provider);
 };

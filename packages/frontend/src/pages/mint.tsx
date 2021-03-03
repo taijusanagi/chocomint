@@ -3,9 +3,10 @@ import {
   ipfs,
   getEthersSigner,
   ChainIdType,
-  getNetworkConfig,
+  getNetwork,
   ipfsBaseUrl,
   getContract,
+  nullAddress,
 } from "../modules/web3";
 
 const bs58 = require("bs58");
@@ -19,15 +20,9 @@ export const Mint: React.FC = () => {
     waitingTransactionConfirmation,
     setWaitingTransactionConfirmation,
   ] = React.useState(false);
-  const [statusAlert, setStatusAlert] = React.useState({
-    success: {
-      status: false,
-      msg: "",
-    },
-    error: {
-      status: false,
-      msg: "",
-    },
+  const [alertStatus, setAlertStatus] = React.useState({
+    category: "",
+    msg: "",
   });
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
@@ -82,11 +77,11 @@ export const Mint: React.FC = () => {
     try {
       const signer = await getEthersSigner();
       const chainId = await signer.getChainId();
-      if (chainId != 4 && chainId != 80001) {
-        setError("Please connect to Rinkeby or Matic Testnet.");
+      if (chainId != 4 && chainId != 31337) {
+        setErrorAlert("Please connect to rinkeby network.");
         return;
       }
-      const { explore } = getNetworkConfig(chainId.toString() as ChainIdType);
+      const { explore } = getNetwork(chainId.toString() as ChainIdType);
       const choco = {
         name,
         description,
@@ -101,56 +96,38 @@ export const Mint: React.FC = () => {
         .decode(cid.toString())
         .slice(2)
         .toString("hex")}`;
-      const { hash } = await contract.mint(digest);
+      const { hash } = await contract.mint(digest, nullAddress);
       setExploreUrl(`${explore}${hash}`);
-      setSuccess(`TxHash: \n${hash}`);
+      setSuccessAlert(`TxHash: \n${hash}`);
     } catch (err) {
-      setError("Error happend");
+      setErrorAlert(`Error: ${err.message}`);
     }
   };
 
-  const setSuccess = (msg: string) => {
+  const setSuccessAlert = (msg: string) => {
     setWaitingTransactionConfirmation(false);
     setName("");
     setDescription("");
     setImageUrl("");
-    setStatusAlert({
-      success: {
-        status: true,
-        msg,
-      },
-      error: {
-        status: false,
-        msg: "",
-      },
+    setAlertStatus({
+      category: "success",
+      msg,
     });
   };
 
-  const setError = (msg: string) => {
+  const setErrorAlert = (msg: string) => {
     setWaitingTransactionConfirmation(false);
-    setStatusAlert({
-      success: {
-        status: false,
-        msg: "",
-      },
-      error: {
-        status: true,
-        msg,
-      },
+    setAlertStatus({
+      category: "error",
+      msg,
     });
   };
 
-  const resetAlert = () => {
+  const resetAlertStatus = () => {
     setWaitingTransactionConfirmation(false);
-    setStatusAlert({
-      success: {
-        status: false,
-        msg: "",
-      },
-      error: {
-        status: false,
-        msg: "",
-      },
+    setAlertStatus({
+      category: "sucsess",
+      msg: "",
     });
   };
 
@@ -167,9 +144,6 @@ export const Mint: React.FC = () => {
             <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
               Chocomint!
             </h2>
-            <p className="text-center text-gray-500 text-sm">
-              Rinkeby & Mumbai is available
-            </p>
           </div>
           <div className="mt-2">
             <label
@@ -273,45 +247,24 @@ export const Mint: React.FC = () => {
           </div>
 
           <div className="mt-8">
-            {statusAlert.success.status && (
+            {alertStatus.category == "success" && (
               <div className="rounded-md bg-green-50 p-4">
                 <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-green-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800">
-                      Success 🎉
+                  <div className="flex-shrink-0">🎉</div>
+                  <div className="ml-3 w-full">
+                    <h3 className="text-md font-medium text-green-800">
+                      Success
                     </h3>
                     <div className="mt-2 text-xs text-green-700">
-                      <p className="truncate w-60">{statusAlert.success.msg}</p>
+                      <a href={exploreUrl}>
+                        <p className="truncate w-60">{alertStatus.msg}</p>
+                      </a>
                     </div>
                     <div className="mt-4">
-                      <div className="-mx-2 -my-1.5 flex">
-                        <a
-                          href={exploreUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <button className="bg-green-50 px-2 py-1.5 rounded-md text-sm font-medium text-green-800 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600">
-                            View status
-                          </button>
-                        </a>
+                      <div className="-mx-2 -my-1.5 flex justify-end">
                         <button
                           className="ml-3 bg-green-50 px-2 py-1.5 rounded-md text-sm font-medium text-green-800 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600"
-                          onClick={resetAlert}
+                          onClick={resetAlertStatus}
                         >
                           Dismiss
                         </button>
@@ -321,33 +274,20 @@ export const Mint: React.FC = () => {
                 </div>
               </div>
             )}
-            {statusAlert.error.status && (
+            {alertStatus.category == "error" && (
               <div className="rounded-md bg-red-50 p-4">
                 <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-red-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">
-                      {statusAlert.error.msg}
-                    </h3>
+                  <div className="flex-shrink-0">🙇‍♂️</div>
+                  <div className="ml-3 w-full">
+                    <h3 className="text-md font-medium text-red-800">Error</h3>
+                    <div className="mt-2 text-xs text-red-700">
+                      <p className="truncate w-60">{alertStatus.msg}</p>
+                    </div>
                     <div className="mt-4">
-                      <div className="-mx-2 -my-1.5 flex">
+                      <div className="-mx-2 -my-1.5 flex justify-end">
                         <button
-                          className="bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
-                          onClick={resetAlert}
+                          className="ml-3 bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                          onClick={resetAlertStatus}
                         >
                           Dismiss
                         </button>

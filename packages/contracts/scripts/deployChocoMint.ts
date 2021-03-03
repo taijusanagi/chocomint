@@ -3,9 +3,9 @@ import * as path from "path";
 
 import hre, { ethers } from "hardhat";
 import configsJson from "../network.json";
+const configs = configsJson as any;
 
 const main = async () => {
-  const configs = configsJson as any;
   const networkName = hre.network.name;
   let chainId =
     networkName == "mainnet" ? "1" : networkName == "rinkeby" ? "4" : "31337";

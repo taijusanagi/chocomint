@@ -1,17 +1,1 @@
-{
-  "1": {
-    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-    "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
-    "explore": "https://rinkeby.etherscan.io/tx/"
-  },
-  "4": {
-    "contractAddress": "0x408F924BAEC71cC3968614Cb2c58E155A35e6890",
-    "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
-    "explore": "https://rinkeby.etherscan.io/tx/"
-  },
-  "31337": {
-    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-    "rpc": "http://localhost:8545",
-    "explore": "https://rinkeby.etherscan.io/tx/"
-  }
-}
+{"1":{"contractAddress":"0x5FbDB2315678afecb367f032d93F642f64180aa3","rpc":"https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149","explore":"https://etherscan.io/tx/"},"4":{"contractAddress":"0x408F924BAEC71cC3968614Cb2c58E155A35e6890","rpc":"https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149","explore":"https://rinkeby.etherscan.io/tx/"},"31337":{"contractAddress":"0x5FbDB2315678afecb367f032d93F642f64180aa3","rpc":"http://localhost:8545","explore":"https://rinkeby.etherscan.io/tx/"}}

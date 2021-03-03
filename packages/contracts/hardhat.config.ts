@@ -7,6 +7,9 @@ const privateKey =
   process.env.PRIVATE_KEY ||
   "0x0000000000000000000000000000000000000000000000000000000000000000"; // this is to avoid hardhat error
 
+import networkJson from "./network.json";
+const network = networkJson as any;
+
 module.exports = {
   solidity: {
     version: "0.5.17",
@@ -19,11 +22,11 @@ module.exports = {
   },
   networks: {
     mainnet: {
-      url: `https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149`,
+      url: network["1"].rpc,
       accounts: [privateKey],
     },
     rinkeby: {
-      url: `https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149`,
+      url: network["4"].rpc,
       accounts: [privateKey],
     },
   },
