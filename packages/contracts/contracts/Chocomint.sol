@@ -5,11 +5,9 @@ pragma experimental ABIEncoderV2;
 // This contract is created by taijusanagi(taijusanagi.eth), I hope this contract is used for all NFT lovers
 // solidity 0.5.17 is used, because this contract uses @openzeppelin/contracts@2.5.1 for gas efficiency
 
-import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "./IERC1271.sol";
 
 // This art is created by Daiki Kunii
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
@@ -128,9 +126,6 @@ contract Chocomint is ERC721 {
   // ECDSA is used for signature verification
   using ECDSA for bytes32;
 
-  // Address is used for check address is contract
-  using Address for address payable;
-
   /**
    * @dev this is used for dulication check
    *      bytes32hash(ipfsHash, creatorAddress) is used for simplicity
@@ -167,14 +162,6 @@ contract Chocomint is ERC721 {
    */
   string public name;
   string public symbol;
-
-  /**
-   * @dev ERC1271 signature verification is implemented for creator signed by contract wallet
-   *      this may be required creator use organization account for creation
-   *      this is only required for minamint
-   *      normal mint use msg.sender so contract wallet is compatible
-   */
-  bytes4 internal constant _INTERFACE_ID_ERC1271 = 0x1626ba7e;
 
   constructor(string memory _name, string memory _symbol) public {
     name = _name;
@@ -223,33 +210,28 @@ contract Chocomint is ERC721 {
     address payable _creator,
     address _receiver,
     uint256 _price,
-    bool _isToCreator,
+    bool _isForWhiteListed,
+    bytes32 _root,
+    bytes32[] memory _proof,
     bytes memory _signature
   ) public payable {
     require(msg.value >= _price, "msg value must be more than signed price");
-    if (_isToCreator) {
-      require(_receiver == _creator, "receiver must be creator");
-    }
+
+    // gigaminamint cannot verify price, so check recreiver is whitelisted instead
+    address receiver = _isForWhiteListed ? _receiver : address(0x0);
+
+    // chainId and contract address is required for reduce risk
+    // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
     bytes32 hash =
-      // chainId and contract address is required for reduce risk
-      // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
-      keccak256(abi.encodePacked(_getChainId(), address(this), _ipfs, _price));
-    // I do not like this complicity... is it really required to be compatible with contract wallet
-    if (
-      _creator.isContract() &&
-      ERC165(_creator).supportsInterface(_INTERFACE_ID_ERC1271)
-    ) {
-      require(
-        IERC1271(_creator).isValidSignature(hash, _signature) ==
-          _INTERFACE_ID_ERC1271,
-        "signer must be valid for creator contract"
+      keccak256(
+        abi.encodePacked(_getChainId(), address(this), _ipfs, _price, receiver)
       );
-    } else {
-      require(
-        hash.toEthSignedMessageHash().recover(_signature) == _creator,
-        "signer must be valid for creator"
-      );
-    }
+    bool hashVerified = MerkleProof.verify(_proof, _root, hash);
+    require(hashVerified, "Must be included in merkle tree");
+    require(
+      _root.toEthSignedMessageHash().recover(_signature) == _creator,
+      "signer must be valid for creator"
+    );
     _mint(_ipfs, _creator, msg.sender, _receiver);
     if (msg.value > 0) {
       _creator.transfer(msg.value);
@@ -258,27 +240,45 @@ contract Chocomint is ERC721 {
 
   /**
    * @dev bulk mint for gas efficiency, this function is used for pro business case
-   *      for this pro purpose, I believe same receiver is enough
    */
-  function gigamint(bytes32[] memory _ipfs, address _receiver) public {
+  function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
+    require(
+      _ipfs.length == _receiver.length,
+      "ipfs length and receiver length must be same"
+    );
     for (uint256 i = 0; i < _ipfs.length; i++) {
-      mint(_ipfs[i], _receiver);
+      mint(_ipfs[i], _receiver[i]);
     }
   }
 
   /**
    * @dev bulk mint for gas efficiency, this function is used for pro business case
-   *      somecase creator and minter is different, in this case, creator just sign, and minter make transaction
-   *      I believe same creator, receiver, signature is enough
+   *      for case creator and minter is different and bulk is required
+   *      for gigaminamint signature, price should be 0, and should be whitelisted
    */
   function gigaminamint(
     bytes32[] memory _ipfs,
     address payable _creator,
-    address _receiver,
+    address[] memory _receiver,
+    bytes32 root,
+    bytes32[][] memory proof,
     bytes memory _signature
   ) public {
+    require(
+      _ipfs.length == _receiver.length || _ipfs.length == proof.length,
+      "ipfs length and receiver and proof length must be same"
+    );
     for (uint256 i = 0; i < _ipfs.length; i++) {
-      minamint(_ipfs[i], _creator, _receiver, 0, false, _signature[i]);
+      minamint(
+        _ipfs[i],
+        _creator,
+        _receiver[i],
+        0,
+        true,
+        root,
+        proof[i],
+        _signature
+      );
     }
   }
 
