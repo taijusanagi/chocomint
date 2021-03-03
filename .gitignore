@@ -125,7 +125,7 @@ packages/contracts/coverage.json
 yarn.lock
 
 # Firebase
-.firebase
+# .firebase
 
 # misc
 .DS_Store
