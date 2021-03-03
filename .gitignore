@@ -119,6 +119,7 @@ dist
 packages/contracts/artifacts
 packages/contracts/cache
 packages/contracts/typechain
+packages/contracts/coverage.json
 
 # yarn
 yarn.lock

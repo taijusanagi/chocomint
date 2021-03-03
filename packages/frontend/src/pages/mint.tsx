@@ -86,9 +86,7 @@ export const Mint: React.FC = () => {
         setError("Please connect to Rinkeby or Matic Testnet.");
         return;
       }
-      const { contractAddress, explore } = getNetworkConfig(
-        chainId.toString() as ChainIdType
-      );
+      const { explore } = getNetworkConfig(chainId.toString() as ChainIdType);
       const choco = {
         name,
         description,
@@ -96,7 +94,9 @@ export const Mint: React.FC = () => {
       };
       const metadataString = JSON.stringify(choco);
       const { cid } = await ipfs.add(metadataString);
-      const contract = getContract(contractAddress).connect(signer);
+      const contract = getContract(chainId.toString() as ChainIdType).connect(
+        signer
+      );
       const digest = `0x${bs58
         .decode(cid.toString())
         .slice(2)
@@ -105,7 +105,7 @@ export const Mint: React.FC = () => {
       setExploreUrl(`${explore}${hash}`);
       setSuccess(`TxHash: \n${hash}`);
     } catch (err) {
-      setError("Please connect to Rinkeby or Matic Testnet.");
+      setError("Error happend");
     }
   };
 

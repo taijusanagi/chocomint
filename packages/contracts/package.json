@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "setup": "hardhat node"
+    "test": "hardhat test",
+    "coverage": "hardhat coverage",
+    "run-localchain": "hardhat node",
+    "deploy-contract-to-localchain": "hardhat run scripts/deployChocoMint.ts --network localhost"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",

@@ -5,7 +5,7 @@ import "solidity-coverage";
 
 const privateKey =
   process.env.PRIVATE_KEY ||
-  "0x0000000000000000000000000000000000000000000000000000000000000000"; //avoid hardhat error
+  "0x0000000000000000000000000000000000000000000000000000000000000000"; // this is to avoid hardhat error
 
 module.exports = {
   solidity: {
