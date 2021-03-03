@@ -2,9 +2,11 @@
 pragma solidity ^0.5.17;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "./IERC1271.sol";
 
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
@@ -112,16 +114,21 @@ import "hardhat/console.sol";
 // rrtrrrrrrtrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrtrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrtrrtrrtr
 
 contract Chocomint is ERC721 {
+  using SafeMath for uint256;
   using ECDSA for bytes32;
+  using Address for address payable;
 
   mapping(address => mapping(bytes32 => uint256)) public tokenIdMemory;
   mapping(uint256 => bytes32) public ipfsMemory;
   mapping(uint256 => address) public creatorMemory;
   mapping(uint256 => address) public minterMemory;
 
-  Counters.Counter public totalSupply;
+  uint256 public totalSupply;
   string public name;
   string public symbol;
+
+  bytes4 public constant _INTERFACE_ID_ERC1271 = 0x1626ba7e;
+  bytes4 public constant _ERC1271FAILVALUE = 0xffffffff;
 
   constructor(string memory _name, string memory _symbol) public {
     name = _name;
@@ -135,13 +142,12 @@ contract Chocomint is ERC721 {
     address _receiver
   ) internal {
     require(tokenIdMemory[_creator][_ipfs] == 0, "already published");
-    totalSupply.increment();
-    uint256 tokenId = totalSupply.current();
-    ipfsMemory[tokenId] = _ipfs;
-    creatorMemory[tokenId] = _creator;
-    minterMemory[tokenId] = _minter;
-    super._mint(_receiver, tokenId);
-    tokenIdMemory[_creator][_ipfs] = tokenId;
+    totalSupply = totalSupply.add(1);
+    ipfsMemory[totalSupply] = _ipfs;
+    creatorMemory[totalSupply] = _creator;
+    minterMemory[totalSupply] = _minter;
+    super._mint(_receiver, totalSupply);
+    tokenIdMemory[_creator][_ipfs] = totalSupply;
   }
 
   function mint(bytes32 _ipfs, address _receiver) public {
@@ -150,18 +156,33 @@ contract Chocomint is ERC721 {
 
   function minamint(
     bytes32 _ipfs,
-    uint256 _price,
     address payable _creator,
     address _receiver,
-    bytes memory signature
+    uint256 _price,
+    bool _isToCreator,
+    bytes memory _signature
   ) public payable {
     require(msg.value >= _price, "msg value must be more than signed price");
+    if (_isToCreator) {
+      require(_receiver == _creator, "receiver must be creator");
+    }
     bytes32 hash =
       keccak256(abi.encodePacked(_getChainId(), address(this), _ipfs, _price));
-    require(
-      hash.toEthSignedMessageHash().recover(signature) == _creator,
-      "signer must be equal to creator"
-    );
+    if (
+      _creator.isContract() &&
+      ERC165(_creator).supportsInterface(_INTERFACE_ID_ERC1271)
+    ) {
+      require(
+        IERC1271(_creator).isValidSignature(hash, _signature) ==
+          _INTERFACE_ID_ERC1271,
+        "signer must be valid for creator contract"
+      );
+    } else {
+      require(
+        hash.toEthSignedMessageHash().recover(_signature) == _creator,
+        "signer must be valid for creator"
+      );
+    }
     _mint(_ipfs, _creator, msg.sender, _receiver);
     _creator.transfer(msg.value);
   }
