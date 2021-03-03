@@ -65,9 +65,5 @@
     "@types/react-router-dom": "^5.1.7",
     "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-prettier": "^3.3.1"
-  },
-  "resolutions": {
-    "multicodec": "2.0.0",
-    "cids": "1.0.0"
   }
 }

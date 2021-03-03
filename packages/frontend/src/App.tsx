@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
-import Create from "./pages/create";
+import Create from "./pages/mint";
 
 const App: React.FC = () => {
   return (

@@ -6,8 +6,9 @@
   "workspaces": [
     "packages/**"
   ],
-  "resolitions": {
-    "multicodec": "2.0.0"
+  "resolutions": {
+    "multicodec": "2.0.0",
+    "cids": "1.0.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3"

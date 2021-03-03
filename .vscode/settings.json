@@ -5,5 +5,11 @@
     "source.fixAll.eslint": true
   },
   "solidity.packageDefaultDependenciesContractsDirectory": "",
-  "solidity.packageDefaultDependenciesDirectory": "node_modules"
+  "solidity.packageDefaultDependenciesDirectory": "node_modules",
+  "files.watcherExclude": {
+    "**/cache/**": true,
+    "**/build/**": true,
+    "**/artifacts/**": true,
+    "**/typechain/**": true
+  }
 }

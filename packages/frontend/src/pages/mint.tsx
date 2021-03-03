@@ -11,7 +11,7 @@ import {
 const bs58 = require("bs58");
 const logo = require("../assets/icon.png").default;
 
-export const Create: React.FC = () => {
+export const Mint: React.FC = () => {
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
@@ -165,7 +165,7 @@ export const Create: React.FC = () => {
               alt="logo"
             />
             <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
-              Let’s create NFTs!
+              Chocomint!
             </h2>
             <p className="text-center text-gray-500 text-sm">
               Rinkeby & Mumbai is available
@@ -364,4 +364,4 @@ export const Create: React.FC = () => {
   );
 };
 
-export default Create;
+export default Mint;

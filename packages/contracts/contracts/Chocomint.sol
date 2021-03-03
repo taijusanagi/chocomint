@@ -2,6 +2,7 @@
 pragma solidity ^0.5.17;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "hardhat/console.sol";
 
@@ -111,22 +112,68 @@ import "hardhat/console.sol";
 // rrtrrrrrrtrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrtrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrtrrtrrtr
 
 contract Chocomint is ERC721 {
-  mapping(uint256 => bytes32) public ipfsMemory;
+  using ECDSA for bytes32;
 
+  mapping(address => mapping(bytes32 => uint256)) public tokenIdMemory;
+  mapping(uint256 => bytes32) public ipfsMemory;
+  mapping(uint256 => address) public creatorMemory;
+  mapping(uint256 => address) public minterMemory;
+
+  Counters.Counter public totalSupply;
   string public name;
   string public symbol;
-
-  uint256 public totalSupply;
 
   constructor(string memory _name, string memory _symbol) public {
     name = _name;
     symbol = _symbol;
   }
 
-  function mint(bytes32 _ipfs) external {
-    totalSupply++;
-    ipfsMemory[totalSupply] = _ipfs;
-    _mint(msg.sender, totalSupply);
+  function _mint(
+    bytes32 _ipfs,
+    address _creator,
+    address _minter,
+    address _receiver
+  ) internal {
+    require(tokenIdMemory[_creator][_ipfs] == 0, "already published");
+    totalSupply.increment();
+    uint256 tokenId = totalSupply.current();
+    ipfsMemory[tokenId] = _ipfs;
+    creatorMemory[tokenId] = _creator;
+    minterMemory[tokenId] = _minter;
+    super._mint(_receiver, tokenId);
+    tokenIdMemory[_creator][_ipfs] = tokenId;
+  }
+
+  function mint(bytes32 _ipfs, address _receiver) public {
+    _mint(_ipfs, msg.sender, msg.sender, _receiver);
+  }
+
+  function minamint(
+    bytes32 _ipfs,
+    uint256 _price,
+    address payable _creator,
+    address _receiver,
+    bytes memory signature
+  ) public payable {
+    require(msg.value >= _price, "msg value must be more than signed price");
+    bytes32 hash =
+      keccak256(abi.encodePacked(_getChainId(), address(this), _ipfs, _price));
+    require(
+      hash.toEthSignedMessageHash().recover(signature) == _creator,
+      "signer must be equal to creator"
+    );
+    _mint(_ipfs, _creator, msg.sender, _receiver);
+    _creator.transfer(msg.value);
+  }
+
+  function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
+    require(
+      _ipfs.length == _receiver.length,
+      "ipfs length and receiver length must be same"
+    );
+    for (uint256 i = 0; i < _ipfs.length; i++) {
+      mint(_ipfs[i], _receiver[i]);
+    }
   }
 
   function tokenURI(uint256 tokenId) external view returns (string memory) {
@@ -137,6 +184,14 @@ contract Chocomint is ERC721 {
           _bytesToBase58(_addSha256FunctionCodePrefix(ipfsMemory[tokenId]))
         )
       );
+  }
+
+  function _getChainId() private pure returns (uint256) {
+    uint256 id;
+    assembly {
+      id := chainid()
+    }
+    return id;
   }
 
   function _addIpfsBaseUrlPrefix(bytes memory input)
