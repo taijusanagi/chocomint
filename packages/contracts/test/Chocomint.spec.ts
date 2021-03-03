@@ -2,38 +2,91 @@ import { ethers } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
 
-const createClient = require("ipfs-http-client");
-
-//this endpoint is too slow
-export const ipfs = createClient({
-  host: "ipfs.infura.io",
-  port: 5001,
-  protocol: "https",
-});
-
 chai.use(solidity);
 const { expect } = chai;
 
-describe("Chocomint Original", function () {
+describe("Chocomint", function () {
   let chocomint;
   const contractName = "ChocoMintEthereum";
   const contractSymbol = "CME";
-  this.beforeAll("initialization.", async function () {
+
+  const metadataIpfsCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz";
+  const metadataIpfsHash =
+    "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
+
+  const ipfsBaseUrl = "ipfs://";
+
+  const firstTokenIndex = 1;
+  const firstTokenMintedTotalSupply = firstTokenIndex;
+
+  let creator, minter, receiver, malicious;
+
+  this.beforeEach("initialization.", async function () {
+    [
+      { address: creator },
+      { address: minter },
+      { address: receiver },
+      { address: malicious },
+    ] = await ethers.getSigners();
     const Chocomint = await ethers.getContractFactory("Chocomint");
     chocomint = await Chocomint.deploy(contractName, contractSymbol);
   });
 
-  it("case: deploy is ok / check: name, symbol", async function () {
+  it("deploy: deploy is ok / check: name, symbol, totalSupply", async function () {
     expect(await chocomint.name()).to.equal(contractName);
     expect(await chocomint.symbol()).to.equal(contractSymbol);
+    expect(await chocomint.totalSupply()).to.equal(
+      firstTokenMintedTotalSupply - 1
+    );
   });
 
-  it("case: mint is ok / check: tokenURI", async function () {
-    const imageCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz";
-    const imageHash =
-      "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
-    await chocomint.mint(imageHash);
-    const tokenURI = await chocomint.tokenURI(1);
-    expect(tokenURI).to.equal(`ipfs://${imageCid}`);
+  //Senario Testing
+
+  it("mint: mint by creator and creator get the NFT", async function () {
+    await chocomint.mint(metadataIpfsHash, creator, { from: creator });
+    expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(creator);
+    expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(creator);
+    expect(await chocomint.minterMemory(firstTokenIndex)).to.equal(creator);
+    const hash = ethers.utils.solidityKeccak256(
+      ["bytes32", "address"],
+      [metadataIpfsHash, creator]
+    );
+    expect(await chocomint.publishedTokenId(hash)).to.equal(firstTokenIndex);
+    expect(await chocomint.totalSupply()).to.equal(firstTokenMintedTotalSupply);
+    expect(await chocomint.tokenURI(firstTokenIndex)).to.equal(
+      `${ipfsBaseUrl}${metadataIpfsCid}`
+    );
+  });
+
+  it("mint: mint by creator and same asset cannot be minted", async function () {
+    await chocomint.mint(metadataIpfsHash, creator, { from: creator });
+    expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(receiver);
+    expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(creator);
+    expect(await chocomint.minterMemory(firstTokenIndex)).to.equal(creator);
+    const hash = ethers.utils.solidityKeccak256(
+      ["bytes32", "address"],
+      [metadataIpfsHash, creator]
+    );
+    expect(await chocomint.publishedTokenId(hash)).to.equal(firstTokenIndex);
+    expect(await chocomint.totalSupply()).to.equal(firstTokenMintedTotalSupply);
+    expect(await chocomint.tokenURI(firstTokenIndex)).to.equal(
+      `${ipfsBaseUrl}${metadataIpfsCid}`
+    );
+  });
+
+  it("mint: mint by creator and other receiver get the NFT", async function () {
+    await chocomint.mint(metadataIpfsHash, receiver, { from: creator });
+    expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(receiver);
+    expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(creator);
+    expect(await chocomint.minterMemory(firstTokenIndex)).to.equal(creator);
+    const hash = ethers.utils.solidityKeccak256(
+      ["bytes32", "address"],
+      [metadataIpfsHash, creator]
+    );
+    expect(await chocomint.publishedTokenId(hash)).to.equal(firstTokenIndex);
+    expect(await chocomint.totalSupply()).to.equal(firstTokenMintedTotalSupply);
+    expect(await chocomint.tokenURI(firstTokenIndex)).to.equal(
+      `${ipfsBaseUrl}${metadataIpfsCid}`
+    );
   });
 });

@@ -2,12 +2,16 @@
 pragma solidity ^0.5.17;
 pragma experimental ABIEncoderV2;
 
+// This contract is created by taijusanagi(taijusanagi.eth), I hope this contract is used for all NFT lovers
+// solidity 0.5.17 is used, because this contract uses @openzeppelin/contracts@2.5.1 for gas efficiency
+
 import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./IERC1271.sol";
 
+// This art is created by Daiki Kunii
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
 // rrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrtrrrr
@@ -113,47 +117,104 @@ import "./IERC1271.sol";
 // rrrrrrtrrrrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrtrrrrrtrrtrrtrrtrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrrrrrrrr
 // rrtrrrrrrtrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrtrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrtrrtrrtr
 
+// I beleive ERC721 is more suitable than ERC1155
+// I will create ERC1155 for "chocoprint" later
+// ERC721 is original NFT, and ERC1155 is copy NFT (kind of printed NFT) in Chocomint
+// Chocomint is chocolate + peppermint, this provide simple experience to mint NFT, and it tastes like chocomint
 contract Chocomint is ERC721 {
+  // SafeMath is used instead of Counter for simplicity
   using SafeMath for uint256;
+
+  // ECDSA is used for signature verification
   using ECDSA for bytes32;
+
+  // Address is used for check address is contract
   using Address for address payable;
 
-  mapping(address => mapping(bytes32 => uint256)) public tokenIdMemory;
+  /**
+   * @dev this is used for dulication check
+   *      bytes32hash(ipfsHash, creatorAddress) is used for simplicity
+   */
+  mapping(bytes32 => uint256) public publishedTokenId;
+
+  /**
+   * @dev this ipfsHash is for tokenURI, used bytes32 ipfs content digest instead of string ipfs cid for gas efficiency
+   *      this metadata can be any kind of json data for future compatibility
+   *      it guarantees persistance of token metadata, it will not changed with help of IPFS
+   *      if invalid ipfs digest is entered, NFT still can be published, but metadata is completely invalid, who needs that NFT?
+   *      you can try to publish invalid NFT, but you will just loose your money
+   */
   mapping(uint256 => bytes32) public ipfsMemory;
+
+  /**
+   * @dev creator is kept for validation
+   */
   mapping(uint256 => address) public creatorMemory;
+
+  /**
+   * @dev minter is great role to publish NFT in blockchain so it kept as minter
+   */
   mapping(uint256 => address) public minterMemory;
 
+  /**
+   * @dev total suplly is implemented for etherscan display
+   */
   uint256 public totalSupply;
+
+  /**
+   * @dev ERC721Metadata is not used, because tokenURI is original logic
+   *      so name and symbol is impemented here
+   */
   string public name;
   string public symbol;
 
-  bytes4 public constant _INTERFACE_ID_ERC1271 = 0x1626ba7e;
-  bytes4 public constant _ERC1271FAILVALUE = 0xffffffff;
+  /**
+   * @dev ERC1271 signature verification is implemented for creator signed by contract wallet
+   *      this may be required creator use organization account for creation
+   *      this is only required for minamint
+   *      normal mint use msg.sender so contract wallet is compatible
+   */
+  bytes4 internal constant _INTERFACE_ID_ERC1271 = 0x1626ba7e;
 
   constructor(string memory _name, string memory _symbol) public {
     name = _name;
     symbol = _symbol;
   }
 
+  /**
+   * @dev I guess it is possible to mint to NFT to differenct account from creator/minter for business user
+   *      so minter and receiver is different
+   */
   function _mint(
     bytes32 _ipfs,
     address _creator,
     address _minter,
     address _receiver
   ) internal {
-    require(tokenIdMemory[_creator][_ipfs] == 0, "already published");
+    // chainId and contract address is not required in hash
+    bytes32 hash = keccak256(abi.encodePacked(_ipfs, _creator));
+    require(publishedTokenId[hash] == 0, "already published");
     totalSupply = totalSupply.add(1);
     ipfsMemory[totalSupply] = _ipfs;
     creatorMemory[totalSupply] = _creator;
     minterMemory[totalSupply] = _minter;
     super._mint(_receiver, totalSupply);
-    tokenIdMemory[_creator][_ipfs] = totalSupply;
+    publishedTokenId[hash] = totalSupply;
   }
 
+  /**
+   * @dev creator and minter is msg.sender, and it cannot be input, because creator and minter should be signature verified
+   */
   function mint(bytes32 _ipfs, address _receiver) public {
     _mint(_ipfs, msg.sender, msg.sender, _receiver);
   }
 
+  /**
+   * @dev creator just sign the content creation(ipfsHash, price) and delegate minting to others
+   *      case1: creator get NFT, this is like minter just help creator to mint
+   *      case2: minter get NFT, this is like cloud sale of premint NFT
+   *      minter cannnot be input because minter should be signature verified
+   */
   function minamint(
     bytes32 _ipfs,
     address payable _creator,
@@ -167,7 +228,10 @@ contract Chocomint is ERC721 {
       require(_receiver == _creator, "receiver must be creator");
     }
     bytes32 hash =
+      // chainId and contract address is required for reduce risk
+      // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
       keccak256(abi.encodePacked(_getChainId(), address(this), _ipfs, _price));
+    // I do not like this complicity... is it really required to be compatible with contract wallet
     if (
       _creator.isContract() &&
       ERC165(_creator).supportsInterface(_INTERFACE_ID_ERC1271)
@@ -187,6 +251,9 @@ contract Chocomint is ERC721 {
     _creator.transfer(msg.value);
   }
 
+  /**
+   * @dev bulk mint for gas efficiency, I'm still thinking whether this is really required
+   */
   function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
     require(
       _ipfs.length == _receiver.length,
@@ -197,7 +264,11 @@ contract Chocomint is ERC721 {
     }
   }
 
-  function tokenURI(uint256 tokenId) external view returns (string memory) {
+  /**
+   * @dev I think this is cool function, get IPFS cid from digest hash
+   *      it reduces gas cost for NFT minting
+   */
+  function tokenURI(uint256 tokenId) public view returns (string memory) {
     require(_exists(tokenId), "token must exist");
     return
       string(
@@ -207,7 +278,7 @@ contract Chocomint is ERC721 {
       );
   }
 
-  function _getChainId() private pure returns (uint256) {
+  function _getChainId() internal pure returns (uint256) {
     uint256 id;
     assembly {
       id := chainid()
@@ -216,7 +287,7 @@ contract Chocomint is ERC721 {
   }
 
   function _addIpfsBaseUrlPrefix(bytes memory input)
-    private
+    internal
     pure
     returns (bytes memory)
   {
@@ -224,7 +295,7 @@ contract Chocomint is ERC721 {
   }
 
   function _addSha256FunctionCodePrefix(bytes32 input)
-    private
+    internal
     pure
     returns (bytes memory)
   {
@@ -232,7 +303,7 @@ contract Chocomint is ERC721 {
   }
 
   function _bytesToBase58(bytes memory input)
-    private
+    internal
     pure
     returns (bytes memory)
   {
