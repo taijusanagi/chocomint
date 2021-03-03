@@ -216,15 +216,18 @@ contract Chocomint is ERC721 {
     bytes memory _signature
   ) public payable {
     require(msg.value >= _price, "msg value must be more than signed price");
-
-    // gigaminamint cannot verify price, so check recreiver is whitelisted instead
-    address receiver = _isForWhiteListed ? _receiver : address(0x0);
-
     // chainId and contract address is required for reduce risk
     // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
     bytes32 hash =
       keccak256(
-        abi.encodePacked(_getChainId(), address(this), _ipfs, _price, receiver)
+        abi.encodePacked(
+          _getChainId(),
+          address(this),
+          _ipfs,
+          _price,
+          // gigaminamint cannot verify price, so check recreiver is whitelisted instead
+          _isForWhiteListed ? _receiver : address(0x0)
+        )
       );
     bool hashVerified = MerkleProof.verify(_proof, _root, hash);
     require(hashVerified, "Must be included in merkle tree");
@@ -241,46 +244,46 @@ contract Chocomint is ERC721 {
   /**
    * @dev bulk mint for gas efficiency, this function is used for pro business case
    */
-  function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
-    require(
-      _ipfs.length == _receiver.length,
-      "ipfs length and receiver length must be same"
-    );
-    for (uint256 i = 0; i < _ipfs.length; i++) {
-      mint(_ipfs[i], _receiver[i]);
-    }
-  }
+  // function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
+  //   require(
+  //     _ipfs.length == _receiver.length,
+  //     "ipfs length and receiver length must be same"
+  //   );
+  //   for (uint256 i = 0; i < _ipfs.length; i++) {
+  //     mint(_ipfs[i], _receiver[i]);
+  //   }
+  // }
 
   /**
    * @dev bulk mint for gas efficiency, this function is used for pro business case
    *      for case creator and minter is different and bulk is required
    *      for gigaminamint signature, price should be 0, and should be whitelisted
    */
-  function gigaminamint(
-    bytes32[] memory _ipfs,
-    address payable _creator,
-    address[] memory _receiver,
-    bytes32 root,
-    bytes32[][] memory proof,
-    bytes memory _signature
-  ) public {
-    require(
-      _ipfs.length == _receiver.length || _ipfs.length == proof.length,
-      "ipfs length and receiver and proof length must be same"
-    );
-    for (uint256 i = 0; i < _ipfs.length; i++) {
-      minamint(
-        _ipfs[i],
-        _creator,
-        _receiver[i],
-        0,
-        true,
-        root,
-        proof[i],
-        _signature
-      );
-    }
-  }
+  // function gigaminamint(
+  //   bytes32[] memory _ipfs,
+  //   address payable _creator,
+  //   address[] memory _receiver,
+  //   bytes32 root,
+  //   bytes32[][] memory proof,
+  //   bytes memory _signature
+  // ) public {
+  //   require(
+  //     _ipfs.length == _receiver.length || _ipfs.length == proof.length,
+  //     "ipfs length and receiver and proof length must be same"
+  //   );
+  //   for (uint256 i = 0; i < _ipfs.length; i++) {
+  //     minamint(
+  //       _ipfs[i],
+  //       _creator,
+  //       _receiver[i],
+  //       0,
+  //       true,
+  //       root,
+  //       proof[i],
+  //       _signature
+  //     );
+  //   }
+  // }
 
   /**
    * @dev I think this is cool function, get IPFS cid from digest hash

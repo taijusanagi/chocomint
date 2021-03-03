@@ -16,12 +16,15 @@
     "hardhat": "^2.0.10",
     "hardhat-typechain": "^0.3.4",
     "prettier-plugin-solidity": "^1.0.0-beta.5",
+    "solidity-coverage": "^0.7.15",
     "ts-generator": "^0.1.1",
     "ts-node": "^9.1.1",
     "typechain": "^4.0.1",
     "typescript": "^4.1.5"
   },
   "dependencies": {
-    "ipfs-only-hash": "^2.0.1"
+    "ipfs-only-hash": "^2.0.1",
+    "keccak256": "^1.0.2",
+    "merkletreejs": "^0.2.13"
   }
 }
