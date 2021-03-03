@@ -26,13 +26,5 @@ module.exports = {
       url: `https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149`,
       accounts: [privateKey],
     },
-    matic: {
-      url: `https://rpc-mumbai.matic.today`,
-      accounts: [privateKey],
-    },
-    matic_test: {
-      url: `https://rpc-mumbai.matic.today`,
-      accounts: [privateKey],
-    },
   },
 };

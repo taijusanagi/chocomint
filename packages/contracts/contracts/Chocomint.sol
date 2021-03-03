@@ -121,230 +121,243 @@ import "hardhat/console.sol";
 // ERC721 is original NFT, and ERC1155 is copy NFT (kind of printed NFT) in Chocomint
 // Chocomint is chocolate + peppermint, this provide simple experience to mint NFT, and it tastes like chocomint
 contract Chocomint is ERC721 {
-  // SafeMath is used instead of Counter for simplicity
-  using SafeMath for uint256;
+    // SafeMath is used instead of Counter for simplicity
+    using SafeMath for uint256;
 
-  // ECDSA is used for signature verification
-  using ECDSA for bytes32;
+    // ECDSA is used for signature verification
+    using ECDSA for bytes32;
 
-  /**
-   * @dev this is used for dulication check
-   *      bytes32hash(ipfsHash, creatorAddress) is used for simplicity
-   */
-  mapping(bytes32 => uint256) public publishedTokenId;
+    /**
+     * @dev this is used for dulication check
+     *      bytes32hash(ipfsHash, creatorAddress) is used for simplicity
+     */
+    mapping(bytes32 => uint256) public publishedTokenId;
 
-  /**
-   * @dev this ipfsHash is for tokenURI, used bytes32 ipfs content digest instead of string ipfs cid for gas efficiency
-   *      this metadata can be any kind of json data for future compatibility
-   *      it guarantees persistance of token metadata, it will not changed with help of IPFS
-   *      if invalid ipfs digest is entered, NFT still can be published, but metadata is completely invalid, who needs that NFT?
-   *      you can try to publish invalid NFT, but you will just loose your money
-   */
-  mapping(uint256 => bytes32) public ipfsMemory;
+    /**
+     * @dev this ipfsHash is for tokenURI, used bytes32 ipfs content digest instead of string ipfs cid for gas efficiency
+     *      this metadata can be any kind of json data for future compatibility
+     *      it guarantees persistance of token metadata, it will not changed with help of IPFS
+     *      if invalid ipfs digest is entered, NFT still can be published, but metadata is completely invalid, who needs that NFT?
+     *      you can try to publish invalid NFT, but you will just loose your money
+     */
+    mapping(uint256 => bytes32) public ipfsMemory;
 
-  /**
-   * @dev creator is kept for validation
-   */
-  mapping(uint256 => address) public creatorMemory;
+    /**
+     * @dev creator is kept for validation
+     */
+    mapping(uint256 => address) public creatorMemory;
 
-  /**
-   * @dev minter is great role to publish NFT in blockchain so it kept as minter
-   */
-  mapping(uint256 => address) public minterMemory;
+    /**
+     * @dev minter is great role to publish NFT in blockchain so it kept as minter
+     */
+    mapping(uint256 => address) public minterMemory;
 
-  /**
-   * @dev total suplly is implemented for etherscan display
-   */
-  uint256 public totalSupply;
+    /**
+     * @dev total suplly is implemented for etherscan display
+     */
+    uint256 public totalSupply;
 
-  /**
-   * @dev ERC721Metadata is not used, because tokenURI is original logic
-   *      so name and symbol is impemented here
-   */
-  string public name;
-  string public symbol;
+    /**
+     * @dev ERC721Metadata is not used, because tokenURI is original logic
+     *      so name and symbol is impemented here
+     */
+    string public name;
+    string public symbol;
 
-  constructor(string memory _name, string memory _symbol) public {
-    name = _name;
-    symbol = _symbol;
-  }
-
-  /**
-   * @dev I guess it is possible to mint to NFT to differenct account from creator/minter for business user
-   *      so minter and receiver is different
-   *      sometime frontrunner can make same nft, but in that case creator is invalid, so NFT is published but NFT can be validated as fake
-   */
-  function _mint(
-    bytes32 _ipfs,
-    address _creator,
-    address _minter,
-    address _receiver
-  ) internal {
-    // chainId and contract address is not required in hash
-    bytes32 hash = keccak256(abi.encodePacked(_ipfs, _creator));
-    require(
-      publishedTokenId[hash] == 0,
-      "this ipfsHash and creator NFT is already published"
-    );
-    address receiver = _receiver == address(0x0) ? msg.sender : _receiver;
-    totalSupply = totalSupply.add(1);
-    ipfsMemory[totalSupply] = _ipfs;
-    creatorMemory[totalSupply] = _creator;
-    minterMemory[totalSupply] = _minter;
-    super._mint(receiver, totalSupply);
-    publishedTokenId[hash] = totalSupply;
-  }
-
-  /**
-   * @dev creator and minter is msg.sender, and it cannot be input, because creator and minter should be signature verified
-   */
-  function mint(bytes32 _ipfs, address _receiver) public {
-    _mint(_ipfs, msg.sender, msg.sender, _receiver);
-  }
-
-  /**
-   * @dev creator just sign the content creation(ipfsHash, price) and delegate minting to others
-   *      case1: creator get NFT, this is like minter just help creator to mint
-   *      case2: minter get NFT, this is like cloud sale of premint NFT
-   *      minter cannnot be input because minter should be signature verified
-   */
-  function minamint(
-    bytes32 _ipfs,
-    address payable _creator,
-    address _receiver,
-    uint256 _price,
-    bytes32 _root,
-    bytes32[] memory _proof,
-    bytes memory _signature
-  ) public payable {
-    require(msg.value >= _price, "msg value must be more than signed price");
-    // chainId and contract address is required for reduce risk
-    // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
-    bytes32 hash =
-      keccak256(
-        abi.encodePacked(_getChainId(), address(this), _ipfs, _price, _receiver)
-      );
-    bool hashVerified = MerkleProof.verify(_proof, _root, hash);
-    require(hashVerified, "hash must be included in merkle tree");
-    require(
-      _root.toEthSignedMessageHash().recover(_signature) == _creator,
-      "signer must be valid for creator"
-    );
-    _mint(_ipfs, _creator, msg.sender, _receiver);
-    if (msg.value > 0) {
-      _creator.transfer(msg.value);
+    constructor(string memory _name, string memory _symbol) public {
+        name = _name;
+        symbol = _symbol;
     }
-  }
 
-  /**
-   * @dev bulk mint for gas efficiency, this function is used for pro business case
-   */
-  function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
-    require(
-      _ipfs.length == _receiver.length,
-      "ipfs length and receiver length must be same"
-    );
-    for (uint256 i = 0; i < _ipfs.length; i++) {
-      mint(_ipfs[i], _receiver[i]);
+    /**
+     * @dev I guess it is possible to mint to NFT to differenct account from creator/minter for business user
+     *      so minter and receiver is different
+     *      sometime frontrunner can make same nft, but in that case creator is invalid, so NFT is published but NFT can be validated as fake
+     */
+    function _mint(
+        bytes32 _ipfs,
+        address _creator,
+        address _minter,
+        address _receiver
+    ) internal {
+        // chainId and contract address is not required in hash
+        bytes32 hash = keccak256(abi.encodePacked(_ipfs, _creator));
+        require(
+            publishedTokenId[hash] == 0,
+            "this ipfsHash and creator NFT is already published"
+        );
+        address receiver = _receiver == address(0x0) ? msg.sender : _receiver;
+        totalSupply = totalSupply.add(1);
+        ipfsMemory[totalSupply] = _ipfs;
+        creatorMemory[totalSupply] = _creator;
+        minterMemory[totalSupply] = _minter;
+        super._mint(receiver, totalSupply);
+        publishedTokenId[hash] = totalSupply;
     }
-  }
 
-  /**
-   * @dev bulk mint for gas efficiency, this function is used for pro business case
-   *      for case creator and minter is different and bulk is required
-   *      for gigaminamint signature, price should be 0, and should be whitelisted
-   */
-  // function gigaminamint(
-  //   bytes32[] memory _ipfs,
-  //   address payable _creator,
-  //   address[] memory _receiver,
-  //   bytes32 root,
-  //   bytes32[][] memory proof,
-  //   bytes memory _signature
-  // ) public {
-  //   require(
-  //     _ipfs.length == _receiver.length || _ipfs.length == proof.length,
-  //     "ipfs length and receiver and proof length must be same"
-  //   );
-  //   for (uint256 i = 0; i < _ipfs.length; i++) {
-  //     minamint(
-  //       _ipfs[i],
-  //       _creator,
-  //       _receiver[i],
-  //       0,
-  //       true,
-  //       root,
-  //       proof[i],
-  //       _signature
-  //     );
-  //   }
-  // }
-
-  /**
-   * @dev I think this is cool function, get IPFS cid from digest hash
-   *      it reduces gas cost for NFT minting
-   */
-  function tokenURI(uint256 tokenId) public view returns (string memory) {
-    require(_exists(tokenId), "token must exist");
-    return
-      string(
-        _addIpfsBaseUrlPrefix(
-          _bytesToBase58(_addSha256FunctionCodePrefix(ipfsMemory[tokenId]))
-        )
-      );
-  }
-
-  function _getChainId() internal pure returns (uint256) {
-    uint256 id;
-    assembly {
-      id := chainid()
+    /**
+     * @dev creator and minter is msg.sender, and it cannot be input, because creator and minter should be signature verified
+     */
+    function mint(bytes32 _ipfs, address _receiver) public {
+        _mint(_ipfs, msg.sender, msg.sender, _receiver);
     }
-    return id;
-  }
 
-  function _addIpfsBaseUrlPrefix(bytes memory input)
-    internal
-    pure
-    returns (bytes memory)
-  {
-    return abi.encodePacked("ipfs://", input);
-  }
-
-  function _addSha256FunctionCodePrefix(bytes32 input)
-    internal
-    pure
-    returns (bytes memory)
-  {
-    return abi.encodePacked(hex"1220", input);
-  }
-
-  function _bytesToBase58(bytes memory input)
-    internal
-    pure
-    returns (bytes memory)
-  {
-    bytes memory alphabet =
-      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    uint8[] memory digits = new uint8[](46);
-    bytes memory output = new bytes(46);
-    digits[0] = 0;
-    uint8 digitlength = 1;
-    for (uint256 i = 0; i < input.length; ++i) {
-      uint256 carry = uint8(input[i]);
-      for (uint256 j = 0; j < digitlength; ++j) {
-        carry += uint256(digits[j]) * 256;
-        digits[j] = uint8(carry % 58);
-        carry = carry / 58;
-      }
-      while (carry > 0) {
-        digits[digitlength] = uint8(carry % 58);
-        digitlength++;
-        carry = carry / 58;
-      }
+    /**
+     * @dev creator just sign the content creation(ipfsHash, price) and delegate minting to others
+     *      case1: creator get NFT, this is like minter just help creator to mint
+     *      case2: minter get NFT, this is like cloud sale of premint NFT
+     *      minter cannnot be input because minter should be signature verified
+     */
+    function minamint(
+        bytes32 _ipfs,
+        address payable _creator,
+        address _receiver,
+        uint256 _price,
+        bytes32 _root,
+        bytes32[] memory _proof,
+        bytes memory _signature
+    ) public payable {
+        require(
+            msg.value >= _price,
+            "msg value must be more than signed price"
+        );
+        // chainId and contract address is required for reduce risk
+        // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
+        bytes32 hash =
+            keccak256(
+                abi.encodePacked(
+                    _getChainId(),
+                    address(this),
+                    _ipfs,
+                    _price,
+                    _receiver
+                )
+            );
+        bool hashVerified = MerkleProof.verify(_proof, _root, hash);
+        require(hashVerified, "hash must be included in merkle tree");
+        require(
+            _root.toEthSignedMessageHash().recover(_signature) == _creator,
+            "signer must be valid for creator"
+        );
+        _mint(_ipfs, _creator, msg.sender, _receiver);
+        if (msg.value > 0) {
+            _creator.transfer(msg.value);
+        }
     }
-    for (uint256 k = 0; k < digitlength; k++) {
-      output[k] = alphabet[digits[digitlength - 1 - k]];
+
+    /**
+     * @dev bulk mint for gas efficiency, this function is used for pro business case
+     */
+    function gigamint(bytes32[] memory _ipfs, address[] memory _receiver)
+        public
+    {
+        require(
+            _ipfs.length == _receiver.length,
+            "ipfs length and receiver length must be same"
+        );
+        for (uint256 i = 0; i < _ipfs.length; i++) {
+            mint(_ipfs[i], _receiver[i]);
+        }
     }
-    return output;
-  }
+
+    /**
+     * @dev bulk mint for gas efficiency, this function is used for pro business case
+     *      for case creator and minter is different and bulk is required
+     *      for gigaminamint signature, price should be 0, and should be whitelisted
+     */
+    // function gigaminamint(
+    //   bytes32[] memory _ipfs,
+    //   address payable _creator,
+    //   address[] memory _receiver,
+    //   bytes32 root,
+    //   bytes32[][] memory proof,
+    //   bytes memory _signature
+    // ) public {
+    //   require(
+    //     _ipfs.length == _receiver.length || _ipfs.length == proof.length,
+    //     "ipfs length and receiver and proof length must be same"
+    //   );
+    //   for (uint256 i = 0; i < _ipfs.length; i++) {
+    //     minamint(
+    //       _ipfs[i],
+    //       _creator,
+    //       _receiver[i],
+    //       0,
+    //       true,
+    //       root,
+    //       proof[i],
+    //       _signature
+    //     );
+    //   }
+    // }
+
+    /**
+     * @dev I think this is cool function, get IPFS cid from digest hash
+     *      it reduces gas cost for NFT minting
+     */
+    function tokenURI(uint256 tokenId) public view returns (string memory) {
+        require(_exists(tokenId), "token must exist");
+        return
+            string(
+                _addIpfsBaseUrlPrefix(
+                    _bytesToBase58(
+                        _addSha256FunctionCodePrefix(ipfsMemory[tokenId])
+                    )
+                )
+            );
+    }
+
+    function _getChainId() internal pure returns (uint256) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
+    }
+
+    function _addIpfsBaseUrlPrefix(bytes memory input)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodePacked("ipfs://", input);
+    }
+
+    function _addSha256FunctionCodePrefix(bytes32 input)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodePacked(hex"1220", input);
+    }
+
+    function _bytesToBase58(bytes memory input)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        bytes memory alphabet =
+            "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+        uint8[] memory digits = new uint8[](46);
+        bytes memory output = new bytes(46);
+        digits[0] = 0;
+        uint8 digitlength = 1;
+        for (uint256 i = 0; i < input.length; ++i) {
+            uint256 carry = uint8(input[i]);
+            for (uint256 j = 0; j < digitlength; ++j) {
+                carry += uint256(digits[j]) * 256;
+                digits[j] = uint8(carry % 58);
+                carry = carry / 58;
+            }
+            while (carry > 0) {
+                digits[digitlength] = uint8(carry % 58);
+                digitlength++;
+                carry = carry / 58;
+            }
+        }
+        for (uint256 k = 0; k < digitlength; k++) {
+            output[k] = alphabet[digits[digitlength - 1 - k]];
+        }
+        return output;
+    }
 }

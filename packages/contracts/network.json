@@ -1,7 +1,7 @@
 {
-  "31337": {
+  "1": {
     "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-    "rpc": "http://localhost:8545",
+    "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://rinkeby.etherscan.io/tx/"
   },
   "4": {
@@ -9,9 +9,9 @@
     "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://rinkeby.etherscan.io/tx/"
   },
-  "80001": {
-    "contractAddress": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
-    "rpc": "https://rpc-mumbai.matic.today",
-    "explore": "https://explorer-mumbai.maticvigil.com/tx/"
+  "31337": {
+    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "rpc": "http://localhost:8545",
+    "explore": "https://rinkeby.etherscan.io/tx/"
   }
 }
