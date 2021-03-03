@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "hardhat/console.sol";
 
 // This art is created by Daiki Kunii
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
@@ -171,6 +172,7 @@ contract Chocomint is ERC721 {
   /**
    * @dev I guess it is possible to mint to NFT to differenct account from creator/minter for business user
    *      so minter and receiver is different
+   *      sometime frontrunner can make same nft, but in that case creator is invalid, so NFT is published but NFT can be validated as fake
    */
   function _mint(
     bytes32 _ipfs,
@@ -184,11 +186,12 @@ contract Chocomint is ERC721 {
       publishedTokenId[hash] == 0,
       "this ipfsHash and creator NFT is already published"
     );
+    address receiver = _receiver == address(0x0) ? msg.sender : _receiver;
     totalSupply = totalSupply.add(1);
     ipfsMemory[totalSupply] = _ipfs;
     creatorMemory[totalSupply] = _creator;
     minterMemory[totalSupply] = _minter;
-    super._mint(_receiver, totalSupply);
+    super._mint(receiver, totalSupply);
     publishedTokenId[hash] = totalSupply;
   }
 
@@ -210,7 +213,6 @@ contract Chocomint is ERC721 {
     address payable _creator,
     address _receiver,
     uint256 _price,
-    bool _isForWhiteListed,
     bytes32 _root,
     bytes32[] memory _proof,
     bytes memory _signature
@@ -220,17 +222,10 @@ contract Chocomint is ERC721 {
     // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
     bytes32 hash =
       keccak256(
-        abi.encodePacked(
-          _getChainId(),
-          address(this),
-          _ipfs,
-          _price,
-          // gigaminamint cannot verify price, so check recreiver is whitelisted instead
-          _isForWhiteListed ? _receiver : address(0x0)
-        )
+        abi.encodePacked(_getChainId(), address(this), _ipfs, _price, _receiver)
       );
     bool hashVerified = MerkleProof.verify(_proof, _root, hash);
-    require(hashVerified, "Must be included in merkle tree");
+    require(hashVerified, "hash must be included in merkle tree");
     require(
       _root.toEthSignedMessageHash().recover(_signature) == _creator,
       "signer must be valid for creator"
@@ -244,15 +239,15 @@ contract Chocomint is ERC721 {
   /**
    * @dev bulk mint for gas efficiency, this function is used for pro business case
    */
-  // function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
-  //   require(
-  //     _ipfs.length == _receiver.length,
-  //     "ipfs length and receiver length must be same"
-  //   );
-  //   for (uint256 i = 0; i < _ipfs.length; i++) {
-  //     mint(_ipfs[i], _receiver[i]);
-  //   }
-  // }
+  function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
+    require(
+      _ipfs.length == _receiver.length,
+      "ipfs length and receiver length must be same"
+    );
+    for (uint256 i = 0; i < _ipfs.length; i++) {
+      mint(_ipfs[i], _receiver[i]);
+    }
+  }
 
   /**
    * @dev bulk mint for gas efficiency, this function is used for pro business case
