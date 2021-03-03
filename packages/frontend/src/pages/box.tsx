@@ -5,7 +5,12 @@ import { db } from "../modules/firebase";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTwitter } from "@fortawesome/free-brands-svg-icons";
 
-import { getContract, validateChainId, getEthersSigner, ChainIdType } from "../modules/web3";
+import {
+  getContract,
+  validateChainId,
+  getEthersSigner,
+  ChainIdType,
+} from "../modules/web3";
 
 import { Minamints } from "../types";
 import "./box.css";
@@ -51,7 +56,6 @@ export const Box: React.FC = () => {
         choco.metadataIpfsHash,
         choco.creator,
         choco.recipient,
-        choco.value,
         choco.root,
         choco.proof,
         choco.signature,
@@ -75,7 +79,9 @@ export const Box: React.FC = () => {
               <div className="mt-2">
                 <div className="font-medium text-sm">
                   <h3>unnamed</h3>
-                  <p className="extra-small">0x70997970C51812dc3A010C7d01b50e0d17dc79C8</p>
+                  <p className="extra-small">
+                    0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+                  </p>
                 </div>
               </div>
               <div className="mt-1">

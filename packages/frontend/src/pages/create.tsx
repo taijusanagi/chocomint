@@ -22,7 +22,10 @@ export const Create: React.FC = () => {
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
-  const [waitingTransactionConfirmation, setWaitingTransactionConfirmation] = React.useState(false);
+  const [
+    waitingTransactionConfirmation,
+    setWaitingTransactionConfirmation,
+  ] = React.useState(false);
   const [alertStatus, setAlertStatus] = React.useState({
     category: "",
     msg: "",
@@ -75,11 +78,15 @@ export const Create: React.FC = () => {
     setPrice("");
   };
 
-  const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleDescriptionChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     setDescription(event.target.value);
   };
 
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     //This can be processed when file presents
     setImagePreview("");
     setImageLoading(true);
@@ -113,7 +120,10 @@ export const Create: React.FC = () => {
       const metadataString = JSON.stringify(choco);
       const { cid } = await ipfs.add(metadataString);
       const creator = await signer.getAddress();
-      const metadataIpfsHash = `0x${bs58.decode(cid.toString()).slice(2).toString("hex")}`;
+      const metadataIpfsHash = `0x${bs58
+        .decode(cid.toString())
+        .slice(2)
+        .toString("hex")}`;
       const recipient = nullAddress;
       const messageHash = ethers.utils.solidityKeccak256(
         ["uint256", "address", "bytes32", "uint256", "address"],
@@ -187,7 +197,9 @@ export const Create: React.FC = () => {
               src={logo}
               alt="logo"
             />
-            <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">Chocomint!</h2>
+            <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
+              Chocomint!
+            </h2>
             <p className="text-center text-gray-500 text-sm">
               クリエイターとNFT発行者のマッチングサービス
             </p>
@@ -250,7 +262,8 @@ export const Create: React.FC = () => {
                 ) : (
                   <img
                     className={`mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-600 shadow-md ${
-                      waitingTransactionConfirmation && "animate-spin opacity-50"
+                      waitingTransactionConfirmation &&
+                      "animate-spin opacity-50"
                     }`}
                     src={imagePreview}
                   />
@@ -305,7 +318,9 @@ export const Create: React.FC = () => {
                 <div className="flex">
                   <div className="flex-shrink-0">🎉</div>
                   <div className="ml-3 w-full">
-                    <h3 className="text-md font-medium text-green-800">Success</h3>
+                    <h3 className="text-md font-medium text-green-800">
+                      Success
+                    </h3>
                     <div className="mt-2 text-xs text-green-700">
                       <a href={exploreUrl}>
                         <p className="truncate w-60">{alertStatus.msg}</p>

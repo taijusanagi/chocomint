@@ -192,7 +192,10 @@ contract Chocomint is ERC721 {
   ) internal returns (uint256) {
     // chainId and contract address is not required in hash
     bytes32 hash = keccak256(abi.encodePacked(_ipfs, _creator));
-    require(publishedTokenId[hash] == 0, "this ipfsHash and creator NFT is already published");
+    require(
+      publishedTokenId[hash] == 0,
+      "this ipfsHash and creator NFT is already published"
+    );
     address receiver = _receiver == address(0x0) ? msg.sender : _receiver;
     totalSupply = totalSupply.add(1);
     ipfsMemory[totalSupply] = _ipfs;
@@ -203,21 +206,15 @@ contract Chocomint is ERC721 {
     return totalSupply;
   }
 
-  //   address indexed creator,
-  // bytes32 indexed ipfsHash,
-  // address indexed minter,
-  // address receiver,
-  // uint256 tokenId,
-  // uint256 price
-
   /**
    * @dev creator and minter is msg.sender, and it cannot be input, because creator and minter should be signature verified
    */
   function mint(bytes32 _ipfs, address _receiver) public {
+    uint256 price = 0;
     address creator = msg.sender;
     address minter = msg.sender;
     uint256 tokenId = _mint(_ipfs, creator, minter, _receiver);
-    emit Mint(_ipfs, creator, minter, _receiver, tokenId, 0);
+    emit Mint(_ipfs, creator, minter, _receiver, tokenId, price);
   }
 
   /**
@@ -230,35 +227,39 @@ contract Chocomint is ERC721 {
     bytes32 _ipfs,
     address payable _creator,
     address _receiver,
-    uint256 _price,
     bytes32 _root,
     bytes32[] memory _proof,
     bytes memory _signature
   ) public payable {
-    require(msg.value >= _price, "msg value must be more than signed price");
     // chainId and contract address is required for reduce risk
     // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
+    uint256 price = msg.value;
+    address minter = msg.sender;
     bytes32 hash =
-      keccak256(abi.encodePacked(_getChainId(), address(this), _ipfs, _price, _receiver));
+      keccak256(
+        abi.encodePacked(_getChainId(), address(this), _ipfs, price, _receiver)
+      );
     bool hashVerified = MerkleProof.verify(_proof, _root, hash);
     require(hashVerified, "hash must be included in merkle tree");
     require(
       _root.toEthSignedMessageHash().recover(_signature) == _creator,
       "signer must be valid for creator"
     );
-    address minter = msg.sender;
-    _mint(_ipfs, _creator, minter, _receiver);
+    uint256 tokenId = _mint(_ipfs, _creator, minter, _receiver);
     if (msg.value > 0) {
       _creator.transfer(msg.value);
     }
-    emit Mint(_ipfs, _creator, minter, _receiver, tokenId, _price);
+    emit Mint(_ipfs, _creator, minter, _receiver, tokenId, price);
   }
 
   /**
    * @dev bulk mint for gas efficiency, this function is used for pro business case
    */
   function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
-    require(_ipfs.length == _receiver.length, "ipfs length and receiver length must be same");
+    require(
+      _ipfs.length == _receiver.length,
+      "ipfs length and receiver length must be same"
+    );
     for (uint256 i = 0; i < _ipfs.length; i++) {
       mint(_ipfs[i], _receiver[i]);
     }
@@ -303,7 +304,9 @@ contract Chocomint is ERC721 {
     require(_exists(tokenId), "token must exist");
     return
       string(
-        _addIpfsBaseUrlPrefix(_bytesToBase58(_addSha256FunctionCodePrefix(ipfsMemory[tokenId])))
+        _addIpfsBaseUrlPrefix(
+          _bytesToBase58(_addSha256FunctionCodePrefix(ipfsMemory[tokenId]))
+        )
       );
   }
 
@@ -315,16 +318,29 @@ contract Chocomint is ERC721 {
     return id;
   }
 
-  function _addIpfsBaseUrlPrefix(bytes memory input) internal pure returns (bytes memory) {
+  function _addIpfsBaseUrlPrefix(bytes memory input)
+    internal
+    pure
+    returns (bytes memory)
+  {
     return abi.encodePacked("ipfs://", input);
   }
 
-  function _addSha256FunctionCodePrefix(bytes32 input) internal pure returns (bytes memory) {
+  function _addSha256FunctionCodePrefix(bytes32 input)
+    internal
+    pure
+    returns (bytes memory)
+  {
     return abi.encodePacked(hex"1220", input);
   }
 
-  function _bytesToBase58(bytes memory input) internal pure returns (bytes memory) {
-    bytes memory alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  function _bytesToBase58(bytes memory input)
+    internal
+    pure
+    returns (bytes memory)
+  {
+    bytes memory alphabet =
+      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     uint8[] memory digits = new uint8[](46);
     bytes memory output = new bytes(46);
     digits[0] = 0;

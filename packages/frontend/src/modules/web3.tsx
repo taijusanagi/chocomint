@@ -44,7 +44,9 @@ export const getEthersSigner = async () => {
   const web3Modal = new Web3Modal({ providerOptions });
   const web3ModalProvider = await web3Modal.connect();
   await web3ModalProvider.enable();
-  const web3EthersProvider = new ethers.providers.Web3Provider(web3ModalProvider);
+  const web3EthersProvider = new ethers.providers.Web3Provider(
+    web3ModalProvider
+  );
   return web3EthersProvider.getSigner();
 };
 
