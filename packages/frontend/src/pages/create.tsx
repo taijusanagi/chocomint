@@ -1,17 +1,17 @@
 import React from "react";
 import { ethers } from "ethers";
 import {
+  chainId,
   ipfs,
   getEthersSigner,
   ChainIdType,
   getNetwork,
   ipfsHttpsBaseUrl,
   nullAddress,
-  validateChainId,
 } from "../modules/web3";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { db } from "../modules/firebase";
+import { db, collectionName } from "../modules/firebase";
 import { Pairmints } from "../types";
 import { MerkleTree } from "merkletreejs";
 const keccak256 = require("keccak256");
@@ -106,11 +106,6 @@ export const Create: React.FC = () => {
     const value = ethers.utils.parseEther(price).toString();
     try {
       const signer = await getEthersSigner();
-      const chainId = await signer.getChainId();
-      if (!validateChainId(chainId)) {
-        setErrorAlert("Please connect to rinkeby network.");
-        return;
-      }
       const { contractAddress } = getNetwork(chainId as ChainIdType);
       const choco = {
         name,
@@ -152,7 +147,7 @@ export const Create: React.FC = () => {
         ["uint256", "address", "bytes32", "address"],
         [chainId, contractAddress, metadataIpfsHash, creator]
       );
-      await db.collection("pairmints").doc(orderId).set(record);
+      await db.collection(collectionName).doc(orderId).set(record);
       // setExploreUrl(`${explore}${hash}`);
       setSuccessAlert(`🎉  Success`);
     } catch (err) {

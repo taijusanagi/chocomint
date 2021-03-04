@@ -16,13 +16,10 @@ export const chainId =
     ? 1
     : 31337;
 
-console.log("test", process.env.REACT_APP_NETWORK_ID);
-console.log("test", chainId);
-
 import networkJson from "../../../contracts/network.json";
 const network = networkJson as any;
 import { abi } from "../../../contracts/artifacts/contracts/Chocomint.sol/Chocomint.json";
-import { Chocomint } from "../../../contracts/typechain/Chocomint";
+// import { Chocomint } from "../../../contracts/typechain/Chocomint";
 
 export const ipfsBaseUrl = "ipfs://";
 export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";
@@ -70,8 +67,4 @@ export const getEthersSigner = async () => {
     web3ModalProvider
   );
   return web3EthersProvider.getSigner();
-};
-
-export const validateChainId = (chainId: number) => {
-  return chainId == 4 || chainId == 31337;
 };

@@ -22,4 +22,15 @@ if (process.env.NODE_ENV === "development") {
   });
 }
 
+export const collectionName =
+  process.env.NODE_ENV == "development"
+    ? "pairmints_localhost"
+    : process.env.REACT_APP_NETWORK_ID == "localhost"
+    ? "pairmints_localhost"
+    : process.env.REACT_APP_NETWORK_ID == "rinkeby"
+    ? "pairmints_staging"
+    : process.env.REACT_APP_NETWORK_ID == "mainnet"
+    ? "pairmints_production"
+    : "pairmints_localhost";
+
 export { db };
