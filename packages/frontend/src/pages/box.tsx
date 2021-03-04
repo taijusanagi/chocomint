@@ -37,9 +37,20 @@ export const Box: React.FC = () => {
     const filter = contract.filters.Mint(null, address);
     contract.queryFilter(filter).then((events) => {
       const args = events.map((event) => event.args);
+      console.log(args);
       setEvents(args as any);
     });
   }, []);
+
+  const checkAlreadyMinted = (ipfsHash: string) => {
+    let result = false;
+    events.forEach((event) => {
+      if (ipfsHash == event.ipfsHash) {
+        result = true;
+      }
+    });
+    return result;
+  };
 
   const mint = async (i: number) => {
     const minamint = minamints[i];
@@ -101,6 +112,7 @@ export const Box: React.FC = () => {
             {minamints.map((minamint, i) => {
               return (
                 <li key={i} className="mt-6">
+                  {checkAlreadyMinted(minamint.metadataIpfsHash) && "minted"}
                   <div
                     onClick={() => {
                       mint(i);
