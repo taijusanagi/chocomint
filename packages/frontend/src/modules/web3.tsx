@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import Portis from "@portis/web3";
+import Torus from "@toruslabs/torus-embed";
 
 const createClient = require("ipfs-http-client");
 
@@ -56,6 +57,9 @@ const providerOptions = {
     options: {
       infuraId: "95f65ab099894076814e8526f52c9149",
     },
+  },
+  torus: {
+    package: Torus,
   },
 };
 
