@@ -41,6 +41,7 @@
     "ipfs-only-hash": "^2.0.1",
     "keccak256": "^1.0.2",
     "merkletreejs": "^0.2.13",
+    "node-sass": "^5.0.0",
     "postcss": "^7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
