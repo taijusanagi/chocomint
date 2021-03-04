@@ -253,50 +253,6 @@ contract Chocomint is ERC721 {
   }
 
   /**
-   * @dev bulk mint for gas efficiency, this function is used for pro business case
-   */
-  function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
-    require(
-      _ipfs.length == _receiver.length,
-      "ipfs length and receiver length must be same"
-    );
-    for (uint256 i = 0; i < _ipfs.length; i++) {
-      mint(_ipfs[i], _receiver[i]);
-    }
-  }
-
-  /**
-   * @dev bulk mint for gas efficiency, this function is used for pro business case
-   *      for case creator and minter is different and bulk is required
-   *      for gigaminamint signature, price should be 0, and should be whitelisted
-   */
-  // function gigaminamint(
-  //   bytes32[] memory _ipfs,
-  //   address payable _creator,
-  //   address[] memory _receiver,
-  //   bytes32 root,
-  //   bytes32[][] memory proof,
-  //   bytes memory _signature
-  // ) public {
-  //   require(
-  //     _ipfs.length == _receiver.length || _ipfs.length == proof.length,
-  //     "ipfs length and receiver and proof length must be same"
-  //   );
-  //   for (uint256 i = 0; i < _ipfs.length; i++) {
-  //     minamint(
-  //       _ipfs[i],
-  //       _creator,
-  //       _receiver[i],
-  //       0,
-  //       true,
-  //       root,
-  //       proof[i],
-  //       _signature
-  //     );
-  //   }
-  // }
-
-  /**
    * @dev I think this is cool function, get IPFS cid from digest hash
    *      it reduces gas cost for NFT minting
    */

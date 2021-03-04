@@ -110,21 +110,26 @@ export const Box: React.FC = () => {
         <div className="flex justify-center">
           <ul className="grid grid-cols-3 gap-x-6">
             {minamints.map((minamint, i) => {
+              const minted = checkAlreadyMinted(minamint.metadataIpfsHash);
               return (
                 <li key={i} className="mt-6">
-                  {checkAlreadyMinted(minamint.metadataIpfsHash) && "minted"}
-                  <div
+                  <button
                     onClick={() => {
                       mint(i);
                     }}
-                    className="cursor-pointer transition duration-500 transform hover:-translate-y-1"
+                    disabled={minted}
+                    className={`frame disabled:opacity-50 ${
+                      minted
+                        ? "cursor-default"
+                        : "transition duration-500 transform hover:-translate-y-1"
+                    }`}
                   >
                     <img
                       className="h-60 w-60 rounded-xl object-cover border-b-4 border-gray-600 shadow-md"
                       src={minamint.choco.image}
                       alt=""
                     />
-                  </div>
+                  </button>
                 </li>
               );
             })}
