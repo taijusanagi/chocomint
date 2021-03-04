@@ -5,6 +5,20 @@ import Portis from "@portis/web3";
 
 const createClient = require("ipfs-http-client");
 
+export const chainId =
+  process.env.NODE_ENV == "development"
+    ? 31337
+    : process.env.REACT_APP_NETWORK_ID == "localhost"
+    ? 31337
+    : process.env.REACT_APP_NETWORK_ID == "rinkeby"
+    ? 4
+    : process.env.REACT_APP_NETWORK_ID == "mainnet"
+    ? 1
+    : 31337;
+
+console.log("test", process.env.REACT_APP_NETWORK_ID);
+console.log("test", chainId);
+
 import networkJson from "../../../contracts/network.json";
 const network = networkJson as any;
 import { abi } from "../../../contracts/artifacts/contracts/Chocomint.sol/Chocomint.json";

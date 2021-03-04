@@ -14,6 +14,7 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 
 const db = app.firestore();
+
 if (process.env.NODE_ENV === "development") {
   db.settings({
     host: `localhost:${firebaseJson.emulators.firestore.port}`,

@@ -1,15 +1,30 @@
 {
-  "hosting": {
-    "predeploy": "yarn workspace frontend build",
-    "public": "packages/frontend/build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  },
+  "hosting": [
+    {
+      "target": "production",
+      "predeploy": "yarn build:production",
+      "public": "packages/frontend/build",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "staging",
+      "predeploy": "yarn build:staging",
+      "public": "packages/frontend/build",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ],
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
@@ -19,11 +34,11 @@
       "port": 8080
     },
     "hosting": {
-      "port": 5000
+      "port": 3000
     },
     "ui": {
       "enabled": true,
-      "port": 8000
+      "port": 5000
     }
   }
 }
