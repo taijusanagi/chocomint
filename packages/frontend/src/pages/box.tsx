@@ -9,15 +9,11 @@ import {
   faYoutube,
   faTiktok,
 } from "@fortawesome/free-brands-svg-icons";
-import {
-  getContract,
-  getEthersSigner,
-  ChainIdType,
-  chainId,
-} from "../modules/web3";
+import { ethers } from "ethers";
+import { getContract, getEthersSigner, ChainIdType } from "../modules/web3";
 import { Pairmints, MintEvent } from "../types";
 const emoji = require("../assets/emoji.png").default;
-import "./box.css";
+import "./box.scss";
 
 export const Box: React.FC = () => {
   const [pairmints, setPairmints] = React.useState<Pairmints[]>([]);
@@ -41,11 +37,10 @@ export const Box: React.FC = () => {
         });
         setPairmints(pairmints);
       });
-    const contract = getContract(chainId);
+    const contract = getContract(31337);
     const filter = contract.filters.Mint(null, address);
     contract.queryFilter(filter).then((events) => {
       const args = events.map((event) => event.args);
-      console.log(args);
       setEvents(args as any);
     });
   }, []);
@@ -114,10 +109,8 @@ export const Box: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         {modals.success && (
           <Modal
-            type="wide"
-            closeValue="Tweet"
+            type="single"
             execValue="閉じる"
-            onClickExec={() => {}}
             onClickClose={() => {
               closeModal("success");
             }}
@@ -132,7 +125,7 @@ export const Box: React.FC = () => {
                 </h3>
                 <div className="mt-2">
                   <p className="text-sm text-gray-500">
-                    発行完了！SNSで知らせよう！
+                    発行できました！SNSで知らせよう！
                   </p>
                 </div>
               </div>
@@ -251,11 +244,26 @@ export const Box: React.FC = () => {
                         : "transition duration-500 transform hover:-translate-y-1"
                     }`}
                   >
-                    <img
-                      className="h-60 w-60 rounded-xl object-cover border-b-4 border-gray-600 shadow-md"
-                      src={pairmint.choco.image}
-                      alt=""
-                    />
+                    <div className="property-card h-60 w-60 rounded-xl object-cover border-b-4 border-gray-600 shadow-md">
+                      <div
+                        className="property-image"
+                        style={{
+                          backgroundImage: `url(${pairmint.choco.image})`,
+                        }}
+                      >
+                        <div className="property-image-title"></div>
+                      </div>
+                      {!minted && (
+                        <div className="property-description text-left">
+                          <p className="text-md font-medium text-white">
+                            {pairmint.choco.name}
+                          </p>
+                          <p className="text-xs text-white">
+                            {ethers.utils.formatEther(pairmint.value)} ETH
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </button>
                 </li>
               );
