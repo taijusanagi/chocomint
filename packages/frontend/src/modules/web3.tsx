@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
+import Portis from "@portis/web3";
 
 const createClient = require("ipfs-http-client");
 
@@ -33,10 +34,16 @@ export const ipfs = createClient({
 });
 
 const providerOptions = {
-  walletconnect: {
-    package: WalletConnectProvider, // required
+  portis: {
+    package: Portis,
     options: {
-      infuraId: "95f65ab099894076814e8526f52c9149", // required
+      id: "4d4b017a-3170-4d53-b6c5-dd22d22db38f",
+    },
+  },
+  walletconnect: {
+    package: WalletConnectProvider,
+    options: {
+      infuraId: "95f65ab099894076814e8526f52c9149",
     },
   },
 };

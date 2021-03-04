@@ -9,12 +9,10 @@ import {
   nullAddress,
   validateChainId,
 } from "../modules/web3";
-
 import { db } from "../modules/firebase";
 import { Pairmints } from "../types";
 import { MerkleTree } from "merkletreejs";
 const keccak256 = require("keccak256");
-
 const bs58 = require("bs58");
 const logo = require("../assets/icon.png").default;
 
@@ -131,7 +129,6 @@ export const Create: React.FC = () => {
       );
       const messageHashBinary = ethers.utils.arrayify(messageHash);
       const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
-
       const leaves = [messageHashBinaryBuffer];
       const tree = new MerkleTree(leaves, keccak256, { sort: true });
       const root = tree.getHexRoot();
@@ -153,8 +150,7 @@ export const Create: React.FC = () => {
         ["uint256", "address", "bytes32", "address"],
         [chainId, contractAddress, metadataIpfsHash, creator]
       );
-      await db.collection("minamints").doc(orderId).set(record);
-
+      await db.collection("pairmints").doc(orderId).set(record);
       // setExploreUrl(`${explore}${hash}`);
       // setSuccessAlert(`TxHash: \n${hash}`);
     } catch (err) {

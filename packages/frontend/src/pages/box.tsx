@@ -1,7 +1,6 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../modules/firebase";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTwitter,
@@ -9,14 +8,12 @@ import {
   faYoutube,
   faTiktok,
 } from "@fortawesome/free-brands-svg-icons";
-
 import {
   getContract,
   validateChainId,
   getEthersSigner,
   ChainIdType,
 } from "../modules/web3";
-
 import { Pairmints, MintEvent } from "../types";
 const emoji = require("../assets/emoji.png").default;
 import "./box.css";
@@ -38,12 +35,10 @@ export const Box: React.FC = () => {
         });
         setPairmints(pairmints);
       });
-
     const contract = getContract(31337);
     const filter = contract.filters.Mint(null, address);
     contract.queryFilter(filter).then((events) => {
       const args = events.map((event) => event.args);
-      console.log(args);
       setEvents(args as any);
     });
   }, []);
