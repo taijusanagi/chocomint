@@ -247,7 +247,7 @@ export const Create: React.FC = () => {
                   </svg>
                 ) : (
                   <img
-                    className={`mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-600 shadow-md ${
+                    className={`object-cover mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-600 shadow-md ${
                       waitingTransactionConfirmation &&
                       "animate-spin opacity-50"
                     }`}
@@ -296,7 +296,7 @@ export const Create: React.FC = () => {
               disabled={isFormNotReady()}
               className="disabled:opacity-50 w-full rounded-xl max-w-md bg-green-500 text-white font-bold py-2 px-4 border-b-4 border-green-700 shadow-md"
             >
-              Let&apos;s Create!
+              Let&apos;s Create 🔨
             </button>
           </div>
           <ToastContainer
