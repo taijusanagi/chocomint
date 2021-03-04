@@ -2,13 +2,25 @@ import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import Portis from "@portis/web3";
+import Torus from "@toruslabs/torus-embed";
 
 const createClient = require("ipfs-http-client");
+
+export const chainId =
+  process.env.NODE_ENV == "development"
+    ? 31337
+    : process.env.REACT_APP_NETWORK_ID == "localhost"
+    ? 31337
+    : process.env.REACT_APP_NETWORK_ID == "rinkeby"
+    ? 4
+    : process.env.REACT_APP_NETWORK_ID == "mainnet"
+    ? 1
+    : 31337;
 
 import networkJson from "../../../contracts/network.json";
 const network = networkJson as any;
 import { abi } from "../../../contracts/artifacts/contracts/Chocomint.sol/Chocomint.json";
-import { Chocomint } from "../../../contracts/typechain/Chocomint";
+// import { Chocomint } from "../../../contracts/typechain/Chocomint";
 
 export const ipfsBaseUrl = "ipfs://";
 export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";
@@ -46,6 +58,9 @@ const providerOptions = {
       infuraId: "95f65ab099894076814e8526f52c9149",
     },
   },
+  torus: {
+    package: Torus,
+  },
 };
 
 export const getEthersSigner = async () => {
@@ -56,8 +71,4 @@ export const getEthersSigner = async () => {
     web3ModalProvider
   );
   return web3EthersProvider.getSigner();
-};
-
-export const validateChainId = (chainId: number) => {
-  return chainId == 4 || chainId == 31337;
 };

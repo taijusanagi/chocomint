@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "chocomint-prod"
+  },
+  "targets": {
+    "chocomint-prod": {
+      "hosting": {
+        "production": [
+          "chocomint-prot"
+        ],
+        "staging": [
+          "chocomint-staging"
+        ]
+      }
+    }
   }
 }
