@@ -11,7 +11,7 @@ const main = async () => {
     networkName == "mainnet" ? "1" : networkName == "rinkeby" ? "4" : "31337";
 
   const Chocomint = await ethers.getContractFactory("Chocomint");
-  const chocomint = await Chocomint.deploy("NFT", "NFT");
+  const chocomint = await Chocomint.deploy("ChocomintEthereum", "CME");
   configs[chainId].contractAddress = chocomint.address;
   console.log("Chocomint deployed to:", chocomint.address);
   fs.writeFileSync(

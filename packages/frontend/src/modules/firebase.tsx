@@ -14,11 +14,23 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 
 const db = app.firestore();
+
 if (process.env.NODE_ENV === "development") {
   db.settings({
     host: `localhost:${firebaseJson.emulators.firestore.port}`,
     ssl: false,
   });
 }
+
+export const collectionName =
+  process.env.NODE_ENV == "development"
+    ? "pairmints_localhost"
+    : process.env.REACT_APP_NETWORK_ID == "localhost"
+    ? "pairmints_localhost"
+    : process.env.REACT_APP_NETWORK_ID == "rinkeby"
+    ? "pairmints_staging"
+    : process.env.REACT_APP_NETWORK_ID == "mainnet"
+    ? "pairmints_production"
+    : "pairmints_localhost";
 
 export { db };
