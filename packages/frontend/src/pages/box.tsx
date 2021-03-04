@@ -89,53 +89,14 @@ export const Box: React.FC = () => {
                 </div>
               </div>
               <div className="mt-1">
-                <ul className="flex justify-center space-x-5">
+                <ul className="flex justify-center space-x-5 mt-4">
                   <li>
                     <a
                       href="//twitter.com/share"
-                      data-text="share"
-                      data-lang="ja"
-                      className={`text-white ${
-                        hasProfile
-                          ? "hover:text-blue-400"
-                          : "cursor-default opacity-50"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faTwitter} />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className={`text-white ${
-                        hasProfile
-                          ? "hover:text-blue-400"
-                          : "cursor-default opacity-50"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faInstagram} />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className={`text-white ${
-                        hasProfile
-                          ? "hover:text-blue-400"
-                          : "cursor-default opacity-50"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faYoutube} />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className={`text-white ${
-                        hasProfile
-                          ? "hover:text-blue-400"
-                          : "cursor-default opacity-50"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faTiktok} />
-                    </a>
+                      className="twitter-share-button"
+                      data-text="NFTを発行しました！"
+                      data-url=""
+                    ></a>
                   </li>
                 </ul>
               </div>
