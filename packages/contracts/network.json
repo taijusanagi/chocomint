@@ -1,1 +1,20 @@
-{"1":{"name":"mainnet","contractAddress":"0x5FbDB2315678afecb367f032d93F642f64180aa3","rpc":"https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149","explore":"https://etherscan.io/tx/"},"4":{"name":"rinkeby","contractAddress":"0x22392659d9A52fd4B4a0bD79211ddA3f6bAA8C0C","rpc":"https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149","explore":"https://rinkeby.etherscan.io/tx/"},"31337":{"name":"hardhat","contractAddress":"0x5FbDB2315678afecb367f032d93F642f64180aa3","rpc":"http://localhost:8545","explore":"https://rinkeby.etherscan.io/tx/"}}
+{
+  "1": {
+    "name": "mainnet",
+    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "rpc": "https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149",
+    "explore": "https://etherscan.io/tx/"
+  },
+  "4": {
+    "name": "rinkeby",
+    "contractAddress": "0x22392659d9A52fd4B4a0bD79211ddA3f6bAA8C0C",
+    "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
+    "explore": "https://rinkeby.etherscan.io/tx/"
+  },
+  "31337": {
+    "name": "hardhat",
+    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "rpc": "http://localhost:8545",
+    "explore": "https://rinkeby.etherscan.io/tx/"
+  }
+}
