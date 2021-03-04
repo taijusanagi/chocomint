@@ -224,11 +224,7 @@ describe("Chocomint", function () {
           value: value - 1,
         }
       )
-<<<<<<< HEAD
-    ).to.be.revertedWith("hash must be included in merkle tree");
-=======
     ).to.be.revertedWith("The hash must be included in the merkle tree");
->>>>>>> 0b89be9fe99739c20b7aa5c8d24d4c6fc1fd366f
   });
 
   it("minamint: receiver is different (reverted with hash is not included in merkle tree)", async function () {
