@@ -18,8 +18,10 @@ describe("Chocomint", function () {
   const contractSymbol = "CME";
 
   const metadataIpfsCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz";
-  const metadataIpfsCidForBulk = "QmWATWQ7fVPP2EFGu71UkfnqhYXDYH566qy47CnJDgvs8u";
-  const metadataIpfsHash = "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
+  const metadataIpfsCidForBulk =
+    "QmWATWQ7fVPP2EFGu71UkfnqhYXDYH566qy47CnJDgvs8u";
+  const metadataIpfsHash =
+    "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
 
   const metadataIpfsHashForBulk =
     "0x74410577111096cd817a3faed78630f2245636beded412d3b212a2e09ba593ca";
@@ -40,16 +42,20 @@ describe("Chocomint", function () {
   it("deploy: deploy is ok / check: name, symbol, totalSupply", async function () {
     expect(await chocomint.name()).to.equal(contractName);
     expect(await chocomint.symbol()).to.equal(contractSymbol);
-    expect(await chocomint.totalSupply()).to.equal(firstTokenMintedTotalSupply - 1);
+    expect(await chocomint.totalSupply()).to.equal(
+      firstTokenMintedTotalSupply - 1
+    );
   });
 
   it("tokenURI: token must exist", async function () {
-    await expect(chocomint.tokenURI(firstTokenIndex)).to.be.revertedWith("token must exist");
+    await expect(chocomint.tokenURI(firstTokenIndex)).to.be.revertedWith(
+      "token must exist"
+    );
   });
 
   //Senario Testing
 
-  it("mint: mint by creator and creator get the NFT", async function () {
+  it("mint: mint by creator and creator gets the NFT", async function () {
     await chocomint.mint(metadataIpfsHash, nullAddress); //this is null address
     expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(creator.address); //check creator has NFT
     expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(
@@ -96,7 +102,9 @@ describe("Chocomint", function () {
       chocomint.mint(metadataIpfsHash, creator.address, {
         from: creator.address,
       })
-    ).to.be.revertedWith("this ipfsHash and creator NFT is already published");
+    ).to.be.revertedWith(
+      "The NFT of this ipfsHash and creator is already published"
+    );
   });
 
   it("minamint: sign by creator and minter mint by paying fee like cloud sale", async function () {
@@ -115,22 +123,36 @@ describe("Chocomint", function () {
     const previousCreatorBalance = await provider.getBalance(creator.address);
     await chocomint
       .connect(minter) //tx is signed by minter
-      .minamint(metadataIpfsHash, creator.address, nullAddress, root, proof, signature, {
-        value,
-      });
+      .minamint(
+        metadataIpfsHash,
+        creator.address,
+        nullAddress,
+        root,
+        proof,
+        signature,
+        {
+          value,
+        }
+      );
     expect(await provider.getBalance(creator.address)).to.equal(
       ethers.BigNumber.from(previousCreatorBalance).add(value) //check price is increased
     );
     expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(minter.address); //minter get NFT
-    expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(creator.address);
-    expect(await chocomint.minterMemory(firstTokenIndex)).to.equal(minter.address);
+    expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(
+      creator.address
+    );
+    expect(await chocomint.minterMemory(firstTokenIndex)).to.equal(
+      minter.address
+    );
     const hash = ethers.utils.solidityKeccak256(
       ["bytes32", "address"],
       [metadataIpfsHash, creator.address]
     );
     expect(await chocomint.publishedTokenId(hash)).to.equal(firstTokenIndex);
     expect(await chocomint.totalSupply()).to.equal(firstTokenMintedTotalSupply);
-    expect(await chocomint.tokenURI(firstTokenIndex)).to.equal(`${ipfsBaseUrl}${metadataIpfsCid}`);
+    expect(await chocomint.tokenURI(firstTokenIndex)).to.equal(
+      `${ipfsBaseUrl}${metadataIpfsCid}`
+    );
   });
 
   it("minamint: sign by creator and minter mint and creator get it", async function () {
@@ -148,19 +170,33 @@ describe("Chocomint", function () {
     const signature = await creator.signMessage(ethers.utils.arrayify(root));
     await chocomint
       .connect(minter)
-      .minamint(metadataIpfsHash, creator.address, creator.address, root, proof, signature, {
-        value,
-      });
+      .minamint(
+        metadataIpfsHash,
+        creator.address,
+        creator.address,
+        root,
+        proof,
+        signature,
+        {
+          value,
+        }
+      );
     expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(creator.address);
-    expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(creator.address);
-    expect(await chocomint.minterMemory(firstTokenIndex)).to.equal(minter.address);
+    expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(
+      creator.address
+    );
+    expect(await chocomint.minterMemory(firstTokenIndex)).to.equal(
+      minter.address
+    );
     const hash = ethers.utils.solidityKeccak256(
       ["bytes32", "address"],
       [metadataIpfsHash, creator.address]
     );
     expect(await chocomint.publishedTokenId(hash)).to.equal(firstTokenIndex);
     expect(await chocomint.totalSupply()).to.equal(firstTokenMintedTotalSupply);
-    expect(await chocomint.tokenURI(firstTokenIndex)).to.equal(`${ipfsBaseUrl}${metadataIpfsCid}`);
+    expect(await chocomint.tokenURI(firstTokenIndex)).to.equal(
+      `${ipfsBaseUrl}${metadataIpfsCid}`
+    );
   });
 
   it("minamint: price is not enough(reverted with hash is not included in merkle tree)", async function () {
@@ -177,10 +213,18 @@ describe("Chocomint", function () {
     const proof = tree.getHexProof(messageHashBinaryBuffer);
     const signature = await creator.signMessage(ethers.utils.arrayify(root));
     await expect(
-      chocomint.minamint(metadataIpfsHash, creator.address, nullAddress, root, proof, signature, {
-        value: value - 1,
-      })
-    ).to.be.revertedWith("hash must be included in merkle tree");
+      chocomint.minamint(
+        metadataIpfsHash,
+        creator.address,
+        nullAddress,
+        root,
+        proof,
+        signature,
+        {
+          value: value - 1,
+        }
+      )
+    ).to.be.revertedWith("The hash must be included in the merkle tree");
   });
 
   it("minamint: receiver is different (reverted with hash is not included in merkle tree)", async function () {
@@ -208,7 +252,7 @@ describe("Chocomint", function () {
           value,
         }
       )
-    ).to.be.revertedWith("hash must be included in merkle tree");
+    ).to.be.revertedWith("The hash must be included in the merkle tree");
   });
 
   it("minamint: creator is different (reverted with signer must be valid for creator)", async function () {
@@ -236,7 +280,7 @@ describe("Chocomint", function () {
           value,
         }
       )
-    ).to.be.revertedWith("signer must be valid for creator");
+    ).to.be.revertedWith("The signer must be valid for the creator");
   });
 
   it("gigamint: bulk mint", async function () {
@@ -274,7 +318,7 @@ describe("Chocomint", function () {
     const ipfsHashes = [metadataIpfsHash, metadataIpfsHashForBulk];
     const addresses = [nullAddress];
     await expect(chocomint.gigamint(ipfsHashes, addresses)).to.be.revertedWith(
-      "ipfs length and receiver length must be same"
+      "The length of ipfs and the length of the receiver must be the same"
     );
   });
 
