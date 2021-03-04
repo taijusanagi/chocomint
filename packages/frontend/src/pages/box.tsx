@@ -58,8 +58,6 @@ export const Box: React.FC = () => {
     const pairmint = pairmints[i];
     const signer = await getEthersSigner();
     const chainId = await signer.getChainId();
-    console.log(chainId);
-    console.log(pairmint.chainId);
 
     if (chainId != pairmint.chainId) {
       setErrorModal("chain id is invalid");
@@ -110,8 +108,10 @@ export const Box: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         {modals.success && (
           <Modal
-            type="single"
+            type="wide"
+            closeValue="Tweet"
             execValue="閉じる"
+            onClickExec={() => {}}
             onClickClose={() => {
               closeModal("success");
             }}
@@ -126,7 +126,7 @@ export const Box: React.FC = () => {
                 </h3>
                 <div className="mt-2">
                   <p className="text-sm text-gray-500">
-                    発行できました！SNSで知らせよう！
+                    発行完了！SNSで知らせよう！
                   </p>
                 </div>
               </div>
