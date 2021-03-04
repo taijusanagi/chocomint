@@ -76,17 +76,15 @@ export const Box: React.FC = () => {
     <div className="mx-auto h-screen bg-white">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-center">
-          <div className="w-full mt-4 mx-auto">
-            <div className="p-8 w-60 mx-auto bg-green-400 text-center rounded-xl border-b-4 border-green-700 shadow-2xl text-center">
+          <div className="w-5/6 mt-4 mx-auto">
+            <div className="p-8 mx-auto bg-green-400 text-center rounded-xl border-b-4 border-green-700 shadow-2xl text-center">
               <img
                 className="mx-auto h-12 w-12 rounded-xl"
                 src={hasProfile ? "" : emoji}
                 alt="profile"
               />
-
               <div className="mt-2">
                 <div className="font-medium text-xs">
-                  <h3>{hasProfile ? "" : "SNS連携は実装中です🙇‍♂️"}</h3>
                   <p className="extra-small ont-medium">{address}</p>
                 </div>
               </div>
@@ -94,6 +92,9 @@ export const Box: React.FC = () => {
                 <ul className="flex justify-center space-x-5">
                   <li>
                     <a
+                      href="//twitter.com/share"
+                      data-text="share"
+                      data-lang="ja"
                       className={`text-white ${
                         hasProfile
                           ? "hover:text-blue-400"
@@ -142,7 +143,7 @@ export const Box: React.FC = () => {
           </div>
         </div>
         <div className="flex justify-center">
-          <ul className="grid grid-cols-3 gap-x-6">
+          <ul className="grid grid-cols-3 gap-x-3">
             {pairmints.map((pairmint, i) => {
               const minted = checkAlreadyMinted(pairmint.metadataIpfsHash);
               return (
