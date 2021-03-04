@@ -10,7 +10,12 @@ import {
   faTiktok,
 } from "@fortawesome/free-brands-svg-icons";
 import { ethers } from "ethers";
-import { getContract, getEthersSigner, ChainIdType } from "../modules/web3";
+import {
+  getNetwork,
+  getContract,
+  getEthersSigner,
+  ChainIdType,
+} from "../modules/web3";
 import { Pairmints, MintEvent } from "../types";
 const emoji = require("../assets/emoji.png").default;
 import "./box.scss";
@@ -24,6 +29,7 @@ export const Box: React.FC = () => {
     error: false,
   });
   const [errorMsg, setErrorMsg] = React.useState("");
+  const [exploreUrl, setExploreUrl] = React.useState("");
 
   const { address } = useParams<{ address: string }>();
   React.useEffect(() => {
@@ -64,8 +70,9 @@ export const Box: React.FC = () => {
       setErrorModal("chain id is invalid");
       return;
     }
+    const { explore } = getNetwork(chainId as ChainIdType);
     const contract = getContract(chainId as ChainIdType);
-    await contract
+    const { hash } = await contract
       .connect(signer)
       .pairmint(
         pairmint.metadataIpfsHash,
@@ -78,6 +85,7 @@ export const Box: React.FC = () => {
           value: pairmint.value,
         }
       );
+    setExploreUrl(`${explore}${hash}`);
     setSuccessModal();
   };
 
@@ -111,7 +119,7 @@ export const Box: React.FC = () => {
           <Modal
             type="single"
             execValue="閉じる"
-            onClickClose={() => {
+            onClickExec={() => {
               closeModal("success");
             }}
           >
@@ -123,10 +131,29 @@ export const Box: React.FC = () => {
                 >
                   🎉 Congratulation!!🎉
                 </h3>
-                <div className="mt-2">
+                <div className="mt-1">
                   <p className="text-sm text-gray-500">
                     発行できました！SNSで知らせよう！
                   </p>
+                </div>
+                <div className="mt-2">
+                  <a
+                    href={exploreUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <p className="block mx-auto text-center text-xs text-green-500 truncate w-60">
+                      Transaction Log
+                    </p>
+                  </a>
+                </div>
+                <div className="flex items-center justify-center mt-4">
+                  <a
+                    href="//twitter.com/share"
+                    className="twitter-share-button"
+                    data-text="NFTを発行しました！"
+                    data-url=""
+                  ></a>
                 </div>
               </div>
             </div>
@@ -163,15 +190,15 @@ export const Box: React.FC = () => {
         )}
         <div className="flex justify-center">
           <div className="w-5/6 mt-4 mx-auto">
-            <div className="p-8 mx-auto bg-green-400 text-center rounded-xl border-b-4 border-green-700 shadow-2xl text-center">
+            <div className="p-8 mx-auto bg-gray-100 text-center rounded-xl border-b-4 border-gray-200 shadow-2xl text-center">
               <img
                 className="mx-auto h-12 w-12 rounded-xl"
                 src={hasProfile ? "" : emoji}
                 alt="profile"
               />
               <div className="mt-2">
-                <div className="font-medium text-xs">
-                  <p className="extra-small ont-medium">{address}</p>
+                <div className="font-medium text-xs text-gray-800">
+                  <p className="font-medium">{address}</p>
                 </div>
               </div>
               <div className="mt-1">
@@ -193,18 +220,16 @@ export const Box: React.FC = () => {
           <ul className="grid grid-cols-3 gap-x-3">
             {pairmints.map((pairmint, i) => {
               const minted = checkAlreadyMinted(pairmint.metadataIpfsHash);
+              console.log(minted);
               return (
                 <li key={i} className="mt-6">
                   <button
                     onClick={() => {
+                      if (minted) return;
                       mint(i);
                     }}
                     disabled={minted}
-                    className={`frame disabled:opacity-50 ${
-                      minted
-                        ? "cursor-default"
-                        : "transition duration-500 transform hover:-translate-y-1"
-                    }`}
+                    className={`frame disabled:opacity-50 transition duration-500 transform hover:-translate-y-1`}
                   >
                     <div className="property-card h-60 w-60 rounded-xl object-cover border-b-4 border-gray-600 shadow-md">
                       <div
