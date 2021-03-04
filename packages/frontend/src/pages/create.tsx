@@ -10,6 +10,7 @@ import {
   getNetwork,
   ipfsHttpsBaseUrl,
   nullAddress,
+  getWeb3,
 } from "../modules/web3";
 import "react-toastify/dist/ReactToastify.css";
 import { db, collectionName } from "../modules/firebase";
@@ -108,7 +109,7 @@ export const Create: React.FC = () => {
     setWaitingTransactionConfirmation(true);
     const value = ethers.utils.parseEther(price).toString();
     try {
-      const signer = await getEthersSigner();
+      const web3 = await getWeb3();
       const { contractAddress } = getNetwork(chainId as ChainIdType);
       const choco = {
         name,
@@ -117,7 +118,7 @@ export const Create: React.FC = () => {
       };
       const metadataString = JSON.stringify(choco);
       const { cid } = await ipfs.add(metadataString);
-      const creator = await signer.getAddress();
+      const [creator] = await web3.eth.getAccounts();
       const metadataIpfsHash = `0x${bs58
         .decode(cid.toString())
         .slice(2)
@@ -133,7 +134,7 @@ export const Create: React.FC = () => {
       const tree = new MerkleTree(leaves, keccak256, { sort: true });
       const root = tree.getHexRoot();
       const proof = tree.getHexProof(messageHashBinaryBuffer);
-      const signature = await signer.signMessage(ethers.utils.arrayify(root));
+      const signature = await web3.eth.personal.sign(root, creator, "");
       const record: Pairmints = {
         chainId,
         contractAddress,
@@ -151,6 +152,7 @@ export const Create: React.FC = () => {
         [chainId, contractAddress, metadataIpfsHash, creator]
       );
       await db.collection(collectionName).doc(orderId).set(record);
+
       setCreatorAddress(creator);
       setSuccessModal();
     } catch (err) {
