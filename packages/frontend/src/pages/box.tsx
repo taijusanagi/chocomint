@@ -162,65 +162,27 @@ export const Box: React.FC = () => {
           </Modal>
         )}
         <div className="flex justify-center">
-          <div className="w-full mt-4 mx-auto">
-            <div className="p-8 w-60 mx-auto bg-green-400 text-center rounded-xl border-b-4 border-green-700 shadow-2xl text-center">
+          <div className="w-5/6 mt-4 mx-auto">
+            <div className="p-8 mx-auto bg-green-400 text-center rounded-xl border-b-4 border-green-700 shadow-2xl text-center">
               <img
                 className="mx-auto h-12 w-12 rounded-xl"
                 src={hasProfile ? "" : emoji}
                 alt="profile"
               />
-
               <div className="mt-2">
                 <div className="font-medium text-xs">
-                  <h3>{hasProfile ? "" : "SNS連携は実装中です🙇‍♂️"}</h3>
                   <p className="extra-small ont-medium">{address}</p>
                 </div>
               </div>
               <div className="mt-1">
-                <ul className="flex justify-center space-x-5">
+                <ul className="flex justify-center space-x-5 mt-4">
                   <li>
                     <a
-                      className={`text-white ${
-                        hasProfile
-                          ? "hover:text-blue-400"
-                          : "cursor-default opacity-50"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faTwitter} />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className={`text-white ${
-                        hasProfile
-                          ? "hover:text-blue-400"
-                          : "cursor-default opacity-50"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faInstagram} />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className={`text-white ${
-                        hasProfile
-                          ? "hover:text-blue-400"
-                          : "cursor-default opacity-50"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faYoutube} />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className={`text-white ${
-                        hasProfile
-                          ? "hover:text-blue-400"
-                          : "cursor-default opacity-50"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faTiktok} />
-                    </a>
+                      href="//twitter.com/share"
+                      className="twitter-share-button"
+                      data-text="NFTを発行しました！"
+                      data-url=""
+                    ></a>
                   </li>
                 </ul>
               </div>
@@ -228,7 +190,7 @@ export const Box: React.FC = () => {
           </div>
         </div>
         <div className="flex justify-center">
-          <ul className="grid grid-cols-3 gap-x-6">
+          <ul className="grid grid-cols-3 gap-x-3">
             {pairmints.map((pairmint, i) => {
               const minted = checkAlreadyMinted(pairmint.metadataIpfsHash);
               return (
