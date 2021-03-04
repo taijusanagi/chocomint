@@ -55,7 +55,7 @@ describe("Chocomint", function () {
 
   //Senario Testing
 
-  it("mint: mint by creator and creator get the NFT", async function () {
+  it("mint: mint by creator and creator gets the NFT", async function () {
     await chocomint.mint(metadataIpfsHash, nullAddress); //this is null address
     expect(await chocomint.ownerOf(firstTokenIndex)).to.equal(creator.address); //check creator has NFT
     expect(await chocomint.creatorMemory(firstTokenIndex)).to.equal(
@@ -102,7 +102,9 @@ describe("Chocomint", function () {
       chocomint.mint(metadataIpfsHash, creator.address, {
         from: creator.address,
       })
-    ).to.be.revertedWith("this ipfsHash and creator NFT is already published");
+    ).to.be.revertedWith(
+      "The NFT of this ipfsHash and creator is already published"
+    );
   });
 
   it("minamint: sign by creator and minter mint by paying fee like cloud sale", async function () {
@@ -222,7 +224,11 @@ describe("Chocomint", function () {
           value: value - 1,
         }
       )
+<<<<<<< HEAD
     ).to.be.revertedWith("hash must be included in merkle tree");
+=======
+    ).to.be.revertedWith("The hash must be included in the merkle tree");
+>>>>>>> 0b89be9fe99739c20b7aa5c8d24d4c6fc1fd366f
   });
 
   it("minamint: receiver is different (reverted with hash is not included in merkle tree)", async function () {
@@ -250,7 +256,7 @@ describe("Chocomint", function () {
           value,
         }
       )
-    ).to.be.revertedWith("hash must be included in merkle tree");
+    ).to.be.revertedWith("The hash must be included in the merkle tree");
   });
 
   it("minamint: creator is different (reverted with signer must be valid for creator)", async function () {
@@ -278,6 +284,6 @@ describe("Chocomint", function () {
           value,
         }
       )
-    ).to.be.revertedWith("signer must be valid for creator");
+    ).to.be.revertedWith("The signer must be valid for the creator");
   });
 });
