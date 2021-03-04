@@ -1,4 +1,6 @@
 import React from "react";
+import { useHistory } from "react-router-dom";
+import { Modal } from "../components/molecules";
 import { ethers } from "ethers";
 import {
   ipfs,
@@ -9,7 +11,6 @@ import {
   nullAddress,
   validateChainId,
 } from "../modules/web3";
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { db } from "../modules/firebase";
 import { Pairmints } from "../types";
@@ -19,6 +20,7 @@ const bs58 = require("bs58");
 const logo = require("../assets/icon.png").default;
 
 export const Create: React.FC = () => {
+  const history = useHistory();
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
@@ -26,14 +28,15 @@ export const Create: React.FC = () => {
     waitingTransactionConfirmation,
     setWaitingTransactionConfirmation,
   ] = React.useState(false);
-  const [alertStatus, setAlertStatus] = React.useState({
-    category: "",
-    msg: "",
-  });
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [price, setPrice] = React.useState("");
-  const [exploreUrl, setExploreUrl] = React.useState("");
+  const [creatorAddress, setCreatorAddress] = React.useState("");
+  const [modals, setModals] = React.useState({
+    success: false,
+    error: false,
+  });
+  const [errorMsg, setErrorMsg] = React.useState("");
 
   const readAsArrayBufferAsync = (file: File) => {
     return new Promise((resolve) => {
@@ -108,7 +111,7 @@ export const Create: React.FC = () => {
       const signer = await getEthersSigner();
       const chainId = await signer.getChainId();
       if (!validateChainId(chainId)) {
-        setErrorAlert("Please connect to rinkeby network.");
+        setErrorModal("Please connect to rinkeby network.");
         return;
       }
       const { contractAddress } = getNetwork(chainId as ChainIdType);
@@ -153,22 +156,37 @@ export const Create: React.FC = () => {
         [chainId, contractAddress, metadataIpfsHash, creator]
       );
       await db.collection("pairmints").doc(orderId).set(record);
-      // setExploreUrl(`${explore}${hash}`);
-      setSuccessAlert(`🎉  Success`);
+      setCreatorAddress(creator);
+      setSuccessModal();
     } catch (err) {
       console.log(err);
-      setErrorAlert(`Error: ${err.message}`);
+      setErrorModal(`Error: ${err.message}`);
     }
   };
 
-  const setSuccessAlert = (msg: string) => {
-    resetStatus();
-    toast(msg);
+  const openModal = async (target: "success" | "error") => {
+    setModals({
+      ...modals,
+      [target]: true,
+    });
   };
 
-  const setErrorAlert = (msg: string) => {
+  const closeModal = async (target: "success" | "error") => {
+    setModals({
+      ...modals,
+      [target]: false,
+    });
+  };
+
+  const setSuccessModal = () => {
+    resetStatus();
+    openModal("success");
+  };
+
+  const setErrorModal = (msg: string) => {
     setWaitingTransactionConfirmation(false);
-    toast.warn(msg);
+    setErrorMsg(msg);
+    openModal("error");
   };
 
   const resetStatus = () => {
@@ -180,6 +198,64 @@ export const Create: React.FC = () => {
     <div className="mx-auto h-screen bg-white">
       <div className="flex justify-center container mx-auto">
         <div className="w-full max-w-md p-4">
+          {modals.success && (
+            <Modal
+              type="wide"
+              closeValue="続けて発行する"
+              execValue="作品を確認する"
+              onClickClose={() => {
+                closeModal("success");
+              }}
+              onClickExec={() => {
+                history.push(`/box/${creatorAddress}`);
+              }}
+            >
+              <div className="mx-4 my-4">
+                <div className="text-center">
+                  <h3
+                    className="text-xl leading-6 font-medium text-gray-900 mb-8"
+                    id="modal-headline"
+                  >
+                    🎉 Congratulation!!🎉
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      続けて発行するもしくは自分の作品を確認しよう！
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Modal>
+          )}
+          {modals.error && (
+            <Modal
+              type="single"
+              execColor="red"
+              execValue="閉じる"
+              onClickExec={() => {
+                closeModal("error");
+              }}
+            >
+              <div className="mx-4">
+                <div className="text-center mt-2">
+                  <h2
+                    className="text-lg leading-6 font-medium text-gray-900"
+                    id="modal-headline"
+                  >
+                    ERROR
+                  </h2>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-800">
+                      以下のようなエラーが発生しました。
+                    </p>
+                  </div>
+                  <div className="overflow-auto mt-4 p-3 bg-gray-100 rounded-md">
+                    <p className="text-sm text-gray-400">{errorMsg}</p>
+                  </div>
+                </div>
+              </div>
+            </Modal>
+          )}
           <div>
             <img
               className="mx-auto h-20 rounded-xl w-auto border-b-4 border-green-700 shadow-md"
@@ -304,17 +380,6 @@ export const Create: React.FC = () => {
               Let&apos;s Create!
             </button>
           </div>
-          <ToastContainer
-            position="top-center"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
         </div>
       </div>
     </div>
