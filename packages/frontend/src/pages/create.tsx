@@ -9,6 +9,8 @@ import {
   nullAddress,
   validateChainId,
 } from "../modules/web3";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { db } from "../modules/firebase";
 import { Pairmints } from "../types";
 import { MerkleTree } from "merkletreejs";
@@ -152,7 +154,7 @@ export const Create: React.FC = () => {
       );
       await db.collection("pairmints").doc(orderId).set(record);
       // setExploreUrl(`${explore}${hash}`);
-      // setSuccessAlert(`TxHash: \n${hash}`);
+      setSuccessAlert(`🎉  Success`);
     } catch (err) {
       console.log(err);
       setErrorAlert(`Error: ${err.message}`);
@@ -160,27 +162,18 @@ export const Create: React.FC = () => {
   };
 
   const setSuccessAlert = (msg: string) => {
-    setWaitingTransactionConfirmation(false);
-    setAlertStatus({
-      category: "success",
-      msg,
-    });
+    resetStatus();
+    toast(msg);
   };
 
   const setErrorAlert = (msg: string) => {
     setWaitingTransactionConfirmation(false);
-    setAlertStatus({
-      category: "error",
-      msg,
-    });
+    toast.warn(msg);
   };
 
-  const resetAlertStatus = () => {
+  const resetStatus = () => {
     setWaitingTransactionConfirmation(false);
-    setAlertStatus({
-      category: "sucsess",
-      msg: "",
-    });
+    clearForm();
   };
 
   return (
@@ -208,6 +201,7 @@ export const Create: React.FC = () => {
               名前
             </label>
             <input
+              value={name}
               onChange={handleNameChange}
               type="text"
               name="name"
@@ -223,6 +217,7 @@ export const Create: React.FC = () => {
               説明
             </label>
             <textarea
+              value={description}
               onChange={handleDescriptionChange}
               id="description"
               name="description"
@@ -291,6 +286,7 @@ export const Create: React.FC = () => {
               販売価格
             </label>
             <input
+              value={price}
               onChange={handlePriceChange}
               type="number"
               name="price"
@@ -308,58 +304,17 @@ export const Create: React.FC = () => {
               Let&apos;s Create!
             </button>
           </div>
-          <div className="mt-8">
-            {alertStatus.category == "success" && (
-              <div className="rounded-md bg-green-50 p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">🎉</div>
-                  <div className="ml-3 w-full">
-                    <h3 className="text-md font-medium text-green-800">
-                      Success
-                    </h3>
-                    <div className="mt-2 text-xs text-green-700">
-                      <a href={exploreUrl}>
-                        <p className="truncate w-60">{alertStatus.msg}</p>
-                      </a>
-                    </div>
-                    <div className="mt-4">
-                      <div className="-mx-2 -my-1.5 flex justify-end">
-                        <button
-                          className="ml-3 bg-green-50 px-2 py-1.5 rounded-md text-sm font-medium text-green-800 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600"
-                          onClick={resetAlertStatus}
-                        >
-                          Dismiss
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {alertStatus.category == "error" && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">🙇‍♂️</div>
-                  <div className="ml-3 w-full">
-                    <h3 className="text-md font-medium text-red-800">Error</h3>
-                    <div className="mt-2 text-xs text-red-700">
-                      <p className="truncate w-60">{alertStatus.msg}</p>
-                    </div>
-                    <div className="mt-4">
-                      <div className="-mx-2 -my-1.5 flex justify-end">
-                        <button
-                          className="ml-3 bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
-                          onClick={resetAlertStatus}
-                        >
-                          Dismiss
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <ToastContainer
+            position="top-center"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
         </div>
       </div>
     </div>
