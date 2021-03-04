@@ -3,7 +3,12 @@ import { useParams } from "react-router-dom";
 import { db } from "../modules/firebase";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTwitter } from "@fortawesome/free-brands-svg-icons";
+import {
+  faTwitter,
+  faInstagram,
+  faYoutube,
+  faTiktok,
+} from "@fortawesome/free-brands-svg-icons";
 
 import {
   getContract,
@@ -13,24 +18,25 @@ import {
 } from "../modules/web3";
 
 import { Pairmints, MintEvent } from "../types";
-
+const emoji = require("../assets/emoji.png").default;
 import "./box.css";
 
 export const Box: React.FC = () => {
-  const [minamints, setMinamints] = React.useState<Pairmints[]>([]);
+  const [pairmints, setPairmints] = React.useState<Pairmints[]>([]);
   const [events, setEvents] = React.useState<MintEvent[]>([]);
+  const [hasProfile, setHasProfile] = React.useState<boolean>(false);
 
   const { address } = useParams<{ address: string }>();
   React.useEffect(() => {
-    db.collection("minamints")
+    db.collection("pairmints")
       .where("creator", "==", address)
       .get()
       .then((querySnapshot) => {
-        const minamints: Pairmints[] = [];
+        const pairmints: Pairmints[] = [];
         querySnapshot.forEach((doc) => {
-          minamints.push(doc.data() as Pairmints);
+          pairmints.push(doc.data() as Pairmints);
         });
-        setMinamints(minamints);
+        setPairmints(pairmints);
       });
 
     const contract = getContract(31337);
@@ -53,7 +59,7 @@ export const Box: React.FC = () => {
   };
 
   const mint = async (i: number) => {
-    const pairmint = minamints[i];
+    const pairmint = pairmints[i];
     const signer = await getEthersSigner();
     const chainId = await signer.getChainId();
     if (chainId != pairmint.chainId) {
@@ -83,23 +89,61 @@ export const Box: React.FC = () => {
           <div className="w-full mt-4 mx-auto">
             <div className="p-8 w-60 mx-auto bg-green-400 text-center rounded-xl border-b-4 border-green-700 shadow-2xl text-center">
               <img
-                className="mx-auto h-12 w-12 rounded-xl shadow-md"
-                src="https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&ixqx=4LE1N9O1HK&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=1024&h=1024&q=80"
+                className="mx-auto h-12 w-12 rounded-xl"
+                src={hasProfile ? "" : emoji}
                 alt="profile"
               />
+
               <div className="mt-2">
-                <div className="font-medium text-sm">
-                  <h3>unnamed</h3>
-                  <p className="extra-small">
-                    0x70997970C51812dc3A010C7d01b50e0d17dc79C8
-                  </p>
+                <div className="font-medium text-xs">
+                  <h3>{hasProfile ? "" : "SNS連携は実装中です🙇‍♂️"}</h3>
+                  <p className="extra-small ont-medium">{address}</p>
                 </div>
               </div>
               <div className="mt-1">
                 <ul className="flex justify-center space-x-5">
                   <li>
-                    <a href="#" className="text-white hover:text-blue-400">
+                    <a
+                      className={`text-white ${
+                        hasProfile
+                          ? "hover:text-blue-400"
+                          : "cursor-default opacity-50"
+                      }`}
+                    >
                       <FontAwesomeIcon icon={faTwitter} />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      className={`text-white ${
+                        hasProfile
+                          ? "hover:text-blue-400"
+                          : "cursor-default opacity-50"
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={faInstagram} />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      className={`text-white ${
+                        hasProfile
+                          ? "hover:text-blue-400"
+                          : "cursor-default opacity-50"
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={faYoutube} />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      className={`text-white ${
+                        hasProfile
+                          ? "hover:text-blue-400"
+                          : "cursor-default opacity-50"
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={faTiktok} />
                     </a>
                   </li>
                 </ul>
@@ -109,7 +153,7 @@ export const Box: React.FC = () => {
         </div>
         <div className="flex justify-center">
           <ul className="grid grid-cols-3 gap-x-6">
-            {minamints.map((pairmint, i) => {
+            {pairmints.map((pairmint, i) => {
               const minted = checkAlreadyMinted(pairmint.metadataIpfsHash);
               return (
                 <li key={i} className="mt-6">
