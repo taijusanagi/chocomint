@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "hardhat/console.sol";
 
 // This contract is created by taijusanagi(taijusanagi.eth), I hope this contract is used for all NFT lovers
-// Chocomint is named by Kenta Suhara
+// Chocomint is named by Kenta Suhara(suhara.eth)
 // AA is created by Daiki Kunii
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
@@ -119,8 +119,8 @@ import "hardhat/console.sol";
 
 // I beleive ERC721 is more suitable than ERC1155
 // I will create ERC1155 for "chocoprint" later
-// ERC721 is original NFT, and ERC1155 is copy NFT (kind of printed NFT) in Chocomint
-// Chocomint is chocolate + peppermint, this provide simple experience to mint NFT, and it tastes like chocomint
+// In Chocomint, ERC721 is the original NFT and ERC1155 is the copy NFT (kind of printed NFT) 
+// Chocomint stands for chocolate + peppermint, this provides a simple experience for minting NFTs, and it tastes like a chocomint
 contract Chocomint is ERC721 {
   // SafeMath is used instead of Counter for simplicity
   using SafeMath for uint256;
@@ -194,7 +194,7 @@ contract Chocomint is ERC721 {
     bytes32 hash = keccak256(abi.encodePacked(_ipfs, _creator));
     require(
       publishedTokenId[hash] == 0,
-      "this ipfsHash and creator NFT is already published"
+      "The NFT of this ipfsHash and creator is already published"
     );
     address receiver = _receiver == address(0x0) ? msg.sender : _receiver;
     totalSupply = totalSupply.add(1);
@@ -240,10 +240,10 @@ contract Chocomint is ERC721 {
         abi.encodePacked(_getChainId(), address(this), _ipfs, price, _receiver)
       );
     bool hashVerified = MerkleProof.verify(_proof, _root, hash);
-    require(hashVerified, "hash must be included in merkle tree");
+    require(hashVerified, "The hash must be included in the merkle tree");
     require(
       _root.toEthSignedMessageHash().recover(_signature) == _creator,
-      "signer must be valid for creator"
+      "The signer must be valid for the creator"
     );
     uint256 tokenId = _mint(_ipfs, _creator, minter, _receiver);
     if (price > 0) {
@@ -258,7 +258,7 @@ contract Chocomint is ERC721 {
   function gigamint(bytes32[] memory _ipfs, address[] memory _receiver) public {
     require(
       _ipfs.length == _receiver.length,
-      "ipfs length and receiver length must be same"
+      "The length of ipfs and the length of the receiver must be the same"
     );
     for (uint256 i = 0; i < _ipfs.length; i++) {
       mint(_ipfs[i], _receiver[i]);
