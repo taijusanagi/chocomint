@@ -12,12 +12,12 @@ import {
   ChainIdType,
 } from "../modules/web3";
 
-import { Minamints, MintEvent } from "../types";
+import { Pairmints, MintEvent } from "../types";
 
 import "./box.css";
 
 export const Box: React.FC = () => {
-  const [minamints, setMinamints] = React.useState<Minamints[]>([]);
+  const [minamints, setMinamints] = React.useState<Pairmints[]>([]);
   const [events, setEvents] = React.useState<MintEvent[]>([]);
 
   const { address } = useParams<{ address: string }>();
@@ -26,9 +26,9 @@ export const Box: React.FC = () => {
       .where("creator", "==", address)
       .get()
       .then((querySnapshot) => {
-        const minamints: Minamints[] = [];
+        const minamints: Pairmints[] = [];
         querySnapshot.forEach((doc) => {
-          minamints.push(doc.data() as Minamints);
+          minamints.push(doc.data() as Pairmints);
         });
         setMinamints(minamints);
       });
@@ -53,25 +53,25 @@ export const Box: React.FC = () => {
   };
 
   const mint = async (i: number) => {
-    const minamint = minamints[i];
+    const pairmint = minamints[i];
     const signer = await getEthersSigner();
     const chainId = await signer.getChainId();
-    if (chainId != minamint.chainId) {
+    if (chainId != pairmint.chainId) {
       alert("chain id is invalid");
       return;
     }
     const contract = getContract(chainId as ChainIdType);
     await contract
       .connect(signer)
-      .minamint(
-        minamint.metadataIpfsHash,
-        minamint.creator,
-        minamint.recipient,
-        minamint.root,
-        minamint.proof,
-        minamint.signature,
+      .pairmint(
+        pairmint.metadataIpfsHash,
+        pairmint.creator,
+        pairmint.recipient,
+        pairmint.root,
+        pairmint.proof,
+        pairmint.signature,
         {
-          value: minamint.value,
+          value: pairmint.value,
         }
       );
   };
@@ -109,8 +109,8 @@ export const Box: React.FC = () => {
         </div>
         <div className="flex justify-center">
           <ul className="grid grid-cols-3 gap-x-6">
-            {minamints.map((minamint, i) => {
-              const minted = checkAlreadyMinted(minamint.metadataIpfsHash);
+            {minamints.map((pairmint, i) => {
+              const minted = checkAlreadyMinted(pairmint.metadataIpfsHash);
               return (
                 <li key={i} className="mt-6">
                   <button
@@ -126,7 +126,7 @@ export const Box: React.FC = () => {
                   >
                     <img
                       className="h-60 w-60 rounded-xl object-cover border-b-4 border-gray-600 shadow-md"
-                      src={minamint.choco.image}
+                      src={pairmint.choco.image}
                       alt=""
                     />
                   </button>

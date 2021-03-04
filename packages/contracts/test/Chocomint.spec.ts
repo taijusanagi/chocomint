@@ -16,15 +16,9 @@ describe("Chocomint", function () {
   const nullAddress = "0x0000000000000000000000000000000000000000";
   const contractName = "ChocoMintEthereum";
   const contractSymbol = "CME";
-
   const metadataIpfsCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz";
-  const metadataIpfsCidForBulk =
-    "QmWATWQ7fVPP2EFGu71UkfnqhYXDYH566qy47CnJDgvs8u";
   const metadataIpfsHash =
     "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
-
-  const metadataIpfsHashForBulk =
-    "0x74410577111096cd817a3faed78630f2245636beded412d3b212a2e09ba593ca";
 
   const ipfsBaseUrl = "ipfs://";
 
@@ -107,7 +101,7 @@ describe("Chocomint", function () {
     );
   });
 
-  it("minamint: sign by creator and minter mint by paying fee like cloud sale", async function () {
+  it("pairmint: sign by creator and minter mint by paying fee like cloud sale", async function () {
     const value = 100;
     const messageHash = ethers.utils.solidityKeccak256(
       ["uint256", "address", "bytes32", "uint256", "address"],
@@ -123,7 +117,7 @@ describe("Chocomint", function () {
     const previousCreatorBalance = await provider.getBalance(creator.address);
     await chocomint
       .connect(minter) //tx is signed by minter
-      .minamint(
+      .pairmint(
         metadataIpfsHash,
         creator.address,
         nullAddress,
@@ -155,7 +149,7 @@ describe("Chocomint", function () {
     );
   });
 
-  it("minamint: sign by creator and minter mint and creator get it", async function () {
+  it("pairmint: sign by creator and minter mint and creator get it", async function () {
     const value = 0;
     const messageHash = ethers.utils.solidityKeccak256(
       ["uint256", "address", "bytes32", "uint256", "address"],
@@ -170,7 +164,7 @@ describe("Chocomint", function () {
     const signature = await creator.signMessage(ethers.utils.arrayify(root));
     await chocomint
       .connect(minter)
-      .minamint(
+      .pairmint(
         metadataIpfsHash,
         creator.address,
         creator.address,
@@ -199,7 +193,7 @@ describe("Chocomint", function () {
     );
   });
 
-  it("minamint: price is not enough(reverted with hash is not included in merkle tree)", async function () {
+  it("pairmint: price is not enough(reverted with hash is not included in merkle tree)", async function () {
     const value = 100;
     const messageHash = ethers.utils.solidityKeccak256(
       ["uint256", "address", "bytes32", "uint256", "address"],
@@ -213,7 +207,7 @@ describe("Chocomint", function () {
     const proof = tree.getHexProof(messageHashBinaryBuffer);
     const signature = await creator.signMessage(ethers.utils.arrayify(root));
     await expect(
-      chocomint.minamint(
+      chocomint.pairmint(
         metadataIpfsHash,
         creator.address,
         nullAddress,
@@ -227,7 +221,7 @@ describe("Chocomint", function () {
     ).to.be.revertedWith("The hash must be included in the merkle tree");
   });
 
-  it("minamint: receiver is different (reverted with hash is not included in merkle tree)", async function () {
+  it("pairmint: receiver is different (reverted with hash is not included in merkle tree)", async function () {
     const value = 100;
     const messageHash = ethers.utils.solidityKeccak256(
       ["uint256", "address", "bytes32", "uint256", "address"],
@@ -241,7 +235,7 @@ describe("Chocomint", function () {
     const proof = tree.getHexProof(messageHashBinaryBuffer);
     const signature = await creator.signMessage(ethers.utils.arrayify(root));
     await expect(
-      chocomint.minamint(
+      chocomint.pairmint(
         metadataIpfsHash,
         creator.address,
         malicious.address, //this address is different from hash
@@ -255,7 +249,7 @@ describe("Chocomint", function () {
     ).to.be.revertedWith("The hash must be included in the merkle tree");
   });
 
-  it("minamint: creator is different (reverted with signer must be valid for creator)", async function () {
+  it("pairmint: creator is different (reverted with signer must be valid for creator)", async function () {
     const value = 100;
     const messageHash = ethers.utils.solidityKeccak256(
       ["uint256", "address", "bytes32", "uint256", "address"],
@@ -269,7 +263,7 @@ describe("Chocomint", function () {
     const proof = tree.getHexProof(messageHashBinaryBuffer);
     const signature = await creator.signMessage(ethers.utils.arrayify(root));
     await expect(
-      chocomint.minamint(
+      chocomint.pairmint(
         metadataIpfsHash,
         malicious.address,
         nullAddress, //this address is different from hash

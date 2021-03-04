@@ -11,7 +11,7 @@ import {
 } from "../modules/web3";
 
 import { db } from "../modules/firebase";
-import { Minamints } from "../types";
+import { Pairmints } from "../types";
 import { MerkleTree } from "merkletreejs";
 const keccak256 = require("keccak256");
 
@@ -137,7 +137,7 @@ export const Create: React.FC = () => {
       const root = tree.getHexRoot();
       const proof = tree.getHexProof(messageHashBinaryBuffer);
       const signature = await signer.signMessage(ethers.utils.arrayify(root));
-      const record: Minamints = {
+      const record: Pairmints = {
         chainId,
         contractAddress,
         metadataIpfsHash,

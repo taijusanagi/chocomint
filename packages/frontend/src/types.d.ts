@@ -4,7 +4,7 @@ export interface Choco {
   description: string;
 }
 
-export interface Minamints {
+export interface Pairmints {
   chainId: number;
   contractAddress: string;
   metadataIpfsHash: string;

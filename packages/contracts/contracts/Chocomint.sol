@@ -223,7 +223,7 @@ contract Chocomint is ERC721 {
    *      case2: minter get NFT, this is like cloud sale of premint NFT
    *      minter cannnot be input because minter should be signature verified
    */
-  function minamint(
+  function pairmint(
     bytes32 _ipfs,
     address payable _creator,
     address _receiver,
