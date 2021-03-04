@@ -8,7 +8,12 @@ import {
   faYoutube,
   faTiktok,
 } from "@fortawesome/free-brands-svg-icons";
-import { getContract, getEthersSigner, ChainIdType } from "../modules/web3";
+import {
+  getContract,
+  getEthersSigner,
+  ChainIdType,
+  chainId,
+} from "../modules/web3";
 import { Pairmints, MintEvent } from "../types";
 const emoji = require("../assets/emoji.png").default;
 import "./box.css";
@@ -30,10 +35,11 @@ export const Box: React.FC = () => {
         });
         setPairmints(pairmints);
       });
-    const contract = getContract(31337);
+    const contract = getContract(chainId);
     const filter = contract.filters.Mint(null, address);
     contract.queryFilter(filter).then((events) => {
       const args = events.map((event) => event.args);
+      console.log(args);
       setEvents(args as any);
     });
   }, []);
