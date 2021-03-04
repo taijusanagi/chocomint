@@ -5,7 +5,6 @@ import { ethers } from "ethers";
 import {
   chainId,
   ipfs,
-  getEthersSigner,
   ChainIdType,
   getNetwork,
   ipfsHttpsBaseUrl,
