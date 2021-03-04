@@ -1,7 +1,7 @@
 {
   "1": {
     "name": "mainnet",
-    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "contractAddress": "0xDa54Ff1260eD610E9350B7A03CcD5c6e48F439AF",
     "rpc": "https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://etherscan.io/tx/"
   },
