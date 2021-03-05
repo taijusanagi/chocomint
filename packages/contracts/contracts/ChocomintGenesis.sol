@@ -120,260 +120,303 @@ contract ChocomintGenesis is Ownable, ERC721 {
   using SafeMath for uint256;
   using ECDSA for bytes32;
 
-  event Finalized(uint256 blockNumber, uint256 blockTimestamp, uint256 sender);
+  // event Finalized(uint256 blockNumber, uint256 blockTimestamp, uint256 sender);
 
+  uint256 public bidIdCount;
+  uint256 public lastBidId;
   mapping(uint256 => uint256) public tokenIdToBidId;
   mapping(uint256 => uint256) public bidIdToTokenId;
+  mapping(uint256 => uint256) public previousBidId;
   mapping(uint256 => uint256) public bidIdToEligibleBidIdsIndex;
   mapping(uint256 => uint256) public bidIdToCurrentPrice;
   mapping(uint256 => address payable) public bidIdToCurrentBidderAddress;
   mapping(uint256 => address payable) public bidIdToCreatorAddress;
   mapping(uint256 => bytes32) public bidIdToIpfsHash;
 
-  string public constant name = "ChocomintGenesis";
-  string public constant symbol = "CMG";
-  uint256 public constant supplyLimit = 256;
-  uint256 public constant ownerCutRatio = 100;
-  uint256 public constant ratioBase = 10000;
-  uint256 public constant selectiveSeasonPeriod = 7 days;
-  uint256 public constant timeLimitAfterSelectiveSeasonPeriod = 10 minutes;
+  function getEligibleBidIds() public view returns (uint256[]) {
+    uint256[] memory eligibleBidIds;
+    uint256 currentBidId = lastBidId;
+    while (currentBidId != 0) {
+      eligibleBidIds.push(currentBidId);
+      currentBidId = previousBidId[currentBidId];
+    }
+  }
 
-  uint256 public totalSupply;
-  uint256 public lastBiddedAt;
-  uint256 public limitExceededAt;
-  uint256[] public eligibleBidIds;
-
-  uint256 public blockNumberAtClosed;
-  uint256 public blockNumberAtFinalized;
-
-  function bid(
-    bytes32 _ipfsHash,
-    address payable _creatorAddress,
-    bytes memory _creatorSignature
-  ) public payable {
-    require(isOpenToBid(), "ChocomintGenesis: bid is already closed");
-    bytes32 hash =
-      keccak256(abi.encodePacked(_getChainId(), address(this), _ipfsHash, _creatorAddress));
-    uint256 bidId = uint256(hash);
-    bool isRefundRequired;
-    address payable refundRecipient;
-    uint256 refundPrice;
-    if (bidIdToCurrentPrice[bidId] == 0) {
-      require(
-        hash.toEthSignedMessageHash().recover(_creatorSignature) == _creatorAddress,
-        "ChocomintGenesis: creator signature must be valid"
-      );
-      bidIdToIpfsHash[bidId] = _ipfsHash;
-      bidIdToCreatorAddress[bidId] = _creatorAddress;
-      if (eligibleBidIds.length < supplyLimit) {
-        bidIdToEligibleBidIdsIndex[bidId] = eligibleBidIds.length;
-        eligibleBidIds.push(bidId);
-        if (eligibleBidIds.length == supplyLimit) {
-          limitExceededAt = now;
-        }
-      } else {
-        uint256 lowestBidId = getCurrentLowestEligibleBidId();
-        require(
-          msg.value > bidIdToCurrentPrice[lowestBidId],
-          "ChocomintGenesis: value must be more than lowest bid price"
-        );
-        isRefundRequired = true;
-        refundPrice = bidIdToCurrentPrice[lowestBidId];
-        refundRecipient = bidIdToCurrentBidderAddress[lowestBidId];
-        eligibleBidIds[lowestBidIndex] = bidId;
-        delete bidIdToCurrentPrice[lowestBidId];
-        delete bidIdToCurrentBidderAddress[lowestBidId];
-        delete bidIdToCreatorAddress[lowestBidId];
-        delete bidIdToIpfsHash[lowestBidId];
-      }
+  function updateEligibleBidIds(uint256 _newBidId, uint256 _newBidPrice) public {
+    if (lastBidId == 0) {
+      lastBidId = _newBidId;
     } else {
-      require(
-        msg.value > bidIdToCurrentPrice[bidId],
-        "ChocomintGenesis: value must be more than last bid price"
-      );
-    }
-    bidIdToCurrentPrice[bidId] = msg.value;
-    bidIdToCurrentBidderAddress[bidId] = msg.sender;
-    lastBiddedAt = now;
-    if (isRefundRequired) {
-      refundRecipient.transfer(refundPrice);
-    }
-  }
-
-  /**
-   * @dev This transaction is only allowed by creator or bidder because this transcation has special meaning for both
-   * This keeps block number of finalization transaction
-   * This transaction is trigger of NFT distribution,
-   * so to avoid dependency on owner, anyone can make transaction when bid is closed
-   */
-  function mint(uint256 bidId) public {
-    require(!isOpenToBid(), "ChocomintGenesis: bid is still open");
-
-    require(bidIdToTokenId[bidId] == 0, "ChocomintGenesis: NFT is already claimed");
-    require(bidIdToCurrentPrice[bidId] > 0, "ChocomintGenesis: bid is not eligible");
-    address payable creatorAddress = bidIdToCreatorAddress[bidId];
-    address payable bidderAddress = bidIdToCurrentBidderAddress[bidId];
-    address ownerAddress = owner();
-    totalSupply = totalSupply.add(1);
-    uint256 tokenId = getBidRanking(bidId);
-    _mint(bidderAddress, tokenId);
-    uint256 price = bidIdToCurrentPrice[bidId];
-    uint256 ownerCut = getOwnerCut(price);
-    uint256 creatorReward = price.sub(ownerCut);
-    tokenIdToBidId[tokenId] = bidId;
-    bidIdToTokenId[bidId] = tokenId;
-    creatorAddress.transfer(creatorReward);
-
-    if (totalSupply == supplyLimit) {
-      blockNumberAtFinalized = block.number;
-    }
-  }
-
-  /**
-   * @dev Get sha256 of concatenated all NFT ipfs hash as provenance
-   * Ipfs hash is sorted by token id (1 -> 256), this is finalized after all bid is closed and owner confirmation
-   * This is inspired by CryptoPunks and Hashmasks, and Chocomint provides provenence by onchain calculation
-   * I hope this will be part of NFT digital art standard in the future
-   */
-  function getProvenance() public view returns (bytes32) {
-    require(blockNumberAtFinalized > 0, "ChocomintGenesis: contract is still not finalized");
-    bytes memory rawProvenance;
-    for (uint256 i = 1; i <= totalSupply; i++) {
-      uint256 bidId = tokenIdToBidId[i];
-      rawProvenance = abi.encodePacked(rawProvenance, bidIdToIpfsHash[bidId]);
-    }
-    return sha256(rawProvenance);
-  }
-
-  /**
-   * @dev We take 10% fee from creator reward for future development
-   * This can be executed after all NFT is claimed
-   * This is final owner transaction, so owner role is renounced as well
-   */
-  function withdraw() public onlyOwner {
-    require(blockNumberAtFinalized > 0, "ChocomintGenesis: contract is still not finalized");
-    renounceOwnership();
-    msg.sender.transfer(address(this).balance);
-  }
-
-  function getOwnerCut(uint256 _price) public returns (uint256) {
-    return _price.mul(ownerCutRatio).div(ratioBase);
-  }
-
-  function isOpenToBid() public view returns (bool) {
-    if (finalized) {
-      return false;
-    } else {
-      if (eligibleBidIds.length < supplyLimit) {
-        return true;
-      } else {
-        if (limitExceededAt.add(selectiveSeasonPeriod) < now) {
-          true;
-        } else {
-          return lastBiddedAt + timeLimitAfterSelectiveSeasonPeriod > now;
+      bool isIncludedInEligibleBidIds;
+      uint256 bidIdToReplace;
+      uint256 currentBidId = lastBidId;
+      while (currentBidId != 0 && bidIdToReplace != 0) {
+        if (currentBidId == _newBidId) {
+          isIncludedInEligibleBidIds = true;
         }
-      }
-    }
-  }
-
-  function pushBidIdToEligibleBidIds(uint256 bidId, uint256 bidPrice) public {
-    for (uint256 i = 0; i < eligibleBidIds.length; i++) {
-      uint256 tempBidId = eligibleBidIds[i];
-      uint256 tempPrice = bidIdToCurrentPrice[tempBidId];
-      uint256 bidIndex;
-      uint256 countSamePriceAndBeforeTargetIndex;
-      uint256 countOverPrice;
-      if (bidPrice < tempPrice) {
-        countOverPrice = countOverPrice.add(1);
-      } else if (bidPrice == tempPrice) {
-        if (bidIndex < i) {
-          countSamePriceAndBeforeTargetIndex = countSamePriceAndBeforeTargetIndex.add(1);
+        if (bidIdToCurrentPrice[currentBidId] <= _newBidPrice) {
+          bidIdToReplace = currentBidId;
         }
+        currentBidId = previousBidId[currentBidId];
       }
-    }
-  }
-
-  function getBidRanking(uint256 bidId) public view returns (uint256) {
-    uint256 bidPrice = bidIdToCurrentPrice[bidId];
-    uint256 bidIndex = bidIdToEligibleBidIdsIndex[tokenId];
-    for (uint256 i = 0; i < eligibleBidIds.length; i++) {
-      uint256 tempBidId = eligibleBidIds[i];
-      uint256 tempPrice = bidIdToCurrentPrice[tempBidId];
-      uint256 bidIndex;
-      uint256 countSamePriceAndBeforeTargetIndex;
-      uint256 countOverPrice;
-      if (bidPrice < tempPrice) {
-        countOverPrice = countOverPrice.add(1);
-      } else if (bidPrice == tempPrice) {
-        if (bidIndex < i) {
-          countSamePriceAndBeforeTargetIndex = countSamePriceAndBeforeTargetIndex.add(1);
-        }
+      uint256 theSecondBidIdFromTheReplaceBid = previousBidId[bidIdToReplace];
+      previousBidId[bidIdToReplace] = _newBidId;
+      previousBidId[_newBidId] = theSecondBidIdFromTheReplaceBid;
+      if (bidIdCount > 100 && !isIncludedInEligibleBidIds) {
+        uint256 theSecondBidIdFromThelastBid = previousBidId[lastBidId];
+        delete previousBidId[lastBidId];
+        lastBidId = theSecondBidIdFromThelastBid;
       }
+      bidIdCount = bidIdCount.add(1);
     }
-    return countOverPrice.add(countSamePriceAndBeforeTargetIndex).add(1);
+
+    // for(uint256 i =0; i < ){
+    // }
   }
 
-  function getCurrentLowestEligibleBidId() public view returns (uint256) {
-    uint256 lowestBidId;
-    uint256 lowestBidPrice;
-    for (uint256 i = eligibleBidIds.length - 1; i >= 0; i--) {
-      uint256 tempBidId = eligibleBidIds[i];
-      uint256 tempCurrentPrice = bidIdToCurrentPrice[tempBidId];
-      if (i == 0 || lowestBidPrice > tempCurrentPrice) {
-        lowestBidId = tempBidId;
-        lowestBidPrice = tempCurrentPrice;
-      }
-    }
-    return lowestBidId;
-  }
+  // string public constant name = "ChocomintGenesis";
+  // string public constant symbol = "CMG";
+  // uint256 public constant supplyLimit = 256;
+  // uint256 public constant ownerCutRatio = 100;
+  // uint256 public constant ratioBase = 10000;
+  // uint256 public constant selectiveSeasonPeriod = 7 days;
+  // uint256 public constant timeLimitAfterSelectiveSeasonPeriod = 10 minutes;
 
-  function tokenURI(uint256 tokenId) public view returns (string memory) {
-    require(_exists(tokenId), "token must exist");
-    uint256 bidId = tokenIdToBidId[tokenId];
-    return
-      string(
-        _addIpfsBaseUrlPrefix(_bytesToBase58(_addSha256FunctionCodePrefix(bidIdToIpfsHash[bidId])))
-      );
-  }
+  // uint256 public totalSupply;
+  // uint256 public lastBiddedAt;
+  // uint256 public limitExceededAt;
+  // uint256[] public eligibleBidIds;
 
-  function _getChainId() internal pure returns (uint256) {
-    uint256 id;
-    assembly {
-      id := chainid()
-    }
-    return id;
-  }
+  // uint256 public blockNumberAtClosed;
+  // uint256 public blockNumberAtFinalized;
 
-  function _addIpfsBaseUrlPrefix(bytes memory input) internal pure returns (bytes memory) {
-    return abi.encodePacked("ipfs://", input);
-  }
+  // function bid(
+  //   bytes32 _ipfsHash,
+  //   address payable _creatorAddress,
+  //   bytes memory _creatorSignature
+  // ) public payable {
+  //   require(isOpenToBid(), "ChocomintGenesis: bid is already closed");
+  //   bytes32 hash =
+  //     keccak256(abi.encodePacked(_getChainId(), address(this), _ipfsHash, _creatorAddress));
+  //   uint256 bidId = uint256(hash);
+  //   bool isRefundRequired;
+  //   address payable refundRecipient;
+  //   uint256 refundPrice;
+  //   if (bidIdToCurrentPrice[bidId] == 0) {
+  //     require(
+  //       hash.toEthSignedMessageHash().recover(_creatorSignature) == _creatorAddress,
+  //       "ChocomintGenesis: creator signature must be valid"
+  //     );
+  //     bidIdToIpfsHash[bidId] = _ipfsHash;
+  //     bidIdToCreatorAddress[bidId] = _creatorAddress;
+  //     if (eligibleBidIds.length < supplyLimit) {
+  //       bidIdToEligibleBidIdsIndex[bidId] = eligibleBidIds.length;
+  //       eligibleBidIds.push(bidId);
+  //       if (eligibleBidIds.length == supplyLimit) {
+  //         limitExceededAt = now;
+  //       }
+  //     } else {
+  //       uint256 lowestBidId = getCurrentLowestEligibleBidId();
+  //       require(
+  //         msg.value > bidIdToCurrentPrice[lowestBidId],
+  //         "ChocomintGenesis: value must be more than lowest bid price"
+  //       );
+  //       isRefundRequired = true;
+  //       refundPrice = bidIdToCurrentPrice[lowestBidId];
+  //       refundRecipient = bidIdToCurrentBidderAddress[lowestBidId];
+  //       eligibleBidIds[lowestBidIndex] = bidId;
+  //       delete bidIdToCurrentPrice[lowestBidId];
+  //       delete bidIdToCurrentBidderAddress[lowestBidId];
+  //       delete bidIdToCreatorAddress[lowestBidId];
+  //       delete bidIdToIpfsHash[lowestBidId];
+  //     }
+  //   } else {
+  //     require(
+  //       msg.value > bidIdToCurrentPrice[bidId],
+  //       "ChocomintGenesis: value must be more than last bid price"
+  //     );
+  //   }
+  //   bidIdToCurrentPrice[bidId] = msg.value;
+  //   bidIdToCurrentBidderAddress[bidId] = msg.sender;
+  //   lastBiddedAt = now;
+  //   if (isRefundRequired) {
+  //     refundRecipient.transfer(refundPrice);
+  //   }
+  // }
 
-  function _addSha256FunctionCodePrefix(bytes32 input) internal pure returns (bytes memory) {
-    return abi.encodePacked(hex"1220", input);
-  }
+  // /**
+  //  * @dev This transaction is only allowed by creator or bidder because this transcation has special meaning for both
+  //  * This keeps block number of finalization transaction
+  //  * This transaction is trigger of NFT distribution,
+  //  * so to avoid dependency on owner, anyone can make transaction when bid is closed
+  //  */
+  // function mint(uint256 bidId) public {
+  //   require(!isOpenToBid(), "ChocomintGenesis: bid is still open");
 
-  function _bytesToBase58(bytes memory input) internal pure returns (bytes memory) {
-    bytes memory alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    uint8[] memory digits = new uint8[](46);
-    bytes memory output = new bytes(46);
-    digits[0] = 0;
-    uint8 digitlength = 1;
-    for (uint256 i = 0; i < input.length; ++i) {
-      uint256 carry = uint8(input[i]);
-      for (uint256 j = 0; j < digitlength; ++j) {
-        carry += uint256(digits[j]) * 256;
-        digits[j] = uint8(carry % 58);
-        carry = carry / 58;
-      }
-      while (carry > 0) {
-        digits[digitlength] = uint8(carry % 58);
-        digitlength++;
-        carry = carry / 58;
-      }
-    }
-    for (uint256 k = 0; k < digitlength; k++) {
-      output[k] = alphabet[digits[digitlength - 1 - k]];
-    }
-    return output;
-  }
+  //   require(bidIdToTokenId[bidId] == 0, "ChocomintGenesis: NFT is already claimed");
+  //   require(bidIdToCurrentPrice[bidId] > 0, "ChocomintGenesis: bid is not eligible");
+  //   address payable creatorAddress = bidIdToCreatorAddress[bidId];
+  //   address payable bidderAddress = bidIdToCurrentBidderAddress[bidId];
+  //   address ownerAddress = owner();
+  //   totalSupply = totalSupply.add(1);
+  //   uint256 tokenId = getBidRanking(bidId);
+  //   _mint(bidderAddress, tokenId);
+  //   uint256 price = bidIdToCurrentPrice[bidId];
+  //   uint256 ownerCut = getOwnerCut(price);
+  //   uint256 creatorReward = price.sub(ownerCut);
+  //   tokenIdToBidId[tokenId] = bidId;
+  //   bidIdToTokenId[bidId] = tokenId;
+  //   creatorAddress.transfer(creatorReward);
+
+  //   if (totalSupply == supplyLimit) {
+  //     blockNumberAtFinalized = block.number;
+  //   }
+  // }
+
+  // /**
+  //  * @dev Get sha256 of concatenated all NFT ipfs hash as provenance
+  //  * Ipfs hash is sorted by token id (1 -> 256), this is finalized after all bid is closed and owner confirmation
+  //  * This is inspired by CryptoPunks and Hashmasks, and Chocomint provides provenence by onchain calculation
+  //  * I hope this will be part of NFT digital art standard in the future
+  //  */
+  // function getProvenance() public view returns (bytes32) {
+  //   require(blockNumberAtFinalized > 0, "ChocomintGenesis: contract is still not finalized");
+  //   bytes memory rawProvenance;
+  //   for (uint256 i = 1; i <= totalSupply; i++) {
+  //     uint256 bidId = tokenIdToBidId[i];
+  //     rawProvenance = abi.encodePacked(rawProvenance, bidIdToIpfsHash[bidId]);
+  //   }
+  //   return sha256(rawProvenance);
+  // }
+
+  // /**
+  //  * @dev We take 10% fee from creator reward for future development
+  //  * This can be executed after all NFT is claimed
+  //  * This is final owner transaction, so owner role is renounced as well
+  //  */
+  // function withdraw() public onlyOwner {
+  //   require(blockNumberAtFinalized > 0, "ChocomintGenesis: contract is still not finalized");
+  //   renounceOwnership();
+  //   msg.sender.transfer(address(this).balance);
+  // }
+
+  // function getOwnerCut(uint256 _price) public returns (uint256) {
+  //   return _price.mul(ownerCutRatio).div(ratioBase);
+  // }
+
+  // function isOpenToBid() public view returns (bool) {
+  //   if (finalized) {
+  //     return false;
+  //   } else {
+  //     if (eligibleBidIds.length < supplyLimit) {
+  //       return true;
+  //     } else {
+  //       if (limitExceededAt.add(selectiveSeasonPeriod) < now) {
+  //         true;
+  //       } else {
+  //         return lastBiddedAt + timeLimitAfterSelectiveSeasonPeriod > now;
+  //       }
+  //     }
+  //   }
+  // }
+
+  // function pushBidIdToEligibleBidIds(uint256 bidId, uint256 bidPrice) public {
+  //   for (uint256 i = 0; i < eligibleBidIds.length; i++) {
+  //     uint256 tempBidId = eligibleBidIds[i];
+  //     uint256 tempPrice = bidIdToCurrentPrice[tempBidId];
+  //     uint256 bidIndex;
+  //     uint256 countSamePriceAndBeforeTargetIndex;
+  //     uint256 countOverPrice;
+  //     if (bidPrice < tempPrice) {
+  //       countOverPrice = countOverPrice.add(1);
+  //     } else if (bidPrice == tempPrice) {
+  //       if (bidIndex < i) {
+  //         countSamePriceAndBeforeTargetIndex = countSamePriceAndBeforeTargetIndex.add(1);
+  //       }
+  //     }
+  //   }
+  // }
+
+  // function getBidRanking(uint256 bidId) public view returns (uint256) {
+  //   uint256 bidPrice = bidIdToCurrentPrice[bidId];
+  //   uint256 bidIndex = bidIdToEligibleBidIdsIndex[tokenId];
+  //   for (uint256 i = 0; i < eligibleBidIds.length; i++) {
+  //     uint256 tempBidId = eligibleBidIds[i];
+  //     uint256 tempPrice = bidIdToCurrentPrice[tempBidId];
+  //     uint256 bidIndex;
+  //     uint256 countSamePriceAndBeforeTargetIndex;
+  //     uint256 countOverPrice;
+  //     if (bidPrice < tempPrice) {
+  //       countOverPrice = countOverPrice.add(1);
+  //     } else if (bidPrice == tempPrice) {
+  //       if (bidIndex < i) {
+  //         countSamePriceAndBeforeTargetIndex = countSamePriceAndBeforeTargetIndex.add(1);
+  //       }
+  //     }
+  //   }
+  //   return countOverPrice.add(countSamePriceAndBeforeTargetIndex).add(1);
+  // }
+
+  // function getCurrentLowestEligibleBidId() public view returns (uint256) {
+  //   uint256 lowestBidId;
+  //   uint256 lowestBidPrice;
+  //   for (uint256 i = eligibleBidIds.length - 1; i >= 0; i--) {
+  //     uint256 tempBidId = eligibleBidIds[i];
+  //     uint256 tempCurrentPrice = bidIdToCurrentPrice[tempBidId];
+  //     if (i == 0 || lowestBidPrice > tempCurrentPrice) {
+  //       lowestBidId = tempBidId;
+  //       lowestBidPrice = tempCurrentPrice;
+  //     }
+  //   }
+  //   return lowestBidId;
+  // }
+
+  // function tokenURI(uint256 tokenId) public view returns (string memory) {
+  //   require(_exists(tokenId), "token must exist");
+  //   uint256 bidId = tokenIdToBidId[tokenId];
+  //   return
+  //     string(
+  //       _addIpfsBaseUrlPrefix(_bytesToBase58(_addSha256FunctionCodePrefix(bidIdToIpfsHash[bidId])))
+  //     );
+  // }
+
+  // function _getChainId() internal pure returns (uint256) {
+  //   uint256 id;
+  //   assembly {
+  //     id := chainid()
+  //   }
+  //   return id;
+  // }
+
+  // function _addIpfsBaseUrlPrefix(bytes memory input) internal pure returns (bytes memory) {
+  //   return abi.encodePacked("ipfs://", input);
+  // }
+
+  // function _addSha256FunctionCodePrefix(bytes32 input) internal pure returns (bytes memory) {
+  //   return abi.encodePacked(hex"1220", input);
+  // }
+
+  // function _bytesToBase58(bytes memory input) internal pure returns (bytes memory) {
+  //   bytes memory alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  //   uint8[] memory digits = new uint8[](46);
+  //   bytes memory output = new bytes(46);
+  //   digits[0] = 0;
+  //   uint8 digitlength = 1;
+  //   for (uint256 i = 0; i < input.length; ++i) {
+  //     uint256 carry = uint8(input[i]);
+  //     for (uint256 j = 0; j < digitlength; ++j) {
+  //       carry += uint256(digits[j]) * 256;
+  //       digits[j] = uint8(carry % 58);
+  //       carry = carry / 58;
+  //     }
+  //     while (carry > 0) {
+  //       digits[digitlength] = uint8(carry % 58);
+  //       digitlength++;
+  //       carry = carry / 58;
+  //     }
+  //   }
+  //   for (uint256 k = 0; k < digitlength; k++) {
+  //     output[k] = alphabet[digits[digitlength - 1 - k]];
+  //   }
+  //   return output;
+  // }
 }
