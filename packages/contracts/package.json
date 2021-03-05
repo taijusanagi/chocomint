@@ -31,6 +31,7 @@
     "chai": "^4.3.1",
     "ipfs-only-hash": "^2.0.1",
     "keccak256": "^1.0.2",
-    "merkletreejs": "^0.2.13"
+    "merkletreejs": "^0.2.13",
+    "multi-token-standard": "^2.0.1"
   }
 }

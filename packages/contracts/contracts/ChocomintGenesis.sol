@@ -2,14 +2,12 @@
 pragma solidity ^0.5.17;
 pragma experimental ABIEncoderV2;
 
-// solidity 0.5.17 is used, because this contract uses @openzeppelin/contracts@2.5.1 for gas efficiency
-
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "hardhat/console.sol";
 
-// This contract is created by taijusanagi (taijusanagi.eth), I hope this contract is used for all NFT lovers
+// Contract is created by Taiju Sanagi (taijusanagi.eth)
 // Chocomint is named by Kenta Suhara (suhara.eth)
 // AA is created by Daiki Kunii (daiki.kunii.eth)
 // rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
@@ -116,154 +114,132 @@ import "hardhat/console.sol";
 // rrrrtrrrtrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrtrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrtrrtrr
 // rrrrrrtrrrrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrtrrrrrtrrtrrtrrtrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrrrrrrrr
 // rrtrrrrrrtrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrtrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrtrrtrrtr
+// For all NFT lovers
 
-// I beleive ERC721 is more suitable than ERC1155
-// I will create ERC1155 for "chocoprint" later
-// In Chocomint, ERC721 is the original NFT and ERC1155 is the copy NFT (kind of printed NFT)
-// Chocomint stands for chocolate + peppermint, this provides a simple experience for minting NFTs, and it tastes like a chocomint
-contract Chocomint is ERC721 {
-  // SafeMath is used instead of Counter for simplicity
+contract ChocomintGenesis is ERC721, Ownable {
   using SafeMath for uint256;
-
-  // ECDSA is used for signature verification
   using ECDSA for bytes32;
 
-  event Mint(
-    bytes32 indexed ipfsHash,
-    address indexed creator,
-    address indexed minter,
-    address receiver,
-    uint256 tokenId,
-    uint256 price
-  );
+  uint256 public constant supplyLimit = 1024;
+  uint256 public constant ownerCutRatio = 100;
+  uint256 public constant ratioBase = 10000;
 
-  /**
-   * @dev this is used for dulication check
-   *      bytes32hash(ipfsHash, creatorAddress) is used for simplicity
-   */
-  mapping(bytes32 => uint256) public publishedTokenId;
+  struct Bid {
+    uint256 bidId;
+    uint256 index;
+    uint256 price;
+    address bidder;
+    bool eligible;
+  }
 
-  /**
-   * @dev this ipfsHash is for tokenURI, used bytes32 ipfs content digest instead of string ipfs cid for gas efficiency
-   *      this metadata can be any kind of json data for future compatibility
-   *      it guarantees persistance of token metadata, it will not changed with help of IPFS
-   *      if invalid ipfs digest is entered, NFT still can be published, but metadata is completely invalid, who needs that NFT?
-   *      you can try to publish invalid NFT, but you will just loose your money
-   */
-  mapping(uint256 => bytes32) public ipfsMemory;
+  uint256[] public eligibleBidIds;
+  mapping(uint256 => Bid) public bidIdToBid;
 
-  /**
-   * @dev creator is kept for validation
-   */
-  mapping(uint256 => address) public creatorMemory;
+  mapping(uint256 => bytes32) public bidIdToIpfsHash;
 
-  /**
-   * @dev minter is great role to publish NFT in blockchain so it kept as minter
-   */
-  mapping(uint256 => address) public minterMemory;
-
-  /**
-   * @dev total suplly is implemented for etherscan display
-   */
   uint256 public totalSupply;
+  bytes32 public provenance;
 
-  /**
-   * @dev ERC721Metadata is not used, because tokenURI is original logic
-   *      so name and symbol is impemented here
-   */
-  string public name;
-  string public symbol;
-
-  constructor(string memory _name, string memory _symbol) public {
-    name = _name;
-    symbol = _symbol;
+  function finalize(bytes32 _provenance) onlyOwner {
+    require(!isOpenToBid(), "ChocomintGenesis: bid is still open");
+    require(!isFinalized(), "ChocomintGenesis: genesis is already finalized");
+    provenance = _provenance;
+    renounceOwnership();
   }
 
-  /**
-   * @dev I guess it is possible to mint to NFT to differenct account from creator/minter for business user
-   *      so minter and receiver is different
-   *      sometime frontrunner can make same nft, but in that case creator is invalid, so NFT is published but NFT can be validated as fake
-   */
-  function _mint(
-    bytes32 _ipfs,
-    address _creator,
-    address _minter,
-    address _receiver
-  ) internal returns (uint256) {
-    // chainId and contract address is not required in hash
-    bytes32 hash = keccak256(abi.encodePacked(_ipfs, _creator));
-    require(
-      publishedTokenId[hash] == 0,
-      "The NFT of this ipfsHash and creator is already published"
-    );
-    address receiver = _receiver == address(0x0) ? msg.sender : _receiver;
-    totalSupply = totalSupply.add(1);
-    ipfsMemory[totalSupply] = _ipfs;
-    creatorMemory[totalSupply] = _creator;
-    minterMemory[totalSupply] = _minter;
-    super._mint(receiver, totalSupply);
-    publishedTokenId[hash] = totalSupply;
-    return totalSupply;
+  function getOwnerCut(uint256 _price) public returns (uint256) {
+    return _price.mul(creatorCutRatio).div(ratioBase);
   }
 
-  /**
-   * @dev creator and minter is msg.sender, and it cannot be input, because creator and minter should be signature verified
-   */
-  function mint(bytes32 _ipfs, address _receiver) public {
-    uint256 price = 0;
-    address creator = msg.sender;
-    address minter = msg.sender;
-    uint256 tokenId = _mint(_ipfs, creator, minter, _receiver);
-    emit Mint(_ipfs, creator, minter, _receiver, tokenId, price);
+  function isFinalized() public view returns (bool) {
+    return provenance != "";
   }
 
-  /**
-   * @dev creator just sign the content creation(ipfsHash, price) and delegate minting to others
-   *      case1: creator get NFT, this is like minter just help creator to mint
-   *      case2: minter get NFT, this is like cloud sale of premint NFT
-   *      minter cannnot be input because minter should be signature verified
-   */
-  function pairmint(
-    bytes32 _ipfs,
-    address payable _creator,
-    address _receiver,
-    bytes32 _root,
-    bytes32[] memory _proof,
-    bytes memory _signature
+  function isOpenToBid() public view returns (bool) {
+    if (eligibles.length < supplyLimit) {
+      return true;
+    } else {
+      return lastBiddedAt + 1 days > now;
+    }
+  }
+
+  function getLeastEligibleBid(uint256 bidId) public returns (Bid) {
+    if (bidIdToBid[bidId].eligible) {
+      return bidIdToBid[bidId];
+    } else {
+      if (eligibleBidIds.length >= supplyLimit) {
+        uint256 tempLowestBidIndex;
+        uint256 tempLowestBidPrice;
+        for (uint256 i = eligibleBidIds.length - 1; i >= 0; i--) {
+          uint256 tempBidId = eligibleBidIds[i];
+          if (i == 0 || tempLowestBidPrice >= bidIdToBid[tempBidId].price) {
+            tempLowestBidIndex = tempBidId;
+            tempLowestBidPrice = bidIdToBid[tempBidId].price;
+          }
+        }
+        return bidIdToBid[tempLowestBidIndex];
+      }
+    }
+  }
+
+  function bid(
+    bytes32 _ipfsHash,
+    address _creatorAddress,
+    bytes memory _creatorSignature
   ) public payable {
-    // chainId and contract address is required for reduce risk
-    // nonce is not required because same ipfsHash and creator NFT will be considered as invalid nexttime.
-    uint256 price = msg.value;
-    address minter = msg.sender;
+    require(!isFinalized(), "ChocomintGenesis: contract is already finalized");
+    require(isOpenToBid(), "ChocomintGenesis: bid is already closed");
     bytes32 hash =
       keccak256(
-        abi.encodePacked(_getChainId(), address(this), _ipfs, price, _receiver)
-      );
-    bool hashVerified = MerkleProof.verify(_proof, _root, hash);
-    require(hashVerified, "The hash must be included in the merkle tree");
-    require(
-      _root.toEthSignedMessageHash().recover(_signature) == _creator,
-      "The signer must be valid for the creator"
-    );
-    uint256 tokenId = _mint(_ipfs, _creator, minter, _receiver);
-    if (price > 0) {
-      _creator.transfer(price);
-    }
-    emit Mint(_ipfs, _creator, minter, _receiver, tokenId, price);
-  }
-
-  /**
-   * @dev I think this is cool function, get IPFS cid from digest hash
-   *      it reduces gas cost for NFT minting
-   */
-  function tokenURI(uint256 tokenId) public view returns (string memory) {
-    require(_exists(tokenId), "token must exist");
-    return
-      string(
-        _addIpfsBaseUrlPrefix(
-          _bytesToBase58(_addSha256FunctionCodePrefix(ipfsMemory[tokenId]))
+        abi.encodePacked(
+          _getChainId(),
+          address(this),
+          _ipfsHash,
+          _creatorAddress
         )
       );
+    require(
+      hash.toEthSignedMessageHash().recover(_creatorSignature) ==
+        _creatorAddress,
+      "ChocomintGenesis: creator signature must be valid"
+    );
+    uint256 bidId = uint256(hash);
+    Bid leastEligibleBid = getLeastEligibleBid(bidId);
+    require(
+      msg.value > leastEligibleBid.price,
+      "ChocomintGenesis: value must be more than least eligible bid price"
+    );
+
+    if (leastEligibleBid.bidId == bidId) {
+      bidIdToBid[bidId] = Bid(
+        bidId,
+        leastEligibleBid.index,
+        msg.value,
+        msg.sender,
+        true
+      );
+    } else {
+      if (eligibleBids.length < supplyLimit) {
+        bidIdToBid[bidId] = Bid(
+          bidId,
+          eligibleBids.length,
+          msg.value,
+          msg.sender,
+          true
+        );
+        eligibleBids.push(bidId);
+      } else {
+        eligibleBids[leastEligibleBid.index] = bidId;
+        bidIdToBid[bidId] = Bid(
+          bidId,
+          leastEligibleBid.index,
+          msg.value,
+          msg.sender,
+          true
+        );
+        delete bidIdToBid[leastEligibleBid.bidId];
+      }
+    }
   }
 
   function _getChainId() internal pure returns (uint256) {
@@ -272,51 +248,5 @@ contract Chocomint is ERC721 {
       id := chainid()
     }
     return id;
-  }
-
-  function _addIpfsBaseUrlPrefix(bytes memory input)
-    internal
-    pure
-    returns (bytes memory)
-  {
-    return abi.encodePacked("ipfs://", input);
-  }
-
-  function _addSha256FunctionCodePrefix(bytes32 input)
-    internal
-    pure
-    returns (bytes memory)
-  {
-    return abi.encodePacked(hex"1220", input);
-  }
-
-  function _bytesToBase58(bytes memory input)
-    internal
-    pure
-    returns (bytes memory)
-  {
-    bytes memory alphabet =
-      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    uint8[] memory digits = new uint8[](46);
-    bytes memory output = new bytes(46);
-    digits[0] = 0;
-    uint8 digitlength = 1;
-    for (uint256 i = 0; i < input.length; ++i) {
-      uint256 carry = uint8(input[i]);
-      for (uint256 j = 0; j < digitlength; ++j) {
-        carry += uint256(digits[j]) * 256;
-        digits[j] = uint8(carry % 58);
-        carry = carry / 58;
-      }
-      while (carry > 0) {
-        digits[digitlength] = uint8(carry % 58);
-        digitlength++;
-        carry = carry / 58;
-      }
-    }
-    for (uint256 k = 0; k < digitlength; k++) {
-      output[k] = alphabet[digits[digitlength - 1 - k]];
-    }
-    return output;
   }
 }

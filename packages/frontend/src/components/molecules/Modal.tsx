@@ -1,8 +1,8 @@
-import React from "react";
-import { ChildrenProps } from "../utils";
-import { Button, Clickable } from "../atoms";
+import React, { ReactNode } from "react";
+import { Button } from "../atoms/Button";
 
-export interface ModalProps extends ChildrenProps {
+export interface ModalProps {
+  children: ReactNode;
   type: "single" | "wide";
   execColor?: "primary" | "green" | "red";
   closeColor?: "secondary";
@@ -44,34 +44,31 @@ export const Modal: React.FC<ModalProps> = ({
           {type === "single" ? (
             <div className="mt-8 sm:mt-6">
               <div className="sm:col-start-2">
-                <Clickable onClick={onClickExec}>
-                  <div className="inline-flex justify-center w-full">
-                    <Button type={execColor ? execColor : "green"}>
-                      {execValue}
-                    </Button>
-                  </div>
-                </Clickable>
+                <div className="inline-flex justify-center w-full">
+                  <Button type={execColor ? execColor : "green"}>
+                    {execValue}
+                  </Button>
+                </div>
               </div>
             </div>
           ) : type === "wide" ? (
             <div className="mt-8 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
               <div className="sm:col-start-2">
-                <Clickable onClick={onClickExec}>
-                  <div className="w-full inline-flex justify-center">
-                    <Button type={execColor ? execColor : "green"}>
-                      {execValue}
-                    </Button>
-                  </div>
-                </Clickable>
+                <div className="w-full inline-flex justify-center">
+                  <Button
+                    type={execColor ? execColor : "green"}
+                    onClick={onClickExec}
+                  >
+                    {execValue}
+                  </Button>
+                </div>
               </div>
               <div className="mt-3 sm:mt-0 sm:col-start-1">
-                <Clickable onClick={onClickClose}>
-                  <div className="w-full inline-flex justify-center">
-                    <Button type={closeColor ? closeColor : "secondary"}>
-                      {closeValue}
-                    </Button>
-                  </div>
-                </Clickable>
+                <div className="w-full inline-flex justify-center">
+                  <Button type={closeColor ? closeColor : "secondary"}>
+                    {closeValue}
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (

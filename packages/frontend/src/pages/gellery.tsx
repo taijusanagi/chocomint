@@ -1,14 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { Modal } from "../components/molecules";
+import { Modal } from "../components/molecules/Modal";
 import { db, collectionName } from "../modules/firebase";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faTwitter,
-  faInstagram,
-  faYoutube,
-  faTiktok,
-} from "@fortawesome/free-brands-svg-icons";
 import { ethers } from "ethers";
 import {
   getNetwork,
@@ -18,7 +11,7 @@ import {
 } from "../modules/web3";
 import { Pairmints, MintEvent } from "../types";
 const emoji = require("../assets/emoji.png").default;
-import "./box.scss";
+import "./gellery.scss";
 
 export const Box: React.FC = () => {
   const [pairmints, setPairmints] = React.useState<Pairmints[]>([]);

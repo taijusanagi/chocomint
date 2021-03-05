@@ -1,6 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import { Modal } from "../components/molecules";
+import { Modal } from "../components/molecules/Modal";
 import { ethers } from "ethers";
 import {
   chainId,
