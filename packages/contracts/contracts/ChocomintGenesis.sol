@@ -124,19 +124,11 @@ contract ChocomintGenesis is ERC721, Ownable {
   uint256 public constant ownerCutRatio = 100;
   uint256 public constant ratioBase = 10000;
 
-  struct Bid {
-    uint256 bidId;
-    uint256 index;
-    uint256 price;
-    address bidder;
-    bool eligible;
-  }
-
-  uint256[] public eligibleBidIds;
-  mapping(uint256 => Bid) public bidIdToBid;
-
+  mapping(uint256 => uint256) public bidIdToCurrentPrice;
+  mapping(uint256 => address) public bidIdToCurrentBidder;
   mapping(uint256 => bytes32) public bidIdToIpfsHash;
-
+  mapping(uint256 => bytes32) public bidIdToCreator;
+  uint256[] public eligibleBidIds;
   uint256 public totalSupply;
   bytes32 public provenance;
 
@@ -163,23 +155,23 @@ contract ChocomintGenesis is ERC721, Ownable {
     }
   }
 
-  function getLeastEligibleBid(uint256 bidId) public returns (Bid) {
-    if (bidIdToBid[bidId].eligible) {
-      return bidIdToBid[bidId];
-    } else {
-      if (eligibleBidIds.length >= supplyLimit) {
-        uint256 tempLowestBidIndex;
-        uint256 tempLowestBidPrice;
-        for (uint256 i = eligibleBidIds.length - 1; i >= 0; i--) {
-          uint256 tempBidId = eligibleBidIds[i];
-          if (i == 0 || tempLowestBidPrice >= bidIdToBid[tempBidId].price) {
-            tempLowestBidIndex = tempBidId;
-            tempLowestBidPrice = bidIdToBid[tempBidId].price;
-          }
-        }
-        return bidIdToBid[tempLowestBidIndex];
+  function getCurrentLowestEligibleBid()
+    public
+    view
+    returns (uint256, uint256)
+  {
+    uint256 lowestBidIndex;
+    uint256 lowestBidId;
+    uint256 lowestBidPrice;
+    for (uint256 i = eligibleBidIds.length - 1; i >= 0; i--) {
+      uint256 tempBidId = eligibleBidIds[i];
+      if (i == 0 || tempLowestBidPrice > bidIdToCurrentPrice[tempBidId]) {
+        lowestBidIndex = i;
+        lowestBidId = tempBidId;
+        tempLowestBidPrice = bidIdToCurrentPrice[tempBidId];
       }
     }
+    return (lowestBidIndex, lowestBidId);
   }
 
   function bid(
@@ -198,48 +190,43 @@ contract ChocomintGenesis is ERC721, Ownable {
           _creatorAddress
         )
       );
-    require(
-      hash.toEthSignedMessageHash().recover(_creatorSignature) ==
-        _creatorAddress,
-      "ChocomintGenesis: creator signature must be valid"
-    );
     uint256 bidId = uint256(hash);
-    Bid leastEligibleBid = getLeastEligibleBid(bidId);
+    if (bidIdToIpfsHash[bidId] == "") {
+      require(
+        hash.toEthSignedMessageHash().recover(_creatorSignature) ==
+          _creatorAddress,
+        "ChocomintGenesis: creator signature must be valid"
+      );
+      bidIdToIpfsHash[bidId] = _ipfsHash;
+      bidIdToIpfsHash[bidId] = _creatorAddress;
+    }
+    uint256 currentLeastEligibleBidId;
+    uint256 currentLeastEligibleBidPrice = getCurrentLeastEligibleBid(bidId);
     require(
-      msg.value > leastEligibleBid.price,
+      msg.value > currentLeastEligibleBidPrice,
       "ChocomintGenesis: value must be more than least eligible bid price"
     );
-
-    if (leastEligibleBid.bidId == bidId) {
-      bidIdToBid[bidId] = Bid(
-        bidId,
-        leastEligibleBid.index,
-        msg.value,
-        msg.sender,
-        true
+    if (bidIdToCurrentPrice[bidId] > 0) {
+      require(
+        msg.value > bidIdToCurrentPrice[bidId],
+        "ChocomintGenesis: value must be more than least eligible bid price"
       );
     } else {
-      if (eligibleBids.length < supplyLimit) {
-        bidIdToBid[bidId] = Bid(
-          bidId,
-          eligibleBids.length,
-          msg.value,
-          msg.sender,
-          true
-        );
-        eligibleBids.push(bidId);
+      if (eligibleBidIds.length < supplyLimit) {
+        eligibleBidIds.push(bidId);
       } else {
-        eligibleBids[leastEligibleBid.index] = bidId;
-        bidIdToBid[bidId] = Bid(
-          bidId,
-          leastEligibleBid.index,
-          msg.value,
-          msg.sender,
-          true
-        );
-        delete bidIdToBid[leastEligibleBid.bidId];
+        uint256 lowestBidIndex;
+        uint256 lowestBidId;
+        (lowestBidIndex, lowestBidId) = getCurrentLowestEligibleBid();
+        eligibleBidIds[lowestBidIndex] = bidId;
+        delete bidIdToCurrentPrice[lowestBidId];
+        delete bidIdToCurrentBidder[lowestBidId];
+        delete bidIdToIpfsHash[lowestBidId];
+        delete bidIdToCreator[lowestBidId];
       }
     }
+    bidIdToCurrentPrice[bidId] = msg.value;
+    bidIdToCurrentBidder[bidId] = msg.sender;
   }
 
   function _getChainId() internal pure returns (uint256) {
