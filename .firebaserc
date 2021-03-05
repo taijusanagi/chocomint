@@ -6,7 +6,7 @@
     "chocomint-prod": {
       "hosting": {
         "production": [
-          "chocomint-prot"
+          "chocomint-prod"
         ],
         "staging": [
           "chocomint-staging"

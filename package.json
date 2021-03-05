@@ -15,10 +15,11 @@
     "dev:firestore": "firebase emulators:start --only firestore",
     "build": "yarn workspace frontend build",
     "build:staging": "cross-env REACT_APP_NETWORK_ID=rinkeby yarn build",
-    "build:procution": "cross-env REACT_APP_NETWORK_ID=mainnet yarn build",
+    "build:production": "cross-env REACT_APP_NETWORK_ID=mainnet yarn build",
     "start:staging": "yarn build:staging && firebase emulators:start --only hosting",
-    "start:production": "yarn build:procution && firebase emulators:start --only hosting",
+    "start:production": "yarn build:production && firebase emulators:start --only hosting",
     "deploy:staging": "firebase deploy --only hosting:staging",
+    "deploy:production": "firebase deploy --only hosting:production",
     "prepare": "husky install"
   },
   "workspaces": [
