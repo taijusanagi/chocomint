@@ -7,15 +7,12 @@ const provider = waffle.provider;
 chai.use(solidity);
 const { expect } = chai;
 
-import { MerkleTree } from "merkletreejs";
-const keccak256 = require("keccak256");
-
 describe("Chocomint", function () {
   let chocomint;
   const chainId = "31337";
   const nullAddress = "0x0000000000000000000000000000000000000000";
-  const contractName = "ChocoMintEthereum";
-  const contractSymbol = "CME";
+  const contractName = "ChocoMintGenesis";
+  const contractSymbol = "CMG";
   const metadataIpfsCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz";
   const metadataIpfsHash =
     "0x7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
