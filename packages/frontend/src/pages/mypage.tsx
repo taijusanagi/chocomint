@@ -3,12 +3,7 @@ import { useParams } from "react-router-dom";
 import { Modal } from "../components/molecules/Modal";
 import { db, collectionName } from "../modules/firebase";
 import { ethers } from "ethers";
-import {
-  getNetwork,
-  getContract,
-  getEthersSigner,
-  ChainIdType,
-} from "../modules/web3";
+import { getNetwork, getContract, getEthersSigner, ChainIdType } from "../modules/web3";
 import { Pairmints, MintEvent } from "../types";
 const emoji = require("../assets/emoji.png").default;
 import "./mypage.scss";
@@ -125,16 +120,10 @@ export const Box: React.FC = () => {
                   🎉 Congratulation!!🎉
                 </h3>
                 <div className="mt-1">
-                  <p className="text-sm text-gray-500">
-                    発行できました！SNSで知らせよう！
-                  </p>
+                  <p className="text-sm text-gray-500">発行できました！SNSで知らせよう！</p>
                 </div>
                 <div className="mt-2">
-                  <a
-                    href={exploreUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a href={exploreUrl} target="_blank" rel="noopener noreferrer">
                     <p className="block mx-auto text-center text-xs text-green-500 truncate w-60">
                       Transaction Log
                     </p>
@@ -163,16 +152,11 @@ export const Box: React.FC = () => {
           >
             <div className="mx-4">
               <div className="text-center mt-2">
-                <h2
-                  className="text-lg leading-6 font-medium text-gray-900"
-                  id="modal-headline"
-                >
+                <h2 className="text-lg leading-6 font-medium text-gray-900" id="modal-headline">
                   ERROR
                 </h2>
                 <div className="mt-2">
-                  <p className="text-sm text-gray-800">
-                    以下のようなエラーが発生しました。
-                  </p>
+                  <p className="text-sm text-gray-800">以下のようなエラーが発生しました。</p>
                 </div>
                 <div className="overflow-auto mt-4 p-3 bg-gray-100 rounded-md">
                   <p className="text-sm text-gray-400">{errorMsg}</p>
@@ -235,9 +219,7 @@ export const Box: React.FC = () => {
                       </div>
                       {!minted && (
                         <div className="property-description text-left">
-                          <p className="text-md font-medium text-white">
-                            {pairmint.choco.name}
-                          </p>
+                          <p className="text-md font-medium text-white">{pairmint.choco.name}</p>
                           <p className="text-xs text-white">
                             {ethers.utils.formatEther(pairmint.value)} ETH
                           </p>

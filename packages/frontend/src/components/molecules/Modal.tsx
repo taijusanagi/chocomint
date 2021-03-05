@@ -28,10 +28,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div className="fixed inset-0 transition-opacity" aria-hidden="true">
           <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
-        <span
-          className="hidden sm:inline-block sm:align-middle sm:h-screen"
-          aria-hidden="true"
-        >
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
           &#8203;
         </span>
         <div
@@ -45,9 +42,7 @@ export const Modal: React.FC<ModalProps> = ({
             <div className="mt-8 sm:mt-6">
               <div className="sm:col-start-2">
                 <div className="inline-flex justify-center w-full">
-                  <Button type={execColor ? execColor : "green"}>
-                    {execValue}
-                  </Button>
+                  <Button type={execColor ? execColor : "green"}>{execValue}</Button>
                 </div>
               </div>
             </div>
@@ -55,19 +50,14 @@ export const Modal: React.FC<ModalProps> = ({
             <div className="mt-8 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
               <div className="sm:col-start-2">
                 <div className="w-full inline-flex justify-center">
-                  <Button
-                    type={execColor ? execColor : "green"}
-                    onClick={onClickExec}
-                  >
+                  <Button type={execColor ? execColor : "green"} onClick={onClickExec}>
                     {execValue}
                   </Button>
                 </div>
               </div>
               <div className="mt-3 sm:mt-0 sm:col-start-1">
                 <div className="w-full inline-flex justify-center">
-                  <Button type={closeColor ? closeColor : "secondary"}>
-                    {closeValue}
-                  </Button>
+                  <Button type={closeColor ? closeColor : "secondary"}>{closeValue}</Button>
                 </div>
               </div>
             </div>

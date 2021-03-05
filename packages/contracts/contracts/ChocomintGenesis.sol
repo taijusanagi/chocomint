@@ -120,117 +120,31 @@ contract ChocomintGenesis is Ownable, ERC721 {
   using SafeMath for uint256;
   using ECDSA for bytes32;
 
-  mapping(uint256 => bool) public isBidIdEligible;
+  event Finalized(uint256 blockNumber, uint256 blockTimestamp, uint256 sender);
+
   mapping(uint256 => uint256) public tokenIdToBidId;
+  mapping(uint256 => uint256) public bidIdToTokenId;
+  mapping(uint256 => uint256) public bidIdToEligibleBidIdsIndex;
   mapping(uint256 => uint256) public bidIdToCurrentPrice;
   mapping(uint256 => address payable) public bidIdToCurrentBidderAddress;
   mapping(uint256 => address payable) public bidIdToCreatorAddress;
   mapping(uint256 => bytes32) public bidIdToIpfsHash;
 
-  string public name;
-  string public symbol;
+  string public constant name = "ChocomintGenesis";
+  string public constant symbol = "CMG";
+  uint256 public constant supplyLimit = 256;
   uint256 public constant ownerCutRatio = 100;
   uint256 public constant ratioBase = 10000;
-  uint256 public supplyLimit;
+  uint256 public constant selectiveSeasonPeriod = 7 days;
+  uint256 public constant timeLimitAfterSelectiveSeasonPeriod = 10 minutes;
+
   uint256 public totalSupply;
   uint256 public lastBiddedAt;
+  uint256 public limitExceededAt;
   uint256[] public eligibleBidIds;
-  bool public finalized;
 
-  constructor(
-    string memory _name,
-    string memory _symbol,
-    uint256 _supplyLimit
-  ) public {
-    name = _name;
-    symbol = _symbol;
-    supplyLimit = _supplyLimit;
-  }
-
-  function finalize(bytes32 _provenance) public onlyOwner {
-    require(!isOpenToBid(), "ChocomintGenesis: bid is still open");
-    require(
-      totalSupply == supplyLimit,
-      "ChocomintGenesis: NFT is still not claimed yet"
-    );
-    finalized = true;
-    renounceOwnership();
-    msg.sender.transfer(address(this).balance);
-  }
-
-  function mint(uint256 bidId) public {
-    require(!isOpenToBid(), "ChocomintGenesis: bid is still open");
-    require(
-      tokenIdToBidId[bidId] == 0,
-      "ChocomintGenesis: NFT is already claimed"
-    );
-    require(isBidIdEligible[bidId], "ChocomintGenesis: bid is not eligible");
-    address payable creatorAddress = bidIdToCreatorAddress[bidId];
-    address payable bidderAddress = bidIdToCurrentBidderAddress[bidId];
-    address ownerAddress = owner();
-    require(
-      msg.sender == creatorAddress ||
-        msg.sender == bidderAddress ||
-        msg.sender == ownerAddress,
-      "ChocomintGenesis: msg sender is not valid"
-    );
-    totalSupply = totalSupply.add(1);
-    uint256 tokenId = totalSupply;
-    _mint(bidderAddress, tokenId);
-    uint256 price = bidIdToCurrentPrice[bidId];
-    uint256 ownerCut = getOwnerCut(price);
-    uint256 creatorReward = price.sub(ownerCut);
-    tokenIdToBidId[tokenId] = bidId;
-    creatorAddress.transfer(creatorReward);
-  }
-
-  function getProvenance() public view returns (bytes32) {
-    bytes memory rawProvenance;
-    for (uint256 i = 0; i < eligibleBidIds.length; i++) {
-      rawProvenance = abi.encodePacked(rawProvenance, bidIdToIpfsHash[i]);
-    }
-    return keccak256(rawProvenance);
-  }
-
-  function getOwnerCut(uint256 _price) public returns (uint256) {
-    return _price.mul(ownerCutRatio).div(ratioBase);
-  }
-
-  function isOpenToBid() public view returns (bool) {
-    if (finalized) {
-      return false;
-    } else {
-      if (eligibleBidIds.length < supplyLimit) {
-        return true;
-      } else {
-        return lastBiddedAt + 1 days > now;
-      }
-    }
-  }
-
-  function getCurrentLowestEligibleBid()
-    public
-    view
-    returns (
-      uint256,
-      uint256,
-      uint256
-    )
-  {
-    uint256 lowestBidIndex;
-    uint256 lowestBidId;
-    uint256 lowestBidPrice;
-    for (uint256 i = eligibleBidIds.length - 1; i >= 0; i--) {
-      uint256 tempBidId = eligibleBidIds[i];
-      uint256 tempCurrentPrice = bidIdToCurrentPrice[tempBidId];
-      if (i == 0 || lowestBidPrice > tempCurrentPrice) {
-        lowestBidIndex = i;
-        lowestBidId = tempBidId;
-        lowestBidPrice = tempCurrentPrice;
-      }
-    }
-    return (lowestBidIndex, lowestBidId, lowestBidPrice);
-  }
+  uint256 public blockNumberAtClosed;
+  uint256 public blockNumberAtFinalized;
 
   function bid(
     bytes32 _ipfsHash,
@@ -239,52 +153,39 @@ contract ChocomintGenesis is Ownable, ERC721 {
   ) public payable {
     require(isOpenToBid(), "ChocomintGenesis: bid is already closed");
     bytes32 hash =
-      keccak256(
-        abi.encodePacked(
-          _getChainId(),
-          address(this),
-          _ipfsHash,
-          _creatorAddress
-        )
-      );
+      keccak256(abi.encodePacked(_getChainId(), address(this), _ipfsHash, _creatorAddress));
     uint256 bidId = uint256(hash);
     bool isRefundRequired;
     address payable refundRecipient;
     uint256 refundPrice;
-    if (!isBidIdEligible[bidId]) {
+    if (bidIdToCurrentPrice[bidId] == 0) {
       require(
-        hash.toEthSignedMessageHash().recover(_creatorSignature) ==
-          _creatorAddress,
+        hash.toEthSignedMessageHash().recover(_creatorSignature) == _creatorAddress,
         "ChocomintGenesis: creator signature must be valid"
       );
       bidIdToIpfsHash[bidId] = _ipfsHash;
       bidIdToCreatorAddress[bidId] = _creatorAddress;
       if (eligibleBidIds.length < supplyLimit) {
+        bidIdToEligibleBidIdsIndex[bidId] = eligibleBidIds.length;
         eligibleBidIds.push(bidId);
+        if (eligibleBidIds.length == supplyLimit) {
+          limitExceededAt = now;
+        }
       } else {
-        uint256 lowestBidIndex;
-        uint256 lowestBidId;
-        uint256 lowestBidPrice;
-        (
-          lowestBidIndex,
-          lowestBidId,
-          lowestBidPrice
-        ) = getCurrentLowestEligibleBid();
+        uint256 lowestBidId = getCurrentLowestEligibleBidId();
         require(
-          msg.value > lowestBidPrice,
+          msg.value > bidIdToCurrentPrice[lowestBidId],
           "ChocomintGenesis: value must be more than lowest bid price"
         );
         isRefundRequired = true;
         refundPrice = bidIdToCurrentPrice[lowestBidId];
         refundRecipient = bidIdToCurrentBidderAddress[lowestBidId];
         eligibleBidIds[lowestBidIndex] = bidId;
-        isBidIdEligible[lowestBidId] = false;
         delete bidIdToCurrentPrice[lowestBidId];
         delete bidIdToCurrentBidderAddress[lowestBidId];
         delete bidIdToCreatorAddress[lowestBidId];
         delete bidIdToIpfsHash[lowestBidId];
       }
-      isBidIdEligible[bidId] = true;
     } else {
       require(
         msg.value > bidIdToCurrentPrice[bidId],
@@ -299,14 +200,139 @@ contract ChocomintGenesis is Ownable, ERC721 {
     }
   }
 
+  /**
+   * @dev This transaction is only allowed by creator or bidder because this transcation has special meaning for both
+   * This keeps block number of finalization transaction
+   * This transaction is trigger of NFT distribution,
+   * so to avoid dependency on owner, anyone can make transaction when bid is closed
+   */
+  function mint(uint256 bidId) public {
+    require(!isOpenToBid(), "ChocomintGenesis: bid is still open");
+
+    require(bidIdToTokenId[bidId] == 0, "ChocomintGenesis: NFT is already claimed");
+    require(bidIdToCurrentPrice[bidId] > 0, "ChocomintGenesis: bid is not eligible");
+    address payable creatorAddress = bidIdToCreatorAddress[bidId];
+    address payable bidderAddress = bidIdToCurrentBidderAddress[bidId];
+    address ownerAddress = owner();
+    totalSupply = totalSupply.add(1);
+    uint256 tokenId = getBidRanking(bidId);
+    _mint(bidderAddress, tokenId);
+    uint256 price = bidIdToCurrentPrice[bidId];
+    uint256 ownerCut = getOwnerCut(price);
+    uint256 creatorReward = price.sub(ownerCut);
+    tokenIdToBidId[tokenId] = bidId;
+    bidIdToTokenId[bidId] = tokenId;
+    creatorAddress.transfer(creatorReward);
+
+    if (totalSupply == supplyLimit) {
+      blockNumberAtFinalized = block.number;
+    }
+  }
+
+  /**
+   * @dev Get sha256 of concatenated all NFT ipfs hash as provenance
+   * Ipfs hash is sorted by token id (1 -> 256), this is finalized after all bid is closed and owner confirmation
+   * This is inspired by CryptoPunks and Hashmasks, and Chocomint provides provenence by onchain calculation
+   * I hope this will be part of NFT digital art standard in the future
+   */
+  function getProvenance() public view returns (bytes32) {
+    require(blockNumberAtFinalized > 0, "ChocomintGenesis: contract is still not finalized");
+    bytes memory rawProvenance;
+    for (uint256 i = 1; i <= totalSupply; i++) {
+      uint256 bidId = tokenIdToBidId[i];
+      rawProvenance = abi.encodePacked(rawProvenance, bidIdToIpfsHash[bidId]);
+    }
+    return sha256(rawProvenance);
+  }
+
+  /**
+   * @dev We take 10% fee from creator reward for future development
+   * This can be executed after all NFT is claimed
+   * This is final owner transaction, so owner role is renounced as well
+   */
+  function withdraw() public onlyOwner {
+    require(blockNumberAtFinalized > 0, "ChocomintGenesis: contract is still not finalized");
+    renounceOwnership();
+    msg.sender.transfer(address(this).balance);
+  }
+
+  function getOwnerCut(uint256 _price) public returns (uint256) {
+    return _price.mul(ownerCutRatio).div(ratioBase);
+  }
+
+  function isOpenToBid() public view returns (bool) {
+    if (finalized) {
+      return false;
+    } else {
+      if (eligibleBidIds.length < supplyLimit) {
+        return true;
+      } else {
+        if (limitExceededAt.add(selectiveSeasonPeriod) < now) {
+          true;
+        } else {
+          return lastBiddedAt + timeLimitAfterSelectiveSeasonPeriod > now;
+        }
+      }
+    }
+  }
+
+  function pushBidIdToEligibleBidIds(uint256 bidId, uint256 bidPrice) public {
+    for (uint256 i = 0; i < eligibleBidIds.length; i++) {
+      uint256 tempBidId = eligibleBidIds[i];
+      uint256 tempPrice = bidIdToCurrentPrice[tempBidId];
+      uint256 bidIndex;
+      uint256 countSamePriceAndBeforeTargetIndex;
+      uint256 countOverPrice;
+      if (bidPrice < tempPrice) {
+        countOverPrice = countOverPrice.add(1);
+      } else if (bidPrice == tempPrice) {
+        if (bidIndex < i) {
+          countSamePriceAndBeforeTargetIndex = countSamePriceAndBeforeTargetIndex.add(1);
+        }
+      }
+    }
+  }
+
+  function getBidRanking(uint256 bidId) public view returns (uint256) {
+    uint256 bidPrice = bidIdToCurrentPrice[bidId];
+    uint256 bidIndex = bidIdToEligibleBidIdsIndex[tokenId];
+    for (uint256 i = 0; i < eligibleBidIds.length; i++) {
+      uint256 tempBidId = eligibleBidIds[i];
+      uint256 tempPrice = bidIdToCurrentPrice[tempBidId];
+      uint256 bidIndex;
+      uint256 countSamePriceAndBeforeTargetIndex;
+      uint256 countOverPrice;
+      if (bidPrice < tempPrice) {
+        countOverPrice = countOverPrice.add(1);
+      } else if (bidPrice == tempPrice) {
+        if (bidIndex < i) {
+          countSamePriceAndBeforeTargetIndex = countSamePriceAndBeforeTargetIndex.add(1);
+        }
+      }
+    }
+    return countOverPrice.add(countSamePriceAndBeforeTargetIndex).add(1);
+  }
+
+  function getCurrentLowestEligibleBidId() public view returns (uint256) {
+    uint256 lowestBidId;
+    uint256 lowestBidPrice;
+    for (uint256 i = eligibleBidIds.length - 1; i >= 0; i--) {
+      uint256 tempBidId = eligibleBidIds[i];
+      uint256 tempCurrentPrice = bidIdToCurrentPrice[tempBidId];
+      if (i == 0 || lowestBidPrice > tempCurrentPrice) {
+        lowestBidId = tempBidId;
+        lowestBidPrice = tempCurrentPrice;
+      }
+    }
+    return lowestBidId;
+  }
+
   function tokenURI(uint256 tokenId) public view returns (string memory) {
     require(_exists(tokenId), "token must exist");
     uint256 bidId = tokenIdToBidId[tokenId];
     return
       string(
-        _addIpfsBaseUrlPrefix(
-          _bytesToBase58(_addSha256FunctionCodePrefix(bidIdToIpfsHash[bidId]))
-        )
+        _addIpfsBaseUrlPrefix(_bytesToBase58(_addSha256FunctionCodePrefix(bidIdToIpfsHash[bidId])))
       );
   }
 
@@ -318,29 +344,16 @@ contract ChocomintGenesis is Ownable, ERC721 {
     return id;
   }
 
-  function _addIpfsBaseUrlPrefix(bytes memory input)
-    internal
-    pure
-    returns (bytes memory)
-  {
+  function _addIpfsBaseUrlPrefix(bytes memory input) internal pure returns (bytes memory) {
     return abi.encodePacked("ipfs://", input);
   }
 
-  function _addSha256FunctionCodePrefix(bytes32 input)
-    internal
-    pure
-    returns (bytes memory)
-  {
+  function _addSha256FunctionCodePrefix(bytes32 input) internal pure returns (bytes memory) {
     return abi.encodePacked(hex"1220", input);
   }
 
-  function _bytesToBase58(bytes memory input)
-    internal
-    pure
-    returns (bytes memory)
-  {
-    bytes memory alphabet =
-      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  function _bytesToBase58(bytes memory input) internal pure returns (bytes memory) {
+    bytes memory alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     uint8[] memory digits = new uint8[](46);
     bytes memory output = new bytes(46);
     digits[0] = 0;

@@ -12,7 +12,7 @@ const main = async () => {
   let chainId =
     networkName == "mainnet" ? "1" : networkName == "rinkeby" ? "4" : "31337";
   const Chocomint = await ethers.getContractFactory("ChocomintGenesis");
-  const chocomint = await Chocomint.deploy("ChocomintGenesis", "CMG", {
+  const chocomint = await Chocomint.deploy({
     gasPrice,
   });
   configs[chainId].contractAddress = chocomint.address;

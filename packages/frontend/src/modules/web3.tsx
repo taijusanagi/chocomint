@@ -66,26 +66,20 @@ const providerOptions = {
 
 export const getEthersSigner = async () => {
   const web3Modal = new Web3Modal({
-    network: process.env.REACT_APP_NETWORK_ID
-      ? process.env.REACT_APP_NETWORK_ID
-      : "",
+    network: process.env.REACT_APP_NETWORK_ID ? process.env.REACT_APP_NETWORK_ID : "",
     providerOptions,
     theme: "dark",
   });
   web3Modal.clearCachedProvider();
   const web3ModalProvider = await web3Modal.connect();
   await web3ModalProvider.enable();
-  const web3EthersProvider = new ethers.providers.Web3Provider(
-    web3ModalProvider
-  );
+  const web3EthersProvider = new ethers.providers.Web3Provider(web3ModalProvider);
   return web3EthersProvider.getSigner();
 };
 
 export const getWeb3 = async () => {
   const web3Modal = new Web3Modal({
-    network: process.env.REACT_APP_NETWORK_ID
-      ? process.env.REACT_APP_NETWORK_ID
-      : "",
+    network: process.env.REACT_APP_NETWORK_ID ? process.env.REACT_APP_NETWORK_ID : "",
     providerOptions,
     theme: "dark",
   });
