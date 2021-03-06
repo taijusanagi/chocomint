@@ -11,5 +11,6 @@
     "**/build/**": true,
     "**/artifacts/**": true,
     "**/typechain/**": true
-  }
+  },
+  "solidity.compileUsingRemoteVersion": "v0.8.0+commit.c7dfd78e"
 }

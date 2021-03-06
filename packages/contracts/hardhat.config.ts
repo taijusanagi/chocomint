@@ -4,15 +4,14 @@ import "hardhat-typechain";
 import "solidity-coverage";
 
 const privateKey =
-  process.env.PRIVATE_KEY ||
-  "0x0000000000000000000000000000000000000000000000000000000000000000"; // this is to avoid hardhat error
+  process.env.PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000000"; // this is to avoid hardhat error
 
 import networkJson from "./network.json";
 const network = networkJson as any;
 
 module.exports = {
   solidity: {
-    version: "0.5.17",
+    version: "0.8.0",
     settings: {
       optimizer: {
         enabled: true,
