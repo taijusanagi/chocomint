@@ -123,7 +123,7 @@ import "hardhat/console.sol";
 contract ChocomintGenesis is ChocomintPriceCurve, ChocomintUtils {
   using ECDSA for bytes32;
 
-  mapping(bytes32 => uint256) public seedToVoteCount;
+  mapping(bytes32 => uint256) public seedToPoll;
   mapping(bytes32 => bytes32) public seedToIpfsHash;
   mapping(bytes32 => address) public seedToCreatorAddress;
   mapping(bytes32 => address) public seedToMinterAddress;
@@ -131,8 +131,70 @@ contract ChocomintGenesis is ChocomintPriceCurve, ChocomintUtils {
 
   bytes32[] public eligibleSeeds;
 
-  function isSeedRegistered(bytes32 seed) public view returns (bool) {
-    return seedToIpfsHash[seed] != "" && seedToCreatorAddress[seed] != address(0x0);
+  // caseの整理
+  // 1. 未登録でまだ上限数量まで達していない場合　-> 末尾にPushする
+  // 2. 未登録だが上限数量まで達している場合 -> 一番最後のものをリプレイスする
+  //    この際に元のPollで同数のものがある場合は同数のものを追い抜いてShiftする
+  // 3. 登録ずみ -> 上限数量に達している/達していないにかかわらず同数Pollのものを追い抜いてShiftする
+  // 特殊ケース: 登録ずみだが、一位の場合、何もしない？
+  // logic:
+  // 上限数量まで達している場合は基本的にShigt
+
+  function _updateEligibleSeeds(bytes32 _seed) internal {
+    // 一旦処理対象のデータをここに入れる
+    bytes32 tempSeed = _seed;
+
+    // まずは現在の投票数を取得する
+    uint256 tempPoll = seedToPoll[tempSeed];
+
+    // 投票数が0のものはリストに含まれていないはずなので、MAXに達していない場合はとりあえずPushしておく
+    if (tempPoll == 0 && eligibleSeeds.length < MAX_PRINT_SUPPLY) {
+      eligibleSeeds.push(seed);
+    } else {
+      // 投票数が0で、すでにMAXに達している場合は、一番最後のデータをリプレイスする
+      // 投票数が1以上の場合は、リストに含まれているので、InputのSeedをそのまま処理する
+      if (tempPoll == 0 && eligibleSeeds.length >= MAX_PRINT_SUPPLY) {
+        tempSeed = eligibleSeeds[eligibleSeeds.length - 1];
+        tempPoll = seedToPoll[tempSeed];
+      }
+      bool foundSelfInEligibleSeeds;
+      bool eligibleSeedsUpdateCompleted;
+      // リストの最後から順番にループしていく（おそらく底値がどんどんアップデートされていくと思っている）
+      // 基本的に同数のPollのものがある場合のみの処理となっている
+      for (uint256 i = eligibleSeeds.length - 1; i >= 0 && !eligibleSeedsUpdateCompleted; i--) {
+        // 一旦ループの対象データを保持する
+        bytes32 currentSeed = eligibleSeeds[i];
+        uint256 currentPoll = seedToPoll[currentSeed];
+
+        // 同じPoll数のデータ以外は処理対象ではないのでスルーする
+        if (tempPoll == currentPoll) {
+          // アップデートするデータを見つけてから処理開始（見つけたループのタイミングから次の分岐につなぐ）
+          // 新規Seedで番最後のレコードをリプレイスする場合は初回ループでTrueになる
+          // すでに登録ずみのSeedの場合は見つけてから処理開始
+          if (tempSeed == currentSeed) {
+            foundSelfInEligibleSeeds = true;
+          }
+
+          // 同数のPollを持つSeedがあった場合のみShift処理を行っている
+          // 一位の状態で同数のPollを追い抜かす処理をする際にエラーが起きないように確認している
+          if (foundSelfInEligibleSeeds && tempPoll == currentPoll) {
+            if (i > 0) {
+              bytes32 nextSeed = eligibleSeeds[i - 1];
+              bytes32 nextPoll = seedToPoll[nextSeed];
+              if (currentPoll == nextPoll) {
+                eligibleSeeds[i] = nextSeed;
+              }
+            }
+          }
+
+          //　Pollの数が大きいものは処理対象ではないので追い越した場合は処理を終了する
+        } else if (tempPoll < currentPoll) {
+          eligibleSeedsUpdateCompleted = true;
+        }
+
+        eligibleSeeds[i] = seed;
+      }
+    }
   }
 
   function vote(
@@ -142,7 +204,9 @@ contract ChocomintGenesis is ChocomintPriceCurve, ChocomintUtils {
   ) public payable {
     bytes32 seed =
       keccak256(abi.encodePacked(_getChainId(), address(this), _ipfsHash, _creatorAddress));
-    if (!isSeedRegistered(seed)) {
+
+    // register seed
+    if (seedToIpfsHash[seed] != "" || seedToCreatorAddress[seed] != address(0x0)) {
       require(
         seed.toEthSignedMessageHash().recover(_creatorSignature) == _creatorAddress,
         "ChocomintGenesis: creator signature must be valid for seed"
@@ -151,52 +215,16 @@ contract ChocomintGenesis is ChocomintPriceCurve, ChocomintUtils {
       seedToCreatorAddress[seed] = _creatorAddress;
     }
 
-    uint256 selfVoteCount = seedToVoteCount[seed];
-    uint256 currentVoteCount = selfVoteCount;
-    if (selfVoteCount == 0) {
-      if (eligibleSeeds.length >= MAX_PRINT_SUPPLY) {
-        uint256 lastIndex = eligibleSeeds.length - 1;
-        bytes32 leastVoteSeed = eligibleSeeds[lastIndex];
-        uint256 leastVoteCount = seedToVoteCount[leastVoteSeed];
-        eligibleSeeds[lastIndex] = seed;
-        currentVoteCount = leastVoteCount;
-      } else {
-        eligibleSeeds.push(seed);
-      }
-    } else {
-      uint256 countSameVoteCountAfterFoundSelf;
-
-      uint256 selfIndexInEligibleSeeds;
-      bool foundSelf;
-      bool end;
-      for (uint256 i = eligibleSeeds.length - 1; i >= 0 && !end; i--) {
-        bytes32 tempSeed = eligibleSeeds[i];
-        uint256 tempCount = seedToVoteCount[tempSeed];
-        if (foundSelf) {
-          if (tempCount == selfVoteCount) {
-            countSameVoteCountAfterFoundSelf++;
-          } else if (tempCount > selfVoteCount) {
-            end = true;
-          }
-        }
-        if (seed == tempSeed) {
-          foundSelf = true;
-          selfIndexInEligibleSeeds = i;
-        }
-      }
-      if (countSameVoteCountAfterFoundSelf > 0) {
-        for (uint256 j = 0; j <= countSameVoteCountAfterFoundSelf; j++) {
-          eligibleSeeds[selfIndexInEligibleSeeds + j] = eligibleSeeds[
-            selfIndexInEligibleSeeds + j - 1
-          ];
-        }
-        eligibleSeeds[selfIndexInEligibleSeeds - countSameVoteCountAfterFoundSelf] = seed;
-      }
-    }
-
-    uint256 nextVoteCount = currentVoteCount + 1;
-    seedToVoteCount[seed];
+    _updateEligibleSeeds(seed);
   }
+  // uint256 price = getPrintPrice(leastEligiblePoll);
+  // require(getPrintPrice(leastEligiblePoll), )
+  //   seedToPoll[seed] = leastEligiblePoll;
+
+  //   if (!participated[msg.sender]) {
+  //     participated[msg.sender] = true;
+  //   }
+  // }
 
   // // ranking -> tokenId
   // function mint(bytes32 seed) public {
