@@ -132,7 +132,7 @@ contract ChocomintGenesis is ChocomintPriceCurve, ChocomintUtils {
   bytes32[] public eligibleSeeds;
 
   // caseの整理
-  // 1. 未登録でまだ上限数量まで達していない場合　-> 末尾にPushする
+  // 1. 未登録でまだ上限数量まで達していない場合　-> 末尾にPushする、これは初期値は必ず最後にビリに入るため
   // 2. 未登録だが上限数量まで達している場合 -> 一番最後のものをリプレイスする
   //    この際に元のPollで同数のものがある場合は同数のものを追い抜いてShiftする
   // 3. 登録ずみ -> 上限数量に達している/達していないにかかわらず同数Pollのものを追い抜いてShiftする
@@ -150,50 +150,51 @@ contract ChocomintGenesis is ChocomintPriceCurve, ChocomintUtils {
     // 投票数が0のものはリストに含まれていないはずなので、MAXに達していない場合はとりあえずPushしておく
     if (tempPoll == 0 && eligibleSeeds.length < MAX_PRINT_SUPPLY) {
       eligibleSeeds.push(seed);
-    } else {
-      // 投票数が0で、すでにMAXに達している場合は、一番最後のデータをリプレイスする
-      // 投票数が1以上の場合は、リストに含まれているので、InputのSeedをそのまま処理する
-      if (tempPoll == 0 && eligibleSeeds.length >= MAX_PRINT_SUPPLY) {
-        tempSeed = eligibleSeeds[eligibleSeeds.length - 1];
-        tempPoll = seedToPoll[tempSeed];
-      }
-      bool foundSelfInEligibleSeeds;
-      bool eligibleSeedsUpdateCompleted;
-      // リストの最後から順番にループしていく（おそらく底値がどんどんアップデートされていくと思っている）
-      // 基本的に同数のPollのものがある場合のみの処理となっている
-      for (uint256 i = eligibleSeeds.length - 1; i >= 0 && !eligibleSeedsUpdateCompleted; i--) {
-        // 一旦ループの対象データを保持する
-        bytes32 currentSeed = eligibleSeeds[i];
-        uint256 currentPoll = seedToPoll[currentSeed];
+      return;
+    }
 
-        // 同じPoll数のデータ以外は処理対象ではないのでスルーする
-        if (tempPoll == currentPoll) {
-          // アップデートするデータを見つけてから処理開始（見つけたループのタイミングから次の分岐につなぐ）
-          // 新規Seedで番最後のレコードをリプレイスする場合は初回ループでTrueになる
-          // すでに登録ずみのSeedの場合は見つけてから処理開始
-          if (tempSeed == currentSeed) {
-            foundSelfInEligibleSeeds = true;
-          }
+    // 投票数が0で、すでにMAXに達している場合は、一番最後のデータをリプレイスする
+    // 投票数が1以上の場合は、リストに含まれているので、InputのSeedをそのまま処理する
+    if (tempPoll == 0 && eligibleSeeds.length >= MAX_PRINT_SUPPLY) {
+      tempSeed = eligibleSeeds[eligibleSeeds.length - 1];
+      tempPoll = seedToPoll[tempSeed];
+    }
+    bool foundSelfInEligibleSeeds;
+    bool eligibleSeedsUpdateCompleted;
+    // リストの最後から順番にループしていく（おそらく底値がどんどんアップデートされていくと思っている）
+    // 基本的に同数のPollのものがある場合のみの処理となっている
+    for (uint256 i = eligibleSeeds.length - 1; i >= 0 && !eligibleSeedsUpdateCompleted; i--) {
+      // 一旦ループの対象データを保持する
+      bytes32 currentSeed = eligibleSeeds[i];
+      uint256 currentPoll = seedToPoll[currentSeed];
 
-          // 同数のPollを持つSeedがあった場合のみShift処理を行っている
-          // 一位の状態で同数のPollを追い抜かす処理をする際にエラーが起きないように確認している
-          if (foundSelfInEligibleSeeds && tempPoll == currentPoll) {
-            if (i > 0) {
-              bytes32 nextSeed = eligibleSeeds[i - 1];
-              bytes32 nextPoll = seedToPoll[nextSeed];
-              if (currentPoll == nextPoll) {
-                eligibleSeeds[i] = nextSeed;
-              }
-            }
-          }
-
-          //　Pollの数が大きいものは処理対象ではないので追い越した場合は処理を終了する
-        } else if (tempPoll < currentPoll) {
-          eligibleSeedsUpdateCompleted = true;
+      // 同じPoll数のデータ以外は処理対象ではないのでスルーする
+      if (tempPoll == currentPoll) {
+        // アップデートするデータを見つけてから処理開始（見つけたループのタイミングから次の分岐につなぐ）
+        // 新規Seedで番最後のレコードをリプレイスする場合は初回ループでTrueになる
+        // すでに登録ずみのSeedの場合は見つけてから処理開始
+        if (tempSeed == currentSeed) {
+          foundSelfInEligibleSeeds = true;
         }
 
-        eligibleSeeds[i] = seed;
+        // 同数のPollを持つSeedがあった場合のみShift処理を行っている
+        // 一位の状態で同数のPollを追い抜かす処理をする際にエラーが起きないように確認している
+        if (foundSelfInEligibleSeeds && tempPoll == currentPoll) {
+          if (i > 0) {
+            bytes32 nextSeed = eligibleSeeds[i - 1];
+            bytes32 nextPoll = seedToPoll[nextSeed];
+            if (currentPoll == nextPoll) {
+              eligibleSeeds[i] = nextSeed;
+            }
+          }
+        }
+
+        //　Pollの数が大きいものは処理対象ではないので追い越した場合は処理を終了する
+      } else if (tempPoll < currentPoll) {
+        eligibleSeedsUpdateCompleted = true;
       }
+
+      eligibleSeeds[i] = seed;
     }
   }
 
