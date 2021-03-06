@@ -2,6 +2,10 @@
 pragma solidity ^0.5.17;
 pragma experimental ABIEncoderV2;
 
+import "./ChocomintCreator.sol";
+import "./ChocomintRegisterer.sol";
+
+///@author
 // Contract is created by Taiju Sanagi (taijusanagi.eth)
 // Chocomint is named by Kenta Suhara (suhara.eth)
 // ASCII art is created by Daiki Kunii (daiki.kunii.eth)
@@ -111,45 +115,53 @@ pragma experimental ABIEncoderV2;
 // rrtrrrrrrtrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrrrtrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtrrtrrtrrtrrtrrtrrtrrrrrrrrrrrrrtrrtrrtr
 // For all NFT lovers.
 
-contract ChocomintUtils {
-  function _getChainId() internal pure returns (uint256) {
-    uint256 id;
-    assembly {
-      id := chainid()
-    }
-    return id;
+contract ChocomintGenesis {
+  event Registered(
+    bytes32 hash,
+    bytes32 indexed ipfsHash,
+    address indexed creator,
+    address indexed registerer,
+    bytes signature,
+    uint256 registeredAt,
+    uint256 nonce
+  );
+
+  mapping(bytes32 => bytes32) public ipfsHashes;
+  mapping(bytes32 => bytes32) public rights;
+
+  ChocomintCreator public chocomintCreator;
+  ChocomintRegisterer public chocomintRegisterer;
+
+  uint256 public nonce;
+
+  constructor(ChocomintCreator _chocomintCreator, ChocomintRegisterer _chocomintRegisterer) public {
+    chocomintCreator = _chocomintCreator;
+    chocomintRegisterer = _chocomintRegisterer;
   }
 
-  function _addSha256FunctionCodePrefix(bytes32 input) internal pure returns (bytes memory) {
-    return abi.encodePacked(hex"1220", input);
-  }
-
-  function _bytesToBase58(bytes memory input) internal pure returns (bytes memory) {
-    bytes memory alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    uint8[] memory digits = new uint8[](46);
-    bytes memory output = new bytes(46);
-    digits[0] = 0;
-    uint8 digitlength = 1;
-    for (uint256 i = 0; i < input.length; ++i) {
-      uint256 carry = uint8(input[i]);
-      for (uint256 j = 0; j < digitlength; ++j) {
-        carry += uint256(digits[j]) * 256;
-        digits[j] = uint8(carry % 58);
-        carry = carry / 58;
-      }
-      while (carry > 0) {
-        digits[digitlength] = uint8(carry % 58);
-        digitlength++;
-        carry = carry / 58;
-      }
-    }
-    for (uint256 k = 0; k < digitlength; k++) {
-      output[k] = alphabet[digits[digitlength - 1 - k]];
-    }
-    return output;
-  }
-
-  function _addIpfsBaseUrlPrefix(bytes memory input) internal pure returns (bytes memory) {
-    return abi.encodePacked("ipfs://", input);
+  /**
+   * @dev this function costs a lot of gas, so user will choose NFT carefully
+   * This gives creator / registerer NFT to receive future royalty
+   * @param _ipfsHash ipfs hash for genesis NFT metadata
+   * @param _creatorAddress creator address
+   * @param _creatorSignature signature is used for creator address verification
+   */
+  function register(
+    bytes32 _ipfsHash,
+    address payable _creatorAddress,
+    bytes memory _creatorSignature
+  ) public payable {
+    bytes32 hash =
+      keccak256(abi.encodePacked(_getChainId(), address(this), _ipfsHash, _creatorAddress));
+    require(
+      hash.toEthSignedMessageHash().recover(_creatorSignature) == _creatorAddress,
+      "ChocomintGenesis: creator signature must be valid for seed"
+    );
+    uint256 creatorTokenId = chocomintCreator.mint(_creatorAddress);
+    uint256 registererTokenId = chocomintRegisterer.mint(msg.sender);
+    ipfsHashes[hash] = _ipfsHash;
+    nonce++;
+    rights[hash] = totalRegistered;
+    emit Registered(hash, _ipfsHash, _creatorAddress, _creatorSignature, block.timestamp, nonce);
   }
 }
