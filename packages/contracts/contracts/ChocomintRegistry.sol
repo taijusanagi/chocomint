@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./ChocomintRightsManager.sol";
+import "./ChocomintRights.sol";
 import "./ChocomintUtils.sol";
 
 contract ChocomintRegistry is ChocomintUtils {
@@ -19,7 +19,7 @@ contract ChocomintRegistry is ChocomintUtils {
     uint256 tokenId
   );
 
-  mapping(uint256 => bytes32) public metadata;
+  mapping(uint256 => bytes32) public ipfsHashes;
 
   address private chocomintCreator;
   address private chocomintRegisterer;
@@ -28,7 +28,7 @@ contract ChocomintRegistry is ChocomintUtils {
 
   function initialize(address _chocomintCreator, address _chocomintRegisterer) public {
     require(
-      _chocomintCreator == address(0x0) && _chocomintRegisterer == address(0x0),
+      chocomintCreator == address(0x0) && chocomintRegisterer == address(0x0),
       "ChocomintRightsManager: contract is already initialized"
     );
     chocomintCreator = _chocomintCreator;
@@ -49,9 +49,9 @@ contract ChocomintRegistry is ChocomintUtils {
     );
     _tokenIdTracker.increment();
     uint256 tokenId = _tokenIdTracker.current();
-    ChocomintRightsManager(chocomintCreator).mint(_creatorAddress, tokenId);
-    ChocomintRightsManager(chocomintRegisterer).mint(msg.sender, tokenId);
-    metadata[tokenId] = _ipfsHash;
+    ChocomintRights(chocomintCreator).mint(_creatorAddress, tokenId);
+    ChocomintRights(chocomintRegisterer).mint(msg.sender, tokenId);
+    ipfsHashes[tokenId] = _ipfsHash;
     emit Registered(
       hash,
       _ipfsHash,
