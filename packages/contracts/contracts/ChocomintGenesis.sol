@@ -5,6 +5,9 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
+import "./ChocomintPriceCurve.sol";
+import "./ChocomintUtils.sol";
 import "hardhat/console.sol";
 
 // Contract is created by Taiju Sanagi (taijusanagi.eth)
@@ -117,102 +120,100 @@ import "hardhat/console.sol";
 // For all NFT lovers.
 
 // contract ChocomintGenesis is Ownable, ERC721 {
-contract ChocomintGenesis is EulerBeatsPriceCurve {
-  mapping(bytes32 => uint256) public seedToVoteCount;
-  mapping(bytes32 => bytes32) public seedToIpfsHash;
-  mapping(bytes32 => bytes32) public seedToCreatorAddress;
-  mapping(bytes32 => bytes32) public seedToMinterAddress;
-
-  //
-  uint256[] public eligibleSeeds;
-
-  /**
-   * @dev Function to get update target seed
-   */
-  function getUpdateTargetSeed(bytes32 seed) public view returns (bytes32) {
-    uint256 voteCount = seedToVoteCount[seed];
-    if (voteCount == 0 && eligibleSeeds.length >= MAX_PRINT_SUPPLY) {
-      uint256 updateTargetSeedCount;
-      for (uint256 i = 0; i < eligibleSeeds.length; i++) {
-        uint256 tempSeed = eligibleSeeds[i];
-        uint256 tempSeedCount = seedToVoteCount[tempSeed];
-        if (i == 0 || leastSeedCount > tempSeedCount) {
-          leastSeedId = tempBidId;
-          leastSeedCount = tempSeedCount;
-        }
-      }
-      return updateTargetSeedCount;
-    } else {
-      return seed;
-    }
-  }
-
-  function registerSeed(
-    bytes32 _ipfsHash,
-    address payable _creatorAddress,
-    bytes memory _creatorSignature
-  ) internal {
-    require(
-      seed.toEthSignedMessageHash().recover(_creatorSignature) == _creatorAddress,
-      "ChocomintGenesis: creator signature must be valid for seed"
-    );
-    seedToIpfsHash[bidId] = _ipfsHash;
-    seedToCreatorAddress[bidId] = _creatorAddress;
-  }
-
-  function isSeedRegistered(bytes32 seed) public view returns (bool) {
-    return seedToIpfsHash[seed] != "" && seedToCreatorAddress = !address(0x0);
-  }
-
-  function vote(
-    bytes32 _ipfsHash,
-    address payable _creatorAddress,
-    bytes memory _creatorSignature
-  ) public payable {
-    bytes32 seed =
-      keccak256(abi.encodePacked(_getChainId(), address(this), _ipfsHash, _creatorAddress));
-    if (!isSeedRegistered()) {
-      registerSeed(_ipfsHash, _creatorAddress, _creatorSignature);
-    }
-    vote(seed);
-  }
-
-  function vote(bytes32 seed) public payable {
-    require(isSeedRegistered(), "ChocomintGenesis: seed must be registered");
-    bytes32 updateTargetSeed = getUpdateTargetSeed(seed);
-    uint256 seedVoteCount = seedToVoteCount[seed];
-    uint256 nextVoteCount = seedToVoteCount[updateTargetSeed] + 1;
-    uint256 votePrice = getPrintPrice(nextVoteCount);
-    require(msg.value > votePrice, "ChocomintGenesis: value must be more than vote price");
-    if (seedVoteCount == 0) {
-      if (eligibleSeeds.length < MAX_PRINT_SUPPLY) {
-        seedToEligibleSeedsIndex[seed] = eligibleSeeds.length;
-        eligibleSeeds.push(seed); // insert to last
-      } else {
-        uint256 updateTargetIndex = seedToEligibleSeedsIndex[updateTargetSeed];
-        seedToVoteCount[seed] = nextVoteCount;
-        eligibleSeeds[updateTargetIndex] = seed; // insert to last
-        delete seedToVoteCount[updateTargetSeed];
-      }
-    }
-    seedToMinterAddress[seed] = msg.sender;
-  }
-
-  // ranking -> tokenId
-  function mint(bytes32 seed) public {
-    address payable creatorAddress = seedToCreatorAddress[seed];
-    address payable bidderAddress = seedToMinterAddress[seed];
-    totalSupply = totalSupply++;
-    uint256 tokenId = totalSupply;
-
-    _mint(bidderAddress, tokenId);
-    uint256 price = bidIdToCurrentPrice[bidId];
-    uint256 ownerCut = getOwnerCut(price);
-    uint256 creatorReward = price.sub(ownerCut);
-    tokenIdToBidId[tokenId] = bidId;
-    creatorAddress.transfer(creatorReward);
-  }
-
+contract ChocomintGenesis is ChocomintPriceCurve, ChocomintUtils {
+  // mapping(bytes32 => uint256) public seedToVoteCount;
+  // mapping(bytes32 => bytes32) public seedToIpfsHash;
+  // mapping(bytes32 => bytes32) public seedToCreatorAddress;
+  // mapping(bytes32 => bytes32) public seedToMinterAddress;
+  mapping(address => bool) public participated;
+  // //
+  // uint256[] public eligibleSeeds;
+  // /**
+  //  * @dev Function to get update target seed
+  //  */
+  // function getUpdateTargetSeed(bytes32 seed) public view returns (bytes32) {
+  //   uint256 voteCount = seedToVoteCount[seed];
+  //   if (voteCount == 0 && eligibleSeeds.length >= MAX_PRINT_SUPPLY) {
+  //     uint256 updateTargetSeedCount;
+  //     for (uint256 i = 0; i < eligibleSeeds.length; i++) {
+  //       uint256 tempSeed = eligibleSeeds[i];
+  //       uint256 tempSeedCount = seedToVoteCount[tempSeed];
+  //       if (i == 0 || leastSeedCount > tempSeedCount) {
+  //         leastSeedId = tempBidId;
+  //         leastSeedCount = tempSeedCount;
+  //       }
+  //     }
+  //     return updateTargetSeedCount;
+  //   } else {
+  //     return seed;
+  //   }
+  // }
+  // function registerSeed(
+  //   bytes32 _ipfsHash,
+  //   address payable _creatorAddress,
+  //   bytes memory _creatorSignature
+  // ) internal {
+  //   require(
+  //     seed.toEthSignedMessageHash().recover(_creatorSignature) == _creatorAddress,
+  //     "ChocomintGenesis: creator signature must be valid for seed"
+  //   );
+  //   seedToIpfsHash[bidId] = _ipfsHash;
+  //   seedToCreatorAddress[bidId] = _creatorAddress;
+  // }
+  // function isSeedRegistered(bytes32 seed) public view returns (bool) {
+  //   return seedToIpfsHash[seed] != "" && seedToCreatorAddress = !address(0x0);
+  // }
+  // function vote(
+  //   bytes32 _ipfsHash,
+  //   address payable _creatorAddress,
+  //   bytes memory _creatorSignature
+  // ) public payable {
+  //   bytes32 seed =
+  //     keccak256(abi.encodePacked(_getChainId(), address(this), _ipfsHash, _creatorAddress));
+  //   if (!isSeedRegistered()) {
+  //     registerSeed(_ipfsHash, _creatorAddress, _creatorSignature);
+  //   }
+  //   vote(seed);
+  // }
+  // function vote(bytes32 seed) public payable {
+  //   require(isSeedRegistered(), "ChocomintGenesis: seed must be registered");
+  //   uint256 currentLeastVoteCount = seedToVoteCount[seed];
+  //   if (currentLeastVoteCount == 0) {
+  //     if (eligibleSeeds.length >= MAX_PRINT_SUPPLY) {
+  //       bytes32 leastVote = eligibleSeeds[eligibleSeeds.length - 1];
+  //       currentLeastVoteCount = seedToVoteCount[leastVote];
+  //     }
+  //   }
+  //   uint256 nextVoteCount = currentLeastVoteCount + 1;
+  //   uint256 votePrice = getPrintPrice(nextVoteCount);
+  //   require(msg.value > votePrice, "ChocomintGenesis: value must be more than vote price");
+  //   if (currentLeastVoteCount == 0) {
+  //     if (eligibleSeeds.length < MAX_PRINT_SUPPLY) {
+  //       seedToEligibleSeedsIndex[seed] = eligibleSeeds.length;
+  //       eligibleSeeds.push(seed); // insert to last
+  //     } else {
+  //       uint256 updateTargetIndex = seedToEligibleSeedsIndex[updateTargetSeed];
+  //       seedToVoteCount[seed] = nextVoteCount;
+  //       eligibleSeeds[updateTargetIndex] = seed; // insert to last
+  //       delete seedToVoteCount[updateTargetSeed];
+  //     }
+  //   }
+  //   seedToMinterAddress[seed] = msg.sender;
+  //   participated[msg.sender] = true;
+  // }
+  // // ranking -> tokenId
+  // function mint(bytes32 seed) public {
+  //   address payable creatorAddress = seedToCreatorAddress[seed];
+  //   address payable bidderAddress = seedToMinterAddress[seed];
+  //   totalSupply = totalSupply++;
+  //   uint256 tokenId = totalSupply;
+  //   _mint(bidderAddress, tokenId);
+  //   uint256 price = bidIdToCurrentPrice[bidId];
+  //   uint256 ownerCut = getOwnerCut(price);
+  //   uint256 creatorReward = price.sub(ownerCut);
+  //   tokenIdToBidId[tokenId] = bidId;
+  //   creatorAddress.transfer(creatorReward);
+  // }
   // function tokenURI(uint256 tokenId) public view returns (string memory) {
   //   require(_exists(tokenId), "token must exist");
   //   uint256 bidId = tokenIdToBidId[tokenId];
@@ -220,42 +221,5 @@ contract ChocomintGenesis is EulerBeatsPriceCurve {
   //     string(
   //       _addIpfsBaseUrlPrefix(_bytesToBase58(_addSha256FunctionCodePrefix(bidIdToIpfsHash[bidId])))
   //     );
-  // }
-  // function _getChainId() internal pure returns (uint256) {
-  //   uint256 id;
-  //   assembly {
-  //     id := chainid()
-  //   }
-  //   return id;
-  // }
-  // function _addIpfsBaseUrlPrefix(bytes memory input) internal pure returns (bytes memory) {
-  //   return abi.encodePacked("ipfs://", input);
-  // }
-  // function _addSha256FunctionCodePrefix(bytes32 input) internal pure returns (bytes memory) {
-  //   return abi.encodePacked(hex"1220", input);
-  // }
-  // function _bytesToBase58(bytes memory input) internal pure returns (bytes memory) {
-  //   bytes memory alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  //   uint8[] memory digits = new uint8[](46);
-  //   bytes memory output = new bytes(46);
-  //   digits[0] = 0;
-  //   uint8 digitlength = 1;
-  //   for (uint256 i = 0; i < input.length; ++i) {
-  //     uint256 carry = uint8(input[i]);
-  //     for (uint256 j = 0; j < digitlength; ++j) {
-  //       carry += uint256(digits[j]) * 256;
-  //       digits[j] = uint8(carry % 58);
-  //       carry = carry / 58;
-  //     }
-  //     while (carry > 0) {
-  //       digits[digitlength] = uint8(carry % 58);
-  //       digitlength++;
-  //       carry = carry / 58;
-  //     }
-  //   }
-  //   for (uint256 k = 0; k < digitlength; k++) {
-  //     output[k] = alphabet[digits[digitlength - 1 - k]];
-  //   }
-  //   return output;
   // }
 }

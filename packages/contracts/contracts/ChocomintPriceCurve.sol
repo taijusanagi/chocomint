@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.5.17;
 
-// this code is copied from https://etherscan.io/address/0x8754F54074400CE745a7CEddC928FB1b7E985eD6#code
-// modified by Taiju Sanagi
+// Code is copied from https://etherscan.io/address/0x8754F54074400CE745a7CEddC928FB1b7E985eD6#code
+// modified by Taiju Sanagi (taijusanagi.eth)
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract EulerBeatsPriceCurve {
+contract ChocomintPriceCurve {
   using SafeMath for uint256;
 
   /***********************************|
