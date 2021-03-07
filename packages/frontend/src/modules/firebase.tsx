@@ -1,6 +1,7 @@
 import firebase from "firebase";
 
 import firebaseJson from "../../../../firebase.json";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDThONNzesmZYFpnXvIoSBTn6eIm69I4tQ",
   authDomain: "chocomint-prod.firebaseapp.com",

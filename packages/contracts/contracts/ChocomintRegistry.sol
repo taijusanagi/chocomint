@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 import "./ChocomintWallet.sol";
 import "./ChocomintUtils.sol";
 
@@ -24,9 +23,6 @@ contract ChocomintRegistry is ChocomintUtils {
   address private chocomintCreator;
   address private chocomintMinter;
 
-  using Counters for Counters.Counter;
-  Counters.Counter private _tokenIdTracker;
-
   function initialize(address _chocomintCreator, address _chocomintMinter) public {
     require(
       chocomintCreator == address(0x0) && chocomintMinter == address(0x0),
@@ -47,8 +43,7 @@ contract ChocomintRegistry is ChocomintUtils {
       hash.toEthSignedMessageHash().recover(_signature) == _creator,
       "creator signature must be valid"
     );
-    _tokenIdTracker.increment();
-    uint256 tokenId = _tokenIdTracker.current();
+    uint256 tokenId = uint256(hash);
     ChocomintWallet(chocomintCreator).mint(_creator, tokenId);
     ChocomintWallet(chocomintMinter).mint(msg.sender, tokenId);
     ipfsHashes[tokenId] = _ipfsHash;

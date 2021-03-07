@@ -8,6 +8,7 @@
     "format": "prettier --ignore-path .gitignore --write \"**/*.{.ts,.js,tsx,jsx,json,md,sol}\"",
     "lint": "yarn workspace frontend lint",
     "test": "yarn workspace contracts test",
+    "predev": "yarn killport",
     "dev": "run-p dev:*",
     "dev:run-localchain": "yarn workspace contracts run-localchain",
     "dev:deploy-contract-to-localchain": "wait-on http://localhost:8545 && yarn workspace contracts deploy-contract-to-localchain",

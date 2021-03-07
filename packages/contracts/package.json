@@ -6,9 +6,9 @@
     "test": "hardhat test",
     "coverage": "hardhat coverage",
     "run-localchain": "hardhat node",
-    "deploy-contract-to-localchain": "hardhat run scripts/deployChocoMint.ts --network localhost",
-    "deploy-contract-to-rinkeby": "hardhat run scripts/deployChocoMint.ts --network rinkeby",
-    "deploy-contract-to-mainnet": "hardhat run scripts/deployChocoMint.ts --network mainnet"
+    "deploy-contract-to-localchain": "hardhat run scripts/deployChocomint.ts --network localhost",
+    "deploy-contract-to-rinkeby": "hardhat run scripts/deployChocomint.ts --network rinkeby",
+    "deploy-contract-to-mainnet": "hardhat run scripts/deployChocomint.ts --network mainnet"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",

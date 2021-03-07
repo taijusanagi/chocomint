@@ -7,16 +7,9 @@ import Torus from "@toruslabs/torus-embed";
 
 const createClient = require("ipfs-http-client");
 
-export const chainId =
-  process.env.NODE_ENV == "development"
-    ? 31337
-    : process.env.REACT_APP_NETWORK_ID == "localhost"
-    ? 31337
-    : process.env.REACT_APP_NETWORK_ID == "rinkeby"
-    ? 4
-    : process.env.REACT_APP_NETWORK_ID == "mainnet"
-    ? 1
-    : 31337;
+export const networkName = process.env.REACT_APP_NETWORK_ID
+  ? process.env.REACT_APP_NETWORK_ID
+  : "localhost";
 
 import networkJson from "../../../contracts/network.json";
 const network = networkJson as any;
