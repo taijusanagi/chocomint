@@ -19,8 +19,6 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     address indexed operator,
     uint256 indexed tokenId,
     uint256 pricePaid,
-    uint256 nextPrintPrice,
-    uint256 nextBurnPrice,
     uint256 currentPrintSupply,
     uint256 reserve,
     uint256 genesisRoyalityPaid,
@@ -32,8 +30,6 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     address indexed operator,
     uint256 indexed tokenId,
     uint256 priceReceived,
-    uint256 nextPrintPrice,
-    uint256 nextBurnPrice,
     uint256 currentPrintSupply,
     uint256 reserve
   );
@@ -103,6 +99,10 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     ChocomintWallet(chocomintCreator).deposit{ value: creatorRoyalty }(_tokenId);
     ChocomintWallet(chocomintRegisterer).deposit{ value: registererRoyalty }(_tokenId);
 
+    if (newSupply == MAX_PRINT_SUPPLY) {
+      ChocomintWallet(chocomintGenesis).mint(msg.sender, _tokenId);
+    }
+
     if (msg.value.sub(printPrice) > 0) {
       payable(msg.sender).transfer(msg.value.sub(printPrice));
     }
@@ -111,8 +111,6 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
       msg.sender,
       _tokenId,
       printPrice,
-      getPrintPrice(newSupply.add(1)),
-      reserveCut,
       newSupply,
       reserve,
       genesisRoyalty,
@@ -139,15 +137,7 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
 
     payable(msg.sender).transfer(burnPrice);
 
-    emit PrintBurned(
-      msg.sender,
-      _tokenId,
-      burnPrice,
-      getPrintPrice(oldSupply),
-      getBurnPrice(newSupply),
-      newSupply,
-      reserve
-    );
+    emit PrintBurned(msg.sender, _tokenId, burnPrice, newSupply, reserve);
   }
 
   // This curve pricing is coped from Euler Beats
