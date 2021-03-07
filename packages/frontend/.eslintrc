@@ -6,6 +6,8 @@
   },
   "extends": [
     "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
     "plugin:react/recommended"
   ],
@@ -25,6 +27,6 @@
   },
   "rules": {
     "react/prop-types": "off",
-    "no-unused-vars": "off"
+    "@typescript-eslint/no-var-requires": "off"
   }
 }

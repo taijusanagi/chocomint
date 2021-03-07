@@ -4,13 +4,8 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
+  "eslint.workingDirectories": [{ "mode": "auto" }],
   "solidity.packageDefaultDependenciesContractsDirectory": "",
   "solidity.packageDefaultDependenciesDirectory": "node_modules",
-  "files.watcherExclude": {
-    "**/cache/**": true,
-    "**/build/**": true,
-    "**/artifacts/**": true,
-    "**/typechain/**": true
-  },
   "solidity.compileUsingRemoteVersion": "v0.8.0+commit.c7dfd78e"
 }

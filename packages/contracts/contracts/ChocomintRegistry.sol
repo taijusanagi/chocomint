@@ -32,6 +32,7 @@ contract ChocomintRegistry is ChocomintUtils {
     chocomintMinter = _chocomintMinter;
   }
 
+  // TODO: I want to implement ERC712 but need to check torus interface
   function register(
     bytes32 _ipfsHash,
     address payable _creator,

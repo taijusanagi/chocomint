@@ -14,24 +14,18 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig);
 
-const db = app.firestore();
+const firestore = app.firestore();
+const functions = app.functions();
 
 if (process.env.NODE_ENV === "development") {
-  db.settings({
+  firestore.settings({
     host: `localhost:${firebaseJson.emulators.firestore.port}`,
     ssl: false,
   });
+  functions.useEmulator("localhost", firebaseJson.emulators.functions.port);
 }
 
 export const collectionName =
-  process.env.NODE_ENV == "development"
-    ? "pairmints_localhost"
-    : process.env.REACT_APP_NETWORK_ID == "localhost"
-    ? "pairmints_localhost"
-    : process.env.REACT_APP_NETWORK_ID == "rinkeby"
-    ? "pairmints_staging"
-    : process.env.REACT_APP_NETWORK_ID == "mainnet"
-    ? "pairmints_production"
-    : "pairmints_localhost";
+  process.env.REACT_APP_NETWORK_ID == "mainnet" ? "pairmints_production" : "pairmints_staging";
 
-export { db };
+export { firestore, functions };

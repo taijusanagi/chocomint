@@ -41,3 +41,5 @@ export const initialize = async (debug?: boolean, gasPrice?: number) => {
 
   return { print, registry, genesis, creator, minter };
 };
+
+export const nullAddress = "0x0000000000000000000000000000000000000000";

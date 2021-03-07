@@ -2,20 +2,10 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import { Modal } from "../components/molecules/Modal";
 import { ethers } from "ethers";
-import {
-  chainId,
-  ipfs,
-  ChainIdType,
-  getNetwork,
-  ipfsHttpsBaseUrl,
-  nullAddress,
-  getWeb3,
-} from "../modules/web3";
+import { ipfs, chainId, ipfsHttpsBaseUrl, nullAddress, getWeb3 } from "../modules/web3";
 import "react-toastify/dist/ReactToastify.css";
-import { db, collectionName } from "../modules/firebase";
-import { Pairmints } from "../types";
-import { MerkleTree } from "merkletreejs";
-const keccak256 = require("keccak256");
+import { firestore, functions, collectionName } from "../modules/firebase";
+
 const bs58 = require("bs58");
 const logo = require("../assets/icon.png").default;
 
@@ -27,7 +17,6 @@ export const Create: React.FC = () => {
   const [waitingTransactionConfirmation, setWaitingTransactionConfirmation] = React.useState(false);
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [price, setPrice] = React.useState("");
   const [creatorAddress, setCreatorAddress] = React.useState("");
   const [modals, setModals] = React.useState({
     success: false,
@@ -62,12 +51,8 @@ export const Create: React.FC = () => {
     setName(event.target.value);
   };
 
-  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPrice(event.target.value);
-  };
-
   const isFormNotReady = () => {
-    return !name || !description || !imageUrl || !price;
+    return !name || !description || !imageUrl;
   };
 
   const clearForm = () => {
@@ -75,7 +60,6 @@ export const Create: React.FC = () => {
     setDescription("");
     setImageUrl("");
     setImagePreview("");
-    setPrice("");
   };
 
   const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -99,10 +83,10 @@ export const Create: React.FC = () => {
       return;
     }
     setWaitingTransactionConfirmation(true);
-    const value = ethers.utils.parseEther(price).toString();
+    const value = ethers.utils.parseEther("1").toString();
     try {
       const web3 = await getWeb3();
-      const { contractAddress } = getNetwork(chainId as ChainIdType);
+      const contractAddress = "";
       const choco = {
         name,
         description,
@@ -115,32 +99,24 @@ export const Create: React.FC = () => {
       const recipient = nullAddress;
       const messageHash = ethers.utils.solidityKeccak256(
         ["uint256", "address", "bytes32", "uint256", "address"],
-        [chainId, contractAddress, metadataIpfsHash, value, recipient]
+        [1, contractAddress, metadataIpfsHash, value, recipient]
       );
-      const messageHashBinary = ethers.utils.arrayify(messageHash);
-      const messageHashBinaryBuffer = Buffer.from(messageHashBinary);
-      const leaves = [messageHashBinaryBuffer];
-      const tree = new MerkleTree(leaves, keccak256, { sort: true });
-      const root = tree.getHexRoot();
-      const proof = tree.getHexProof(messageHashBinaryBuffer);
-      const signature = await web3.eth.personal.sign(root, creator, "");
-      const record: Pairmints = {
-        chainId,
+      const signature = await web3.eth.personal.sign(messageHash, creator, "");
+      const record = {
+        chainId: 1,
         contractAddress,
         metadataIpfsHash,
         value,
         recipient,
-        root,
-        proof,
         signature,
         creator,
         choco,
       };
       const orderId = ethers.utils.solidityKeccak256(
         ["uint256", "address", "bytes32", "address"],
-        [chainId, contractAddress, metadataIpfsHash, creator]
+        ["1", contractAddress, metadataIpfsHash, creator]
       );
-      await db.collection(collectionName).doc(orderId).set(record);
+      await firestore.collection(collectionName).doc(orderId).set(record);
 
       setCreatorAddress(creator);
       setSuccessModal();
@@ -180,63 +156,24 @@ export const Create: React.FC = () => {
     clearForm();
   };
 
+  const test = async () => {
+    await functions.httpsCallable("addChoco")("test");
+    console.log("test");
+  };
+
   return (
     <div className="mx-auto h-screen bg-white">
+      <button onClick={test}>Test</button>
+
       <div className="flex justify-center container mx-auto">
         <div className="w-full max-w-md p-4">
-          {modals.success && (
-            <Modal
-              type="wide"
-              closeValue="続けて発行する"
-              execValue="作品を確認する"
-              onClickClose={() => {
-                closeModal("success");
-              }}
-              onClickExec={() => {
-                history.push(`/box/${creatorAddress}`);
-              }}
-            >
-              <div className="mx-4 my-4">
-                <div className="text-center">
-                  <h3
-                    className="text-xl leading-6 font-medium text-gray-900 mb-8"
-                    id="modal-headline"
-                  >
-                    🎉 Congratulation!!🎉
-                  </h3>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      続けて発行するもしくは自分の作品を確認しよう！
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Modal>
-          )}
-          {modals.error && (
-            <Modal
-              type="single"
-              execColor="red"
-              execValue="閉じる"
-              onClickExec={() => {
-                closeModal("error");
-              }}
-            >
-              <div className="mx-4">
-                <div className="text-center mt-2">
-                  <h2 className="text-lg leading-6 font-medium text-gray-900" id="modal-headline">
-                    ERROR
-                  </h2>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-800">以下のようなエラーが発生しました。</p>
-                  </div>
-                  <div className="overflow-auto mt-4 p-3 bg-gray-100 rounded-md">
-                    <p className="text-sm text-gray-400">{errorMsg}</p>
-                  </div>
-                </div>
-              </div>
-            </Modal>
-          )}
+          <Modal
+            onClickDismiss={() => {
+              closeModal("success");
+            }}
+          >
+            Modal
+          </Modal>
           <div>
             <img
               className="mx-auto h-20 rounded-xl w-auto border-b-4 border-green-700 shadow-md"
@@ -331,23 +268,6 @@ export const Create: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
-          <div className="mt-2">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-            >
-              販売価格
-            </label>
-            <input
-              value={price}
-              onChange={handlePriceChange}
-              type="number"
-              name="price"
-              id="price"
-              className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
-              placeholder="ETH"
-            />
           </div>
           <div className="mt-8">
             <button

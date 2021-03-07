@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
@@ -39,8 +39,6 @@
     "firebase": "^8.2.9",
     "ipfs-http-client": "^49.0.2",
     "ipfs-only-hash": "^2.0.1",
-    "keccak256": "^1.0.2",
-    "merkletreejs": "^0.2.13",
     "node-sass": "^5.0.0",
     "postcss": "^7",
     "react": "^17.0.1",
