@@ -3,7 +3,7 @@ import { RecoilRoot } from "recoil";
 import { Modal, ModalProps } from "./Modal";
 
 const args: ModalProps = {
-  children: "Your NFT is Registered!",
+  text: "Your NFT is Registered!",
 };
 
 export default {

@@ -26,6 +26,6 @@ if (process.env.NODE_ENV === "development") {
 }
 
 export const collectionName =
-  process.env.REACT_APP_NETWORK_ID == "mainnet" ? "pairmints_production" : "pairmints_staging";
+  process.env.REACT_APP_NETWORK_ID == "mainnet" ? "nft_production" : "nft_staging";
 
 export { firestore, functions };

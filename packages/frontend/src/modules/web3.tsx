@@ -83,7 +83,6 @@ export const web3Modal = new Web3Modal({
   network: process.env.REACT_APP_NETWORK_ID ? process.env.REACT_APP_NETWORK_ID : "",
   providerOptions,
   cacheProvider: true,
-  theme: "dark",
 });
 
 export const initializeWeb3Modal = async () => {
@@ -93,8 +92,6 @@ export const initializeWeb3Modal = async () => {
 };
 
 export const clearWeb3Modal = async () => {
-  console.log(web3Modal);
-
   await web3Modal.clearCachedProvider();
 };
 

@@ -6,14 +6,13 @@ import {
   ipfs,
   chainId,
   ipfsHttpsBaseUrl,
-  nullAddress,
+  chocomintRegistryContract,
   getWeb3,
   selectedAddressState,
   initializeWeb3Modal,
-  clearWeb3Modal,
 } from "../modules/web3";
 import "react-toastify/dist/ReactToastify.css";
-import { firestore, functions, collectionName } from "../modules/firebase";
+import { functions } from "../modules/firebase";
 
 import { Button } from "../components/atoms/Button";
 import { Modal } from "../components/molecules/Modal";
@@ -27,26 +26,28 @@ export const Create: React.FC = () => {
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
-  const [waitingTransactionConfirmation, setWaitingTransactionConfirmation] = React.useState(false);
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
-
+  const [isWaitingTransactionConfirmation, setIsWaitingTransactionConfirmation] = React.useState(
+    false
+  );
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [modalMessage, setModalMessage] = React.useState("");
+  const [modalUrl, setModalUrl] = React.useState<string | undefined>(undefined);
+  const [modalNewTab, setModalNewTab] = React.useState<boolean | undefined>(undefined);
   const [selectedAddress, setSelectedAddress] = useRecoilState(selectedAddressState);
 
-  const [modals, setModals] = React.useState("");
-  // const [modalMessage setModalMessage] =  React.useState("");
+  const openModal = (message: string, url?: string, newTab?: boolean) => {
+    setModalMessage(message);
+    setModalUrl(url);
+    setModalNewTab(newTab);
+    setIsModalOpen(true);
+  };
 
-  React.useEffect(() => {
-    const dropContainer = document.getElementById("dropContainer") as any;
-    dropContainer.ondragover = dropContainer.ondragenter = function (event: any) {
-      event.preventDefault();
-    };
-    dropContainer.ondrop = function (event: any) {
-      const file = event.dataTransfer.files[0];
-      processImage(file);
-      event.preventDefault();
-    };
-  }, []);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalMessage("");
+  };
 
   const readAsArrayBufferAsync = (file: File) => {
     return new Promise((resolve) => {
@@ -79,6 +80,10 @@ export const Create: React.FC = () => {
     setDescription(event.target.value);
   };
 
+  const clickInputFile = () => {
+    document.getElementById("file")!.click();
+  };
+
   const processImage = async (file: File) => {
     setImagePreview("");
     setImageLoading(true);
@@ -89,13 +94,27 @@ export const Create: React.FC = () => {
     setImageLoading(false);
   };
 
+  React.useEffect(() => {
+    const dropContainer = document.getElementById("dropContainer") as any;
+    dropContainer.ondragover = dropContainer.ondragenter = function (event: any) {
+      event.preventDefault();
+    };
+    dropContainer.ondrop = function (event: any) {
+      if (event.target.files) {
+        processImage(event.target.files[0]);
+      }
+      event.preventDefault();
+    };
+  }, []);
+
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files![0];
-    processImage(file);
+    if (event.target.files) {
+      processImage(event.target.files[0]);
+    }
   };
 
-  const isFormNotReady = () => {
-    return !name || !description || !imageUrl;
+  const isFormReady = () => {
+    return name && description && imageUrl;
   };
 
   const clearForm = () => {
@@ -110,20 +129,12 @@ export const Create: React.FC = () => {
     setSelectedAddress(provider.selectedAddress);
   };
 
-  const clickInputFile = () => {
-    const inputFile = document.getElementById("file") as any;
-    inputFile.click();
-  };
-
   const createNft = async () => {
-    if (isFormNotReady() || !selectedAddress) {
+    if (!isFormReady() || !selectedAddress) {
       return;
     }
-    setWaitingTransactionConfirmation(true);
-    const value = ethers.utils.parseEther("1").toString();
+    setIsWaitingTransactionConfirmation(true);
     try {
-      const web3 = await getWeb3();
-      const contractAddress = "";
       const choco = {
         name,
         description,
@@ -131,91 +142,52 @@ export const Create: React.FC = () => {
       };
       const metadataString = JSON.stringify(choco);
       const { cid } = await ipfs.add(metadataString);
-      const [creator] = await web3.eth.getAccounts();
-      const metadataIpfsHash = `0x${bs58.decode(cid.toString()).slice(2).toString("hex")}`;
-      const recipient = nullAddress;
+      const ipfsHash = `0x${bs58.decode(cid.toString()).slice(2).toString("hex")}`;
+      const registry = chocomintRegistryContract.address;
+      const creator = selectedAddress;
       const messageHash = ethers.utils.solidityKeccak256(
-        ["uint256", "address", "bytes32", "uint256", "address"],
-        [1, contractAddress, metadataIpfsHash, value, recipient]
+        ["uint256", "address", "bytes32", "address"],
+        [chainId, registry, ipfsHash, selectedAddress]
       );
+      const web3 = await getWeb3();
       const signature = await web3.eth.personal.sign(messageHash, creator, "");
       const record = {
-        chainId: 1,
-        contractAddress,
-        metadataIpfsHash,
-        value,
-        recipient,
-        signature,
+        chainId,
+        registry,
+        ipfsHash,
         creator,
+        signature,
         choco,
       };
       const orderId = ethers.utils.solidityKeccak256(
         ["uint256", "address", "bytes32", "address"],
-        ["1", contractAddress, metadataIpfsHash, creator]
+        ["1", registry, ipfsHash, creator]
       );
-      await firestore.collection(collectionName).doc(orderId).set(record);
-      // setSuccessModal();
+      await functions.httpsCallable("addChoco")({ orderId, record });
+      clearForm();
+      setIsWaitingTransactionConfirmation(false);
+      openModal("🎉 Your NFT is ready to publish", `/nft/${orderId}`, false);
     } catch (err) {
-      console.log(err);
-      // setErrorModal(`Error: ${err.message}`);
+      openModal(`🤦‍♂️ ${err.message}`);
     }
-  };
-
-  // const openModal = async (target: "success" | "error") => {
-  //   setModals({
-  //     ...modals,
-  //     [target]: true,
-  //   });
-  // };
-
-  // const closeModal = async (target: "success" | "error") => {
-  //   setModals({
-  //     ...modals,
-  //     [target]: false,
-  //   });
-  // };
-
-  // const setSuccessModal = () => {
-  //   resetStatus();
-  //   openModal("success");
-  // };
-
-  // const setErrorModal = (msg: string) => {
-  //   setWaitingTransactionConfirmation(false);
-  //   setErrorMsg(msg);
-  //   openModal("error");
-  // };
-
-  const resetStatus = () => {
-    setWaitingTransactionConfirmation(false);
-    clearForm();
   };
 
   return (
     <div className="mx-auto h-screen bg-white flex flex-col">
       <Header />
       <div className="flex justify-center flex-grow container mx-auto">
-        <div className="w-full sm:max-w-md p-2">
-          {/* <Modal
-            onClickDismiss={() => {
-              closeModal("success");
-            }}
-          >
-            Modal
-          </Modal> */}
-          <div>
-            <img
-              className="mx-auto h-20 rounded-xl w-auto border-b-2 border-green-600 shadow-md"
-              src={logo}
-              alt="logo"
-            />
-            <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">Chocomint!</h2>
-            <p className="text-center text-gray-400 text-sm">Let&apos;s create NFTs</p>
-          </div>
+        <div className="w-full sm:max-w-md p-4">
+          <img
+            onClick={() => openModal("🤫 Tutorial?", "/about", false)}
+            className="cursor-pointer mx-auto h-20 rounded-xl w-auto border-b-2 border-green-600 shadow-md"
+            src={logo}
+            alt="logo"
+          />
+
           <div className="mt-2">
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              className="block text-sm font-bold text-gray-600 sm:mt-px sm:pt-2"
             >
               Name
             </label>
@@ -223,7 +195,6 @@ export const Create: React.FC = () => {
               value={name}
               onChange={handleNameChange}
               type="text"
-              name="name"
               id="name"
               className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             />
@@ -231,7 +202,7 @@ export const Create: React.FC = () => {
           <div className="mt-2">
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              className="block text-sm font-bold text-gray-600 sm:mt-px sm:pt-2"
             >
               Description
             </label>
@@ -239,19 +210,18 @@ export const Create: React.FC = () => {
               value={description}
               onChange={handleDescriptionChange}
               id="description"
-              name="description"
               className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             ></textarea>
           </div>
-          <div className="mt-2 cursor-pointer" onClick={clickInputFile} id="dropContainer">
+          <div className="mt-2" id="dropContainer">
             <label
               htmlFor="cover_photo"
-              className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              className="block text-sm font-bold text-gray-600 sm:mt-px sm:pt-2"
             >
               Image
             </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl">
-              <div className="space-y-4 text-center">
+            <div className="mt-1 flex justify-center p-8 border-2 border-gray-300 border-dashed rounded-xl">
+              <div className={"cursor-pointer"} onClick={clickInputFile}>
                 {!imagePreview ? (
                   <svg
                     className={`mx-auto h-20 w-20 text-gray-400 ${
@@ -272,27 +242,18 @@ export const Create: React.FC = () => {
                 ) : (
                   <img
                     className={`object-cover mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-400 shadow-md ${
-                      waitingTransactionConfirmation && "animate-spin opacity-50"
+                      isWaitingTransactionConfirmation && "animate-spin opacity-50"
                     }`}
                     src={imagePreview}
                   />
                 )}
-                <div className="flex text-sm text-gray-600">
-                  <label
-                    htmlFor="file"
-                    className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
-                  >
-                    <span>Image is hosted by IPFS</span>
-                    <input
-                      onChange={handleImageChange}
-                      id="file"
-                      name="file"
-                      type="file"
-                      accept="image/*"
-                      className="sr-only"
-                    />
-                  </label>
-                </div>
+                <input
+                  onChange={handleImageChange}
+                  id="file"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                />
               </div>
             </div>
           </div>
@@ -302,14 +263,18 @@ export const Create: React.FC = () => {
                 Connect <span className="ml-1">🔐</span>
               </Button>
             ) : (
-              <Button onClick={createNft} disabled={isFormNotReady()} type="primary">
+              <Button onClick={createNft} disabled={!isFormReady()} type="primary">
                 Create <span className="ml-1">💎</span>
               </Button>
             )}
           </div>
         </div>
       </div>
-
+      {isModalOpen && (
+        <Modal text={modalMessage} url={modalUrl} newTab={modalNewTab} onClickDismiss={closeModal}>
+          {modalMessage}
+        </Modal>
+      )}
       <Footer />
     </div>
   );

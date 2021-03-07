@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import { useRecoilState } from "recoil";
 
@@ -40,7 +41,10 @@ export const Header: React.FC = () => {
 
   return (
     <header>
-      <div className="relative h-12">
+      <div className="relative h-16">
+        <Link to="/">
+          <div className="px-4 py-6 absolute left-0 font-bold">Chocomint 🌱</div>
+        </Link>
         <div className="p-4 absolute right-0">
           {!selectedAddress ? (
             <Button onClick={connectWallet} type="tertiary">

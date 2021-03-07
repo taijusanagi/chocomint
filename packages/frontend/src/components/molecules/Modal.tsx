@@ -1,18 +1,26 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 
+import { Button } from "../atoms/Button";
+
 export interface ModalProps {
-  children: React.ReactNode;
+  text: string;
+  url?: string;
+  newTab?: boolean;
   onClickDismiss?: () => void;
 }
 
-export const Modal: React.FC<ModalProps> = ({ children, onClickDismiss }) => {
+export const Modal: React.FC<ModalProps> = ({ text, url, newTab, onClickDismiss }) => {
   return (
     <div className="fixed z-10 inset-0">
       <div className="flex p-4 items-center justify-center min-h-screen text-center">
-        <div className="absolute inset-0 overflow-hidden bg-gray-500 opacity-50"></div>
+        <div
+          onClick={onClickDismiss}
+          className="absolute inset-0 overflow-hidden bg-black opacity-40"
+        ></div>
         <div className="bg-white border-b-2 border-gray-500 shadow-md rounded-xl p-6 px-4 transform max-w-lg w-full">
           <button
             onClick={onClickDismiss}
@@ -20,7 +28,24 @@ export const Modal: React.FC<ModalProps> = ({ children, onClickDismiss }) => {
           >
             <FontAwesomeIcon icon={faTimes} />
           </button>
-          <div className="my-8">{children}</div>
+          <p className="my-8 text-gray-600 text-sm">{text}</p>
+          {url && (
+            <>
+              {newTab ? (
+                <a href={url} target="_blank" rel="noreferrer">
+                  <Button type="tertiary">
+                    Check <span className="ml-1">👀</span>
+                  </Button>
+                </a>
+              ) : (
+                <Link to={url}>
+                  <Button type="tertiary">
+                    Check <span className="ml-1">👀</span>
+                  </Button>
+                </Link>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
