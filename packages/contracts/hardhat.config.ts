@@ -21,11 +21,11 @@ module.exports = {
   },
   networks: {
     mainnet: {
-      url: network["1"].rpc,
+      url: network.mainnet.rpc,
       accounts: [privateKey],
     },
     rinkeby: {
-      url: network["4"].rpc,
+      url: network.rinkeby.rpc,
       accounts: [privateKey],
     },
   },

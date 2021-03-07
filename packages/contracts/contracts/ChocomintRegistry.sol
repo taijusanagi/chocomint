@@ -13,7 +13,7 @@ contract ChocomintRegistry is ChocomintUtils {
     bytes32 hash,
     bytes32 indexed ipfsHash,
     address indexed creator,
-    address indexed registerer,
+    address indexed minter,
     bytes signature,
     uint256 registeredAt,
     uint256 tokenId
@@ -22,18 +22,18 @@ contract ChocomintRegistry is ChocomintUtils {
   mapping(uint256 => bytes32) public ipfsHashes;
 
   address private chocomintCreator;
-  address private chocomintRegisterer;
+  address private chocomintMinter;
 
   using Counters for Counters.Counter;
   Counters.Counter private _tokenIdTracker;
 
-  function initialize(address _chocomintCreator, address _chocomintRegisterer) public {
+  function initialize(address _chocomintCreator, address _chocomintMinter) public {
     require(
-      chocomintCreator == address(0x0) && chocomintRegisterer == address(0x0),
+      chocomintCreator == address(0x0) && chocomintMinter == address(0x0),
       "contract is already initialized"
     );
     chocomintCreator = _chocomintCreator;
-    chocomintRegisterer = _chocomintRegisterer;
+    chocomintMinter = _chocomintMinter;
   }
 
   function register(
@@ -50,7 +50,7 @@ contract ChocomintRegistry is ChocomintUtils {
     _tokenIdTracker.increment();
     uint256 tokenId = _tokenIdTracker.current();
     ChocomintWallet(chocomintCreator).mint(_creator, tokenId);
-    ChocomintWallet(chocomintRegisterer).mint(msg.sender, tokenId);
+    ChocomintWallet(chocomintMinter).mint(msg.sender, tokenId);
     ipfsHashes[tokenId] = _ipfsHash;
     emit Registered(hash, _ipfsHash, _creator, msg.sender, _signature, block.timestamp, tokenId);
   }

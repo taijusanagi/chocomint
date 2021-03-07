@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./ChocomintRegistry.sol";
 import "./ChocomintUtils.sol";
 
-abstract contract ChocomintWallet is ERC721, ChocomintUtils {
+contract ChocomintWallet is ERC721, ChocomintUtils {
   mapping(uint256 => uint256) public balances;
 
   event Depositted(address indexed operator, uint256 indexed tokenId, uint256 amount);

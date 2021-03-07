@@ -1,20 +1,32 @@
 {
-  "1": {
-    "name": "mainnet",
-    "contractAddress": "0xDa54Ff1260eD610E9350B7A03CcD5c6e48F439AF",
+  "mainnet": {
+    "chainId": "5",
     "rpc": "https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149",
-    "explore": "https://etherscan.io/tx/"
+    "explore": "https://etherscan.io/tx/",
+    "printAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "registryAddress": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "genesisAddress": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "creatorAddress": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "minterAddress": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
   },
-  "4": {
-    "name": "rinkeby",
-    "contractAddress": "0x22392659d9A52fd4B4a0bD79211ddA3f6bAA8C0C",
+  "rinkeby": {
+    "chainId": "4",
     "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
-    "explore": "https://rinkeby.etherscan.io/tx/"
+    "explore": "https://rinkeby.etherscan.io/tx/",
+    "printAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "registryAddress": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "genesisAddress": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "creatorAddress": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "minterAddress": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
   },
-  "31337": {
-    "name": "hardhat",
-    "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "localhost": {
+    "chainId": "31337",
     "rpc": "http://localhost:8545",
-    "explore": "https://rinkeby.etherscan.io/tx/"
+    "explore": "https://rinkeby.etherscan.io/tx/",
+    "printAddress": "0xcbEAF3BDe82155F56486Fb5a1072cb8baAf547cc",
+    "registryAddress": "0x1429859428C0aBc9C2C47C8Ee9FBaf82cFA0F20f",
+    "genesisAddress": "0xB0D4afd8879eD9F52b28595d31B441D079B2Ca07",
+    "creatorAddress": "0x162A433068F51e18b7d13932F27e66a3f99E6890",
+    "minterAddress": "0x922D6956C99E12DFeB3224DEA977D0939758A1Fe"
   }
 }
