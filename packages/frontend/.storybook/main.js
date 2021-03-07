@@ -21,6 +21,10 @@ module.exports = {
       ],
       include: path.resolve(__dirname, "../"),
     });
+    const scopePluginIndex = config.resolve.plugins.findIndex(
+      ({ constructor }) => constructor && constructor.name === "ModuleScopePlugin"
+    );
+    config.resolve.plugins.splice(scopePluginIndex, 1);
     return config;
   },
 };

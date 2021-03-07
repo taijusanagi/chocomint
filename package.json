@@ -4,7 +4,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "killport": "kill-port --port 3000,5000,8080",
+    "killport": "kill-port --port 3000,5000,8080,8545",
     "format": "prettier --ignore-path .gitignore --write \"**/*.{.ts,.js,tsx,jsx,json,md,sol}\"",
     "lint": "run-p lint:*",
     "lint:frontend": "yarn workspace frontend lint",

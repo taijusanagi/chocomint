@@ -1,5 +1,6 @@
 import React from "react";
 
+import { RecoilRoot } from "recoil";
 import { Button, ButtonProps } from "./Button";
 
 const args: ButtonProps = {
@@ -14,5 +15,7 @@ export default {
 };
 
 export const Control: React.FC<ButtonProps> = (props) => (
-  <Button {...props}>{props.children}</Button>
+  <RecoilRoot>
+    <Button {...props}>{props.children}</Button>
+  </RecoilRoot>
 );

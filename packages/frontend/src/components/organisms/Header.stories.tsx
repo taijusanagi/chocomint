@@ -1,5 +1,6 @@
 import React from "react";
 
+import { RecoilRoot } from "recoil";
 import { Header } from "./Header";
 
 export default {
@@ -7,4 +8,8 @@ export default {
   component: Header,
 };
 
-export const Control: React.FC = () => <Header />;
+export const Control: React.FC = () => (
+  <RecoilRoot>
+    <Header />{" "}
+  </RecoilRoot>
+);

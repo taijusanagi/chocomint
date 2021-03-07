@@ -1,3 +1,5 @@
+import { atom } from "recoil";
+
 import { ethers } from "ethers";
 import Web3 from "web3";
 import Web3Modal from "web3modal";
@@ -65,27 +67,35 @@ export const chocomintMinterContract = new ethers.Contract(
   provider
 ) as ChocomintWallet;
 
-export const initializeWeb3Modal = async () => {
-  const providerOptions = {
-    walletconnect: {
-      package: WalletConnectProvider,
-      options: {
-        infuraId: "95f65ab099894076814e8526f52c9149",
-      },
+export const providerOptions = {
+  walletconnect: {
+    package: WalletConnectProvider,
+    options: {
+      infuraId: "95f65ab099894076814e8526f52c9149",
     },
-    torus: {
-      package: Torus,
-    },
-  };
+  },
+  torus: {
+    package: Torus,
+  },
+};
 
-  const web3Modal = new Web3Modal({
-    network: process.env.REACT_APP_NETWORK_ID ? process.env.REACT_APP_NETWORK_ID : "",
-    providerOptions,
-    theme: "dark",
-  });
+export const web3Modal = new Web3Modal({
+  network: process.env.REACT_APP_NETWORK_ID ? process.env.REACT_APP_NETWORK_ID : "",
+  providerOptions,
+  cacheProvider: true,
+  theme: "dark",
+});
+
+export const initializeWeb3Modal = async () => {
   const web3ModalProvider = await web3Modal.connect();
   await web3ModalProvider.enable();
   return web3ModalProvider;
+};
+
+export const clearWeb3Modal = async () => {
+  console.log(web3Modal);
+
+  await web3Modal.clearCachedProvider();
 };
 
 export const getEthersSigner = async () => {
@@ -99,3 +109,8 @@ export const getWeb3 = async () => {
   const web3ModalProvider = await initializeWeb3Modal();
   return new Web3(web3ModalProvider);
 };
+
+export const selectedAddressState = atom({
+  key: "selectedAddress",
+  default: "",
+});

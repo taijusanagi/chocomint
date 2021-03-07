@@ -1,5 +1,5 @@
 import React from "react";
-
+import { RecoilRoot } from "recoil";
 import { Modal, ModalProps } from "./Modal";
 
 const args: ModalProps = {
@@ -12,4 +12,8 @@ export default {
   args,
 };
 
-export const Control: React.FC<ModalProps> = (props) => <Modal {...props} />;
+export const Control: React.FC<ModalProps> = (props) => (
+  <RecoilRoot>
+    <Modal {...props} />
+  </RecoilRoot>
+);

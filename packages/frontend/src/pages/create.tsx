@@ -1,28 +1,51 @@
 import React from "react";
-import { useHistory } from "react-router-dom";
-import { Modal } from "../components/molecules/Modal";
+import { useRecoilState } from "recoil";
+
 import { ethers } from "ethers";
-import { ipfs, chainId, ipfsHttpsBaseUrl, nullAddress, getWeb3 } from "../modules/web3";
+import {
+  ipfs,
+  chainId,
+  ipfsHttpsBaseUrl,
+  nullAddress,
+  getWeb3,
+  selectedAddressState,
+  initializeWeb3Modal,
+  clearWeb3Modal,
+} from "../modules/web3";
 import "react-toastify/dist/ReactToastify.css";
 import { firestore, functions, collectionName } from "../modules/firebase";
+
+import { Button } from "../components/atoms/Button";
+import { Modal } from "../components/molecules/Modal";
+import { Header } from "../components/organisms/Header";
 
 const bs58 = require("bs58");
 const logo = require("../assets/icon.png").default;
 
 export const Create: React.FC = () => {
-  const history = useHistory();
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
   const [waitingTransactionConfirmation, setWaitingTransactionConfirmation] = React.useState(false);
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [creatorAddress, setCreatorAddress] = React.useState("");
-  const [modals, setModals] = React.useState({
-    success: false,
-    error: false,
-  });
-  const [errorMsg, setErrorMsg] = React.useState("");
+
+  const [selectedAddress, setSelectedAddress] = useRecoilState(selectedAddressState);
+
+  const [modals, setModals] = React.useState("");
+  // const [modalMessage setModalMessage] =  React.useState("");
+
+  React.useEffect(() => {
+    const dropContainer = document.getElementById("dropContainer") as any;
+    dropContainer.ondragover = dropContainer.ondragenter = function (event: any) {
+      event.preventDefault();
+    };
+    dropContainer.ondrop = function (event: any) {
+      const file = event.dataTransfer.files[0];
+      processImage(file);
+      event.preventDefault();
+    };
+  }, []);
 
   const readAsArrayBufferAsync = (file: File) => {
     return new Promise((resolve) => {
@@ -51,6 +74,25 @@ export const Create: React.FC = () => {
     setName(event.target.value);
   };
 
+  const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(event.target.value);
+  };
+
+  const processImage = async (file: File) => {
+    setImagePreview("");
+    setImageLoading(true);
+    const preview = URL.createObjectURL(file);
+    const imageUrl = await uploadFileToIpfs(file);
+    setImagePreview(preview);
+    setImageUrl(imageUrl);
+    setImageLoading(false);
+  };
+
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files![0];
+    processImage(file);
+  };
+
   const isFormNotReady = () => {
     return !name || !description || !imageUrl;
   };
@@ -62,24 +104,18 @@ export const Create: React.FC = () => {
     setImagePreview("");
   };
 
-  const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDescription(event.target.value);
+  const connectWallet = async () => {
+    const provider = await initializeWeb3Modal();
+    setSelectedAddress(provider.selectedAddress);
   };
 
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    //This can be processed when file presents
-    setImagePreview("");
-    setImageLoading(true);
-    const file = event.target.files![0];
-    const preview = URL.createObjectURL(file);
-    const imageUrl = await uploadFileToIpfs(file);
-    setImagePreview(preview);
-    setImageUrl(imageUrl);
-    setImageLoading(false);
+  const clickInputFile = () => {
+    const inputFile = document.getElementById("file") as any;
+    inputFile.click();
   };
 
   const createNft = async () => {
-    if (isFormNotReady()) {
+    if (isFormNotReady() || !selectedAddress) {
       return;
     }
     setWaitingTransactionConfirmation(true);
@@ -117,80 +153,70 @@ export const Create: React.FC = () => {
         ["1", contractAddress, metadataIpfsHash, creator]
       );
       await firestore.collection(collectionName).doc(orderId).set(record);
-
-      setCreatorAddress(creator);
-      setSuccessModal();
+      // setSuccessModal();
     } catch (err) {
       console.log(err);
-      setErrorModal(`Error: ${err.message}`);
+      // setErrorModal(`Error: ${err.message}`);
     }
   };
 
-  const openModal = async (target: "success" | "error") => {
-    setModals({
-      ...modals,
-      [target]: true,
-    });
-  };
+  // const openModal = async (target: "success" | "error") => {
+  //   setModals({
+  //     ...modals,
+  //     [target]: true,
+  //   });
+  // };
 
-  const closeModal = async (target: "success" | "error") => {
-    setModals({
-      ...modals,
-      [target]: false,
-    });
-  };
+  // const closeModal = async (target: "success" | "error") => {
+  //   setModals({
+  //     ...modals,
+  //     [target]: false,
+  //   });
+  // };
 
-  const setSuccessModal = () => {
-    resetStatus();
-    openModal("success");
-  };
+  // const setSuccessModal = () => {
+  //   resetStatus();
+  //   openModal("success");
+  // };
 
-  const setErrorModal = (msg: string) => {
-    setWaitingTransactionConfirmation(false);
-    setErrorMsg(msg);
-    openModal("error");
-  };
+  // const setErrorModal = (msg: string) => {
+  //   setWaitingTransactionConfirmation(false);
+  //   setErrorMsg(msg);
+  //   openModal("error");
+  // };
 
   const resetStatus = () => {
     setWaitingTransactionConfirmation(false);
     clearForm();
   };
 
-  const test = async () => {
-    await functions.httpsCallable("addChoco")("test");
-    console.log("test");
-  };
-
   return (
     <div className="mx-auto h-screen bg-white">
-      <button onClick={test}>Test</button>
-
+      <Header />
       <div className="flex justify-center container mx-auto">
-        <div className="w-full max-w-md p-4">
-          <Modal
+        <div className="w-full max-w-md p-2">
+          {/* <Modal
             onClickDismiss={() => {
               closeModal("success");
             }}
           >
             Modal
-          </Modal>
+          </Modal> */}
           <div>
             <img
-              className="mx-auto h-20 rounded-xl w-auto border-b-4 border-green-700 shadow-md"
+              className="mx-auto h-20 rounded-xl w-auto border-b-2 border-green-600 shadow-md"
               src={logo}
               alt="logo"
             />
             <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">Chocomint!</h2>
-            <p className="text-center text-gray-500 text-sm">
-              クリエイターとNFT発行者のマッチングサービス
-            </p>
+            <p className="text-center text-gray-500 text-sm">Let&apos;s create NFTs</p>
           </div>
           <div className="mt-2">
             <label
               htmlFor="name"
               className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
             >
-              名前
+              Name
             </label>
             <input
               value={name}
@@ -206,7 +232,7 @@ export const Create: React.FC = () => {
               htmlFor="description"
               className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
             >
-              説明
+              Description
             </label>
             <textarea
               value={description}
@@ -216,12 +242,12 @@ export const Create: React.FC = () => {
               className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             ></textarea>
           </div>
-          <div className="mt-2">
+          <div className="mt-2 cursor-pointer" onClick={clickInputFile} id="dropContainer">
             <label
               htmlFor="cover_photo"
               className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
             >
-              画像
+              Image
             </label>
             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl">
               <div className="space-y-4 text-center">
@@ -255,7 +281,7 @@ export const Create: React.FC = () => {
                     htmlFor="file"
                     className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
                   >
-                    <span>NFTに登録する画像のアップロード</span>
+                    <span>Upload image to IPFS</span>
                     <input
                       onChange={handleImageChange}
                       id="file"
@@ -270,13 +296,15 @@ export const Create: React.FC = () => {
             </div>
           </div>
           <div className="mt-8">
-            <button
-              onClick={createNft}
-              disabled={isFormNotReady()}
-              className="disabled:opacity-50 w-full rounded-xl max-w-md bg-green-500 text-white font-bold py-2 px-4 border-b-4 border-green-700 shadow-md"
-            >
-              Let&apos;s Create 🔨
-            </button>
+            {!selectedAddress ? (
+              <Button onClick={connectWallet} type="primary">
+                Connect <span className="ml-1">🔐</span>
+              </Button>
+            ) : (
+              <Button onClick={createNft} disabled={isFormNotReady()} type="primary">
+                Create <span className="ml-1">💎</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
