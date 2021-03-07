@@ -17,6 +17,7 @@ import { firestore, functions, collectionName } from "../modules/firebase";
 
 import { Button } from "../components/atoms/Button";
 import { Modal } from "../components/molecules/Modal";
+import { Footer } from "../components/organisms/Footer";
 import { Header } from "../components/organisms/Header";
 
 const bs58 = require("bs58");
@@ -191,10 +192,10 @@ export const Create: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto h-screen bg-white">
+    <div className="mx-auto h-screen bg-white flex flex-col">
       <Header />
-      <div className="flex justify-center container mx-auto">
-        <div className="w-full max-w-md p-2">
+      <div className="flex justify-center flex-grow container mx-auto">
+        <div className="w-full sm:max-w-md p-2">
           {/* <Modal
             onClickDismiss={() => {
               closeModal("success");
@@ -209,7 +210,7 @@ export const Create: React.FC = () => {
               alt="logo"
             />
             <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">Chocomint!</h2>
-            <p className="text-center text-gray-500 text-sm">Let&apos;s create NFTs</p>
+            <p className="text-center text-gray-400 text-sm">Let&apos;s create NFTs</p>
           </div>
           <div className="mt-2">
             <label
@@ -270,7 +271,7 @@ export const Create: React.FC = () => {
                   </svg>
                 ) : (
                   <img
-                    className={`object-cover mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-600 shadow-md ${
+                    className={`object-cover mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-400 shadow-md ${
                       waitingTransactionConfirmation && "animate-spin opacity-50"
                     }`}
                     src={imagePreview}
@@ -281,7 +282,7 @@ export const Create: React.FC = () => {
                     htmlFor="file"
                     className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
                   >
-                    <span>Upload image to IPFS</span>
+                    <span>Image is hosted by IPFS</span>
                     <input
                       onChange={handleImageChange}
                       id="file"
@@ -308,6 +309,8 @@ export const Create: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
