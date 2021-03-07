@@ -10,18 +10,18 @@ contract ChocomintUtils {
     return id;
   }
 
-  function _addSha256FunctionCodePrefix(bytes32 input) internal pure returns (bytes memory) {
-    return abi.encodePacked(hex"1220", input);
+  function _addSha256FunctionCodePrefix(bytes32 _input) internal pure returns (bytes memory) {
+    return abi.encodePacked(hex"1220", _input);
   }
 
-  function _bytesToBase58(bytes memory input) internal pure returns (bytes memory) {
+  function _bytesToBase58(bytes memory _input) internal pure returns (bytes memory) {
     bytes memory alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     uint8[] memory digits = new uint8[](46);
     bytes memory output = new bytes(46);
     digits[0] = 0;
     uint8 digitlength = 1;
-    for (uint256 i = 0; i < input.length; ++i) {
-      uint256 carry = uint8(input[i]);
+    for (uint256 i = 0; i < _input.length; ++i) {
+      uint256 carry = uint8(_input[i]);
       for (uint256 j = 0; j < digitlength; ++j) {
         carry += uint256(digits[j]) * 256;
         digits[j] = uint8(carry % 58);
@@ -39,7 +39,7 @@ contract ChocomintUtils {
     return output;
   }
 
-  function _addIpfsBaseUrlPrefix(bytes memory input) internal pure returns (bytes memory) {
-    return abi.encodePacked("ipfs://", input);
+  function _addIpfsBaseUrlPrefix(bytes memory _input) internal pure returns (bytes memory) {
+    return abi.encodePacked("ipfs://", _input);
   }
 }
