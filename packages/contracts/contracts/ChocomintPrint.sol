@@ -167,28 +167,28 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
   // fee distribution
 
   // Get 90% cut for reserve
-  function getReserveCut(uint256 fee) public pure returns (uint256) {
+  function getReserveCut(uint256 _fee) public pure returns (uint256) {
     uint256 reserveRatio = BASE_RATIO.sub(GENESIS_RATIO).sub(CREATOR_RATIO).sub(MINTER_RATIO);
-    return fee.mul(reserveRatio).div(BASE_RATIO);
+    return _fee.mul(reserveRatio).div(BASE_RATIO);
   }
 
   // Get 9.1% cut for genesis owner
-  function getGenesisRoyality(uint256 fee) public pure returns (uint256) {
-    return fee.mul(GENESIS_RATIO).div(BASE_RATIO);
+  function getGenesisRoyality(uint256 _fee) public pure returns (uint256) {
+    return _fee.mul(GENESIS_RATIO).div(BASE_RATIO);
   }
 
   // Get 0.8% cut for creator
-  function getCreatorRoyality(uint256 fee) public pure returns (uint256) {
-    return fee.mul(CREATOR_RATIO).div(BASE_RATIO);
+  function getCreatorRoyality(uint256 _fee) public pure returns (uint256) {
+    return _fee.mul(CREATOR_RATIO).div(BASE_RATIO);
   }
 
   // Get 0.1% cut for publisher
-  function getPublisherRoyality(uint256 fee) public pure returns (uint256) {
-    return fee.mul(MINTER_RATIO).div(BASE_RATIO);
+  function getPublisherRoyality(uint256 _fee) public pure returns (uint256) {
+    return _fee.mul(MINTER_RATIO).div(BASE_RATIO);
   }
 
-  function uri(uint256 tokenId) public view override returns (string memory) {
-    bytes32 hash = ChocomintRegistry(chocomintRegistry).ipfsHashes(tokenId);
+  function uri(uint256 _tokenId) public view override returns (string memory) {
+    bytes32 hash = ChocomintRegistry(chocomintRegistry).ipfsHashes(_tokenId);
     return string(_addIpfsBaseUrlPrefix(_bytesToBase58(_addSha256FunctionCodePrefix(hash))));
   }
 }
