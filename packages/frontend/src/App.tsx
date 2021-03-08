@@ -5,6 +5,7 @@ import { RecoilRoot } from "recoil";
 
 import Create from "./pages/create";
 import Box from "./pages/box";
+import NFT from "./pages/nft";
 
 const App: React.FC = () => {
   return (
@@ -16,6 +17,9 @@ const App: React.FC = () => {
           </Route>
           <Route path="/box" exact>
             <Box />
+          </Route>
+          <Route path="/nft/:hash" exact>
+            <NFT />
           </Route>
         </Switch>
       </Router>

@@ -11,11 +11,13 @@ import {
   selectedAddressState,
   initializeWeb3Modal,
 } from "../modules/web3";
-import "react-toastify/dist/ReactToastify.css";
 import { functions } from "../modules/firebase";
 
+import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
-import { Modal } from "../components/molecules/Modal";
+import { Container } from "../components/atoms/Container";
+import { ImageUploadIcon } from "../components/atoms/ImageUploadIcon";
+import { Modal, useModal } from "../components/molecules/Modal";
 import { Footer } from "../components/organisms/Footer";
 import { Header } from "../components/organisms/Header";
 
@@ -31,23 +33,9 @@ export const Create: React.FC = () => {
   const [isWaitingTransactionConfirmation, setIsWaitingTransactionConfirmation] = React.useState(
     false
   );
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [modalMessage, setModalMessage] = React.useState("");
-  const [modalUrl, setModalUrl] = React.useState<string | undefined>(undefined);
-  const [modalNewTab, setModalNewTab] = React.useState<boolean | undefined>(undefined);
   const [selectedAddress, setSelectedAddress] = useRecoilState(selectedAddressState);
 
-  const openModal = (message: string, url?: string, newTab?: boolean) => {
-    setModalMessage(message);
-    setModalUrl(url);
-    setModalNewTab(newTab);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setModalMessage("");
-  };
+  const { modal, openModal, closeModal } = useModal();
 
   const readAsArrayBufferAsync = (file: File) => {
     return new Promise((resolve) => {
@@ -135,12 +123,12 @@ export const Create: React.FC = () => {
     }
     setIsWaitingTransactionConfirmation(true);
     try {
-      const choco = {
+      const metadata = {
         name,
         description,
         image: imageUrl,
       };
-      const metadataString = JSON.stringify(choco);
+      const metadataString = JSON.stringify(metadata);
       const { cid } = await ipfs.add(metadataString);
       const ipfsHash = `0x${bs58.decode(cid.toString()).slice(2).toString("hex")}`;
       const registry = chocomintRegistryContract.address;
@@ -151,34 +139,34 @@ export const Create: React.FC = () => {
       );
       const web3 = await getWeb3();
       const signature = await web3.eth.personal.sign(messageHash, creator, "");
-      const record = {
+      const choco = {
         chainId,
         registry,
         ipfsHash,
         creator,
         signature,
-        choco,
+        metadata,
       };
-      const orderId = ethers.utils.solidityKeccak256(
+      const chocoId = ethers.utils.solidityKeccak256(
         ["uint256", "address", "bytes32", "address"],
-        ["1", registry, ipfsHash, creator]
+        [chainId, registry, ipfsHash, creator]
       );
-      await functions.httpsCallable("addChoco")({ orderId, record });
+      await functions.httpsCallable("addChoco")({ chocoId, choco });
       clearForm();
       setIsWaitingTransactionConfirmation(false);
-      openModal("🎉 Your NFT is ready to publish", `/nft/${orderId}`, false);
+      openModal("🎉 Your NFT is ready", `/nft/${chocoId}`, "Check", false);
     } catch (err) {
       openModal(`🤦‍♂️ ${err.message}`);
     }
   };
 
   return (
-    <div className="mx-auto h-screen bg-white flex flex-col">
+    <Body>
       <Header />
-      <div className="flex justify-center flex-grow container mx-auto">
+      <Container>
         <div className="w-full sm:max-w-md p-4">
           <img
-            onClick={() => openModal("🤫 Tutorial?", "/about", false)}
+            onClick={() => openModal("🤫 Tutorial?", "Check", "/about", false)}
             className="cursor-pointer mx-auto h-20 rounded-xl w-auto border-b-2 border-green-600 shadow-md"
             src={logo}
             alt="logo"
@@ -223,22 +211,9 @@ export const Create: React.FC = () => {
             <div className="mt-1 flex justify-center p-8 border-2 border-gray-300 border-dashed rounded-xl">
               <div className={"cursor-pointer"} onClick={clickInputFile}>
                 {!imagePreview ? (
-                  <svg
-                    className={`mx-auto h-20 w-20 text-gray-400 ${
-                      imageLoading && "animate-bounce"
-                    }`}
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <div className={`${imageLoading && "animate-bounce"}`}>
+                    <ImageUploadIcon />
+                  </div>
                 ) : (
                   <img
                     className={`object-cover mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-400 shadow-md ${
@@ -269,14 +244,10 @@ export const Create: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
-      {isModalOpen && (
-        <Modal text={modalMessage} url={modalUrl} newTab={modalNewTab} onClickDismiss={closeModal}>
-          {modalMessage}
-        </Modal>
-      )}
+      </Container>
+      {modal && <Modal {...modal} onClickDismiss={closeModal} />}
       <Footer />
-    </div>
+    </Body>
   );
 };
 

@@ -7,13 +7,20 @@ import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "../atoms/Button";
 
 export interface ModalProps {
-  text: string;
+  messageText: string;
+  buttonText?: string;
   url?: string;
   newTab?: boolean;
   onClickDismiss?: () => void;
 }
 
-export const Modal: React.FC<ModalProps> = ({ text, url, newTab, onClickDismiss }) => {
+export const Modal: React.FC<ModalProps> = ({
+  messageText,
+  buttonText,
+  url,
+  newTab,
+  onClickDismiss,
+}) => {
   return (
     <div className="fixed z-10 inset-0">
       <div className="flex p-4 items-center justify-center min-h-screen text-center">
@@ -28,19 +35,19 @@ export const Modal: React.FC<ModalProps> = ({ text, url, newTab, onClickDismiss 
           >
             <FontAwesomeIcon icon={faTimes} />
           </button>
-          <p className="my-8 text-gray-600 text-sm">{text}</p>
+          <p className="my-8 text-gray-600 text-sm">{messageText}</p>
           {url && (
             <>
               {newTab ? (
                 <a href={url} target="_blank" rel="noreferrer">
                   <Button type="tertiary">
-                    Check <span className="ml-1">👀</span>
+                    {buttonText} <span className="ml-1">👀</span>
                   </Button>
                 </a>
               ) : (
                 <Link to={url}>
                   <Button type="tertiary">
-                    Check <span className="ml-1">👀</span>
+                    {buttonText} <span className="ml-1">👀</span>
                   </Button>
                 </Link>
               )}
@@ -50,4 +57,23 @@ export const Modal: React.FC<ModalProps> = ({ text, url, newTab, onClickDismiss 
       </div>
     </div>
   );
+};
+
+export const useModal = () => {
+  const [modal, setModal] = React.useState<ModalProps | undefined>(undefined);
+
+  const openModal = (messageText: string, buttonText?: string, url?: string, newTab?: boolean) => {
+    setModal({
+      messageText,
+      buttonText,
+      url,
+      newTab,
+    });
+  };
+
+  const closeModal = () => {
+    setModal(undefined);
+  };
+
+  return { modal, openModal, closeModal };
 };
