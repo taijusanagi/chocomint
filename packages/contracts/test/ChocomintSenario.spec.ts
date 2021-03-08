@@ -12,21 +12,21 @@ const { expect } = chai;
 describe("Chocomint", function () {
   let printContract;
   let registryContract;
-  let genesisContract;
+  let galleryContract;
   let creatorContract;
-  let minterContract;
+  let publisherContract;
 
   const chainId = "31337";
 
-  let signer, printSigner, genesisSigner, createSigner, mintSigner;
+  let signer, printSigner, gallerySigner, createSigner, mintSigner;
   this.beforeEach("initialization.", async function () {
-    [signer, printSigner, genesisSigner, createSigner, mintSigner] = await ethers.getSigners();
-    const { print, registry, genesis, creator, minter } = await initialize();
+    [signer, printSigner, gallerySigner, createSigner, mintSigner] = await ethers.getSigners();
+    const { print, registry, gallery, creator, publisher } = await initialize();
     printContract = print;
     registryContract = registry;
-    genesisContract = genesis;
+    galleryContract = gallery;
     creatorContract = creator;
-    minterContract = minter;
+    publisherContract = publisher;
   });
 
   it("deploy: deploy is ok", async function () {

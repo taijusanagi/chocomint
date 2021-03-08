@@ -41,9 +41,9 @@ export const Header: React.FC = () => {
 
   return (
     <header>
-      <div className="relative h-16 mb-2">
+      <div className="relative h-20 mb-4">
         <Link to="/">
-          <div className="px-4 py-6 absolute left-0 font-bold">Chocomint 🌱</div>
+          <div className="px-4 py-8 absolute left-0 font-bold">Chocomint 🌱</div>
         </Link>
         <div className="p-4 absolute right-0">
           {!selectedAddress ? (

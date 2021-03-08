@@ -21,7 +21,7 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     uint256 pricePaid,
     uint256 currentPrintSupply,
     uint256 reserve,
-    uint256 genesisRoyalityPaid,
+    uint256 galleryRoyalityPaid,
     uint256 creatorRoyalityPaid,
     uint256 publisherRoyalityPaid
   );
@@ -37,13 +37,13 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
   mapping(uint256 => uint256) public totalSupply;
 
   address private chocomintRegistry;
-  address private chocomintGenesis;
+  address private chocomintGallery;
   address private chocomintCreator;
   address private chocomintPublisher;
 
   uint256 constant GENESIS_RATIO = 500;
   uint256 constant CREATOR_RATIO = 450;
-  uint256 constant MINTER_RATIO = 50;
+  uint256 constant PUBLISHER_RATIO = 50;
   uint256 constant BASE_RATIO = 10000;
 
   // This curve pricing value is coped from Euler Beats
@@ -61,19 +61,19 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
 
   function initialize(
     address _chocomintRegistry,
-    address _chocomintGenesis,
+    address _chocomintGallery,
     address _chocomintCreator,
     address _chocomintPublisher
   ) public {
     require(
       chocomintRegistry == address(0x0) ||
-        chocomintGenesis == address(0x0) ||
+        chocomintGallery == address(0x0) ||
         chocomintCreator == address(0x0) ||
         chocomintPublisher == address(0x0),
       "contract is already initialized"
     );
     chocomintRegistry = _chocomintRegistry;
-    chocomintGenesis = _chocomintGenesis;
+    chocomintGallery = _chocomintGallery;
     chocomintCreator = _chocomintCreator;
     chocomintPublisher = _chocomintPublisher;
   }
@@ -90,19 +90,19 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     totalSupply[_tokenId] = newSupply;
 
     uint256 reserveCut = getReserveCut(printPrice);
-    uint256 genesisRoyalty = getGenesisRoyality(printPrice);
+    uint256 galleryRoyalty = getGalleryRoyality(printPrice);
     uint256 creatorRoyalty = getCreatorRoyality(printPrice);
     uint256 publisherRoyalty = getPublisherRoyality(printPrice);
 
     reserve = reserve.add(reserveCut);
     _mint(msg.sender, _tokenId, 1, "");
 
-    ChocomintWallet(chocomintGenesis).deposit{ value: genesisRoyalty }(_tokenId);
+    ChocomintWallet(chocomintGallery).deposit{ value: galleryRoyalty }(_tokenId);
     ChocomintWallet(chocomintCreator).deposit{ value: creatorRoyalty }(_tokenId);
     ChocomintWallet(chocomintPublisher).deposit{ value: publisherRoyalty }(_tokenId);
 
     if (newSupply == MAX_PRINT_SUPPLY) {
-      ChocomintWallet(chocomintGenesis).mint(msg.sender, _tokenId);
+      ChocomintWallet(chocomintGallery).mint(msg.sender, _tokenId);
     }
 
     if (msg.value.sub(printPrice) > 0) {
@@ -115,7 +115,7 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
       printPrice,
       newSupply,
       reserve,
-      genesisRoyalty,
+      galleryRoyalty,
       creatorRoyalty,
       publisherRoyalty
     );
@@ -173,12 +173,12 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
 
   // Get 90% cut for reserve
   function getReserveCut(uint256 _fee) public pure returns (uint256) {
-    uint256 reserveRatio = BASE_RATIO.sub(GENESIS_RATIO).sub(CREATOR_RATIO).sub(MINTER_RATIO);
+    uint256 reserveRatio = BASE_RATIO.sub(GENESIS_RATIO).sub(CREATOR_RATIO).sub(PUBLISHER_RATIO);
     return _fee.mul(reserveRatio).div(BASE_RATIO);
   }
 
-  // Get 9.1% cut for genesis owner
-  function getGenesisRoyality(uint256 _fee) public pure returns (uint256) {
+  // Get 9.1% cut for gallery owner
+  function getGalleryRoyality(uint256 _fee) public pure returns (uint256) {
     return _fee.mul(GENESIS_RATIO).div(BASE_RATIO);
   }
 
@@ -189,7 +189,7 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
 
   // Get 0.1% cut for publisher
   function getPublisherRoyality(uint256 _fee) public pure returns (uint256) {
-    return _fee.mul(MINTER_RATIO).div(BASE_RATIO);
+    return _fee.mul(PUBLISHER_RATIO).div(BASE_RATIO);
   }
 
   function uri(uint256 _tokenId) public view override returns (string memory) {

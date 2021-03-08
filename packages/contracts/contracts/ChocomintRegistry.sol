@@ -33,6 +33,7 @@ contract ChocomintRegistry is ChocomintUtils {
   }
 
   // TODO: I want to implement ERC712 but need to check torus interface
+  // TODO: add function to speficy minter
   function publish(
     bytes32 _ipfsHash,
     address payable _creator,

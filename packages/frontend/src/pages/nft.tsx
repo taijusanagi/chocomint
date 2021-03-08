@@ -1,5 +1,6 @@
 import React from "react";
 import { useParams } from "react-router-dom";
+import { useRecoilState } from "recoil";
 
 import { ethers } from "ethers";
 
@@ -12,6 +13,9 @@ import {
   getEthersSigner,
   chainId,
   networkName,
+  selectedAddressState,
+  initializeWeb3Modal,
+  explore,
 } from "../modules/web3";
 
 import { Body } from "../components/atoms/Body";
@@ -35,6 +39,9 @@ export const NFT: React.FC = () => {
   const [publisherRoyalityPool, setPublisherRoyalityPool] = React.useState("");
   const [printCount, setPrintCount] = React.useState(0);
   const [printPrice, setPrintPrice] = React.useState<ethers.BigNumber | undefined>(undefined);
+  const [burnPrice, setBurnPrice] = React.useState<ethers.BigNumber | undefined>(undefined);
+
+  const [selectedAddress, setSelectedAddress] = useRecoilState(selectedAddressState);
 
   React.useEffect(() => {
     firestore
@@ -70,6 +77,9 @@ export const NFT: React.FC = () => {
         chocomintPrintContract.getPrintPrice(printCount + 1).then((printPriceBN) => {
           setPrintPrice(printPriceBN);
         });
+        chocomintPrintContract.getPrintPrice(printCount).then((burnPriceBN) => {
+          setBurnPrice(burnPriceBN);
+        });
       });
     });
   }, []);
@@ -79,23 +89,67 @@ export const NFT: React.FC = () => {
     openModal("📝", messageText);
   };
 
-  const openRoyality = () => {
-    openModal("📝", "royality");
+  const connectWallet = async () => {
+    const provider = await initializeWeb3Modal();
+    setSelectedAddress(provider.selectedAddress);
   };
 
   const publish = async () => {
     if (!choco) {
       return;
     }
-    const signer = await getEthersSigner();
-    const signerNetwork = await signer.provider.getNetwork();
-    if (signerNetwork.chainId != chainId) {
-      openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
+    try {
+      const signer = await getEthersSigner();
+      const signerNetwork = await signer.provider.getNetwork();
+      if (signerNetwork.chainId != chainId) {
+        openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
+        return;
+      }
+      const { hash: tx } = await chocomintRegistryContract
+        .connect(signer)
+        .publish(choco.ipfsHash, choco.creator, choco.signature);
+      openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
+    } catch (err) {
+      openModal("🙇‍♂️", err.message);
+    }
+  };
+
+  const print = async () => {
+    if (!choco || !printPrice) {
       return;
     }
-    await chocomintRegistryContract
-      .connect(signer)
-      .publish(choco.ipfsHash, choco.creator, choco.signature);
+    try {
+      const signer = await getEthersSigner();
+      const signerNetwork = await signer.provider.getNetwork();
+      if (signerNetwork.chainId != chainId) {
+        openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
+        return;
+      }
+      const { hash: tx } = await chocomintPrintContract
+        .connect(signer)
+        .mintPrint(hash, { value: printPrice });
+      openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
+    } catch (err) {
+      openModal("🙇‍♂️", err.message);
+    }
+  };
+
+  const burn = async () => {
+    if (!choco || !burnPrice) {
+      return;
+    }
+    try {
+      const signer = await getEthersSigner();
+      const signerNetwork = await signer.provider.getNetwork();
+      if (signerNetwork.chainId != chainId) {
+        openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
+        return;
+      }
+      const { hash: tx } = await chocomintPrintContract.connect(signer).burnPrint(hash, 0);
+      openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
+    } catch (err) {
+      openModal("🙇‍♂️", err.message);
+    }
   };
 
   return (
@@ -104,40 +158,45 @@ export const NFT: React.FC = () => {
       {choco && (
         <>
           <div className="w-full">
-            <div className="flex flex-col items-center mx-auto bg-gradient-to-r from-green-100 via-blue-100 to-green-100 p-12">
-              <div className="w-60">
-                <img
-                  onClick={() => openDescription(choco.metadata.name)}
-                  className="cursor-pointer transition duration-500 transform hover:-translate-y-1 rounded-xl border-b-2 border-gray-400 shadow-md"
-                  src={choco.metadata.image}
-                />
-              </div>
+            <div className="flex flex-col items-center mx-auto bg-gradient-to-r from-green-100 via-blue-100 to-green-100 p-8">
+              <img
+                onClick={() => openDescription(choco.metadata.name)}
+                className="max-w-96 max-h-80 cursor-pointer transition duration-500 transform hover:-translate-y-1 rounded-xl border-b-2 border-gray-400 shadow-md"
+                src={choco.metadata.image}
+              />
             </div>
           </div>
           <Container>
-            <div className="py-6 space-y-4">
-              {!published ? (
-                <>
-                  <Button onClick={publish} type="primary">
-                    Publish NFT
+            <div className="w-80">
+              <div className="mt-6 space-y-6">
+                <p className="text-center text-sm text-gray-600 font-medium">{printCount} Prints</p>
+                {!selectedAddress ? (
+                  <Button onClick={connectWallet} type="primary">
+                    Connect <span className="ml-1">🔐</span>
                   </Button>
-                </>
-              ) : (
-                <>
-                  {printPrice && (
-                    <>
-                      <p>Printed {printCount}</p>
+                ) : (
+                  <>
+                    {!printPrice || !burnPrice ? (
                       <Button onClick={publish} type="primary">
-                        Buy Print{" "}
-                        <span className="ml-2">Ξ {ethers.utils.formatEther(printPrice)} </span>
+                        Mint Publisher NFT <span className="ml-1">💎</span>
                       </Button>
-                      <Button onClick={openRoyality} type="tertiary">
-                        Royality
-                      </Button>
-                    </>
-                  )}
-                </>
-              )}
+                    ) : (
+                      <>
+                        <Button onClick={print} type="primary">
+                          Mint Print
+                          <span className="ml-1">Ξ {ethers.utils.formatEther(printPrice)} </span>
+                          <span className="ml-1">💎</span>
+                        </Button>
+                        <Button onClick={burn} type="tertiary">
+                          Burn Print
+                          <span className="ml-1">Ξ {ethers.utils.formatEther(burnPrice)} </span>
+                          <span className="ml-1">🔥</span>
+                        </Button>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </Container>
         </>

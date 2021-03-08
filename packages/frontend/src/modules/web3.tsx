@@ -26,11 +26,12 @@ const network = require("../../../contracts/network.json");
 export const {
   rpc,
   chainId,
+  explore,
   registryAddress,
   printAddress,
-  genesisAddress,
+  galleryAddress,
   creatorAddress,
-  minterAddress,
+  publisherAddress,
 } = network[networkName];
 
 export const nullAddress = "0x0000000000000000000000000000000000000000";
@@ -72,8 +73,8 @@ export const chocomintPrintContract = new ethers.Contract(
   chocomintPrintAbi,
   provider
 ) as ChocomintPrint;
-export const chocomintGenesisContract = new ethers.Contract(
-  genesisAddress,
+export const chocomintGalleryContract = new ethers.Contract(
+  galleryAddress,
   chocomintWalletAbi,
   provider
 ) as ChocomintWallet;
@@ -82,8 +83,8 @@ export const chocomintCreatorContract = new ethers.Contract(
   chocomintWalletAbi,
   provider
 ) as ChocomintWallet;
-export const chocomintMinterContract = new ethers.Contract(
-  minterAddress,
+export const chocomintPublisherContract = new ethers.Contract(
+  publisherAddress,
   chocomintWalletAbi,
   provider
 ) as ChocomintWallet;
