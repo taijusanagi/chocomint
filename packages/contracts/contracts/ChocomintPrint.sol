@@ -41,8 +41,8 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
   address private chocomintCreator;
   address private chocomintPublisher;
 
-  uint256 constant GENESIS_RATIO = 700;
-  uint256 constant CREATOR_RATIO = 250;
+  uint256 constant GENESIS_RATIO = 500;
+  uint256 constant CREATOR_RATIO = 450;
   uint256 constant MINTER_RATIO = 50;
   uint256 constant BASE_RATIO = 10000;
 
@@ -157,6 +157,8 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     price = price.add(C.mul(printNumber));
     price = price.sub(D);
     price = price.mul(K).div(decimals);
+
+    // added to reduce price from original EulerBeats because Chocomint is made for cheaper NFT
     price = price.div(coefficient);
   }
 
