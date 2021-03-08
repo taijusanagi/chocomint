@@ -11,17 +11,17 @@ contract ChocomintWallet is ERC721, ChocomintUtils {
   event Depositted(address indexed operator, uint256 indexed tokenId, uint256 amount);
   event Withdrawed(address indexed operator, uint256 indexed tokenId, uint256 amount);
 
-  address private chocomintRegistry;
+  address private chocomintPublisher;
   address private chocomintMinter;
 
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
-  function initialize(address _chocomintRegistry, address _chocomintMinter) public {
+  function initialize(address _chocomintPublisher, address _chocomintMinter) public {
     require(
-      chocomintRegistry == address(0x0) || chocomintMinter == address(0x0),
+      chocomintPublisher == address(0x0) || chocomintMinter == address(0x0),
       "contract is already initialized"
     );
-    chocomintRegistry = _chocomintRegistry;
+    chocomintPublisher = _chocomintPublisher;
     chocomintMinter = _chocomintMinter;
   }
 
@@ -46,7 +46,7 @@ contract ChocomintWallet is ERC721, ChocomintUtils {
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
     require(_exists(_tokenId), "token must exist");
-    bytes32 hash = ChocomintRegistry(chocomintRegistry).ipfsHashes(_tokenId);
+    bytes32 hash = ChocomintRegistry(chocomintPublisher).ipfsHashes(_tokenId);
     return string(_addIpfsBaseUrlPrefix(_bytesToBase58(_addSha256FunctionCodePrefix(hash))));
   }
 }

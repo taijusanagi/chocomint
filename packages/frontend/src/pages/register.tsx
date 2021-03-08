@@ -10,6 +10,7 @@ import {
   getWeb3,
   selectedAddressState,
   initializeWeb3Modal,
+  cidToIpfsHash,
 } from "../modules/web3";
 import { functions } from "../modules/firebase";
 
@@ -21,8 +22,8 @@ import { Modal, useModal } from "../components/molecules/Modal";
 import { Footer } from "../components/organisms/Footer";
 import { Header } from "../components/organisms/Header";
 
-const bs58 = require("bs58");
 const logo = require("../assets/icon.png").default;
+const canonicalize = require("canonicalize");
 
 export const Create: React.FC = () => {
   const [imageUrl, setImageUrl] = React.useState("");
@@ -117,7 +118,7 @@ export const Create: React.FC = () => {
     setSelectedAddress(provider.selectedAddress);
   };
 
-  const createNft = async () => {
+  const registerNft = async () => {
     if (!isFormReady() || !selectedAddress) {
       return;
     }
@@ -128,9 +129,9 @@ export const Create: React.FC = () => {
         description,
         image: imageUrl,
       };
-      const metadataString = JSON.stringify(metadata);
+      const metadataString = canonicalize(metadata);
       const { cid } = await ipfs.add(metadataString);
-      const ipfsHash = `0x${bs58.decode(cid.toString()).slice(2).toString("hex")}`;
+      const ipfsHash = cidToIpfsHash(cid);
       const registry = chocomintRegistryContract.address;
       const creator = selectedAddress;
       const messageHash = ethers.utils.solidityKeccak256(
@@ -151,12 +152,12 @@ export const Create: React.FC = () => {
         ["uint256", "address", "bytes32", "address"],
         [chainId, registry, ipfsHash, creator]
       );
-      await functions.httpsCallable("addChoco")({ chocoId, choco });
+      await functions.httpsCallable("registerChoco")({ chocoId, choco });
       clearForm();
       setIsWaitingTransactionConfirmation(false);
-      openModal("🎉 Your NFT is ready", `/nft/${chocoId}`, "Check", false);
+      openModal("🎉", "NFT is registered in Chocomint!", "Check", `/nft/${chocoId}`, false);
     } catch (err) {
-      openModal(`🤦‍♂️ ${err.message}`);
+      openModal("🙇‍♂️", err.message);
     }
   };
 
@@ -166,7 +167,7 @@ export const Create: React.FC = () => {
       <Container>
         <div className="w-full sm:max-w-md p-4">
           <img
-            onClick={() => openModal("🤫 Tutorial?", "Check", "/about", false)}
+            onClick={() => openModal("🤫", "Tutorial?", "Check", "/about", false)}
             className="cursor-pointer mx-auto h-20 rounded-xl w-auto border-b-2 border-green-600 shadow-md"
             src={logo}
             alt="logo"
@@ -238,8 +239,8 @@ export const Create: React.FC = () => {
                 Connect <span className="ml-1">🔐</span>
               </Button>
             ) : (
-              <Button onClick={createNft} disabled={!isFormReady()} type="primary">
-                Create <span className="ml-1">💎</span>
+              <Button onClick={registerNft} disabled={!isFormReady()} type="primary">
+                Register <span className="ml-1">💎</span>
               </Button>
             )}
           </div>

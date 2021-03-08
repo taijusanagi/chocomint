@@ -23,7 +23,7 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     uint256 reserve,
     uint256 genesisRoyalityPaid,
     uint256 creatorRoyalityPaid,
-    uint256 minterRoyalityPaid
+    uint256 publisherRoyalityPaid
   );
 
   event PrintBurned(
@@ -39,7 +39,7 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
   address private chocomintRegistry;
   address private chocomintGenesis;
   address private chocomintCreator;
-  address private chocomintMinter;
+  address private chocomintPublisher;
 
   uint256 constant GENESIS_RATIO = 910;
   uint256 constant CREATOR_RATIO = 80;
@@ -61,25 +61,25 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     address _chocomintRegistry,
     address _chocomintGenesis,
     address _chocomintCreator,
-    address _chocomintMinter
+    address _chocomintPublisher
   ) public {
     require(
       chocomintRegistry == address(0x0) ||
         chocomintGenesis == address(0x0) ||
         chocomintCreator == address(0x0) ||
-        chocomintMinter == address(0x0),
-      "ChocomintGenesis: contract is already initialized"
+        chocomintPublisher == address(0x0),
+      "contract is already initialized"
     );
     chocomintRegistry = _chocomintRegistry;
     chocomintGenesis = _chocomintGenesis;
     chocomintCreator = _chocomintCreator;
-    chocomintMinter = _chocomintMinter;
+    chocomintPublisher = _chocomintPublisher;
   }
 
   function mintPrint(uint256 _tokenId) public payable {
     require(
       ChocomintRegistry(chocomintRegistry).ipfsHashes(_tokenId) != "",
-      "token is still not registered"
+      "token is still not minted"
     );
 
     uint256 newSupply = totalSupply[_tokenId].add(1);
@@ -90,14 +90,14 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     uint256 reserveCut = getReserveCut(printPrice);
     uint256 genesisRoyalty = getGenesisRoyality(printPrice);
     uint256 creatorRoyalty = getCreatorRoyality(printPrice);
-    uint256 minterRoyalty = getMinterRoyality(printPrice);
+    uint256 publisherRoyalty = getPublisherRoyality(printPrice);
 
     reserve = reserve.add(reserveCut);
     _mint(msg.sender, _tokenId, 1, "");
 
     ChocomintWallet(chocomintGenesis).deposit{ value: genesisRoyalty }(_tokenId);
     ChocomintWallet(chocomintCreator).deposit{ value: creatorRoyalty }(_tokenId);
-    ChocomintWallet(chocomintMinter).deposit{ value: minterRoyalty }(_tokenId);
+    ChocomintWallet(chocomintPublisher).deposit{ value: publisherRoyalty }(_tokenId);
 
     if (newSupply == MAX_PRINT_SUPPLY) {
       ChocomintWallet(chocomintGenesis).mint(msg.sender, _tokenId);
@@ -115,7 +115,7 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
       reserve,
       genesisRoyalty,
       creatorRoyalty,
-      minterRoyalty
+      publisherRoyalty
     );
   }
 
@@ -182,8 +182,8 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     return fee.mul(CREATOR_RATIO).div(BASE_RATIO);
   }
 
-  // Get 0.1% cut for minter
-  function getMinterRoyality(uint256 fee) public pure returns (uint256) {
+  // Get 0.1% cut for publisher
+  function getPublisherRoyality(uint256 fee) public pure returns (uint256) {
     return fee.mul(MINTER_RATIO).div(BASE_RATIO);
   }
 

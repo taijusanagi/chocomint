@@ -6,12 +6,17 @@ import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import Torus from "@toruslabs/torus-embed";
 
+import { Metadata } from "../types";
+
 import { abi as chocomintRegistryAbi } from "../../../contracts/artifacts/contracts/ChocomintRegistry.sol/ChocomintRegistry.json";
 import { abi as chocomintPrintAbi } from "../../../contracts/artifacts/contracts/ChocomintPrint.sol/ChocomintPrint.json";
 import { abi as chocomintWalletAbi } from "../../../contracts/artifacts/contracts/ChocomintWallet.sol/ChocomintWallet.json";
 import { ChocomintRegistry, ChocomintPrint, ChocomintWallet } from "../../../contracts/typechain";
 
+const bs58 = require("bs58");
 const createClient = require("ipfs-http-client");
+const ipfsOnlyHash = require("ipfs-only-hash");
+const canonicalize = require("canonicalize");
 
 export const networkName = process.env.REACT_APP_NETWORK_ID
   ? process.env.REACT_APP_NETWORK_ID
@@ -38,6 +43,22 @@ export const ipfs = createClient({
   port: 5001,
   protocol: "https",
 });
+
+export const ipfsHashToIpfsUrl = (ipfsHash: string) => {
+  const cid = bs58.encode(Buffer.from(`1220${ipfsHash.slice(2)}`, "hex"));
+  return `${ipfsHttpsBaseUrl}${cid}`;
+};
+
+export const cidToIpfsHash = (cid: string) => {
+  return `0x${bs58.decode(cid.toString()).slice(2).toString("hex")}`;
+};
+
+export const verifyMetadata = async (ipfsHash: string, metadata: Metadata) => {
+  const rawMetadata = Buffer.from(canonicalize(metadata));
+  const cid = await ipfsOnlyHash.of(rawMetadata);
+  const calculated = cidToIpfsHash(cid);
+  return ipfsHash == calculated;
+};
 
 export const provider = new ethers.providers.JsonRpcProvider(rpc);
 

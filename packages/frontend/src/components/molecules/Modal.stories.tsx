@@ -1,9 +1,12 @@
 import React from "react";
-import { RecoilRoot } from "recoil";
+import { MemoryRouter } from "react-router-dom";
 import { Modal, ModalProps } from "./Modal";
 
 const args: ModalProps = {
+  icon: "🎉",
   messageText: "Your NFT is Registered!",
+  buttonText: "Check",
+  url: "/",
 };
 
 export default {
@@ -13,7 +16,7 @@ export default {
 };
 
 export const Control: React.FC<ModalProps> = (props) => (
-  <RecoilRoot>
+  <MemoryRouter>
     <Modal {...props} />
-  </RecoilRoot>
+  </MemoryRouter>
 );

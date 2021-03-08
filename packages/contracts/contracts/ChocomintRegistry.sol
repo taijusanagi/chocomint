@@ -8,11 +8,11 @@ import "./ChocomintUtils.sol";
 contract ChocomintRegistry is ChocomintUtils {
   using ECDSA for bytes32;
 
-  event Registered(
+  event Published(
     bytes32 hash,
     bytes32 indexed ipfsHash,
     address indexed creator,
-    address indexed minter,
+    address indexed publisher,
     bytes signature,
     uint256 registeredAt,
     uint256 tokenId
@@ -33,21 +33,22 @@ contract ChocomintRegistry is ChocomintUtils {
   }
 
   // TODO: I want to implement ERC712 but need to check torus interface
-  function register(
+  function publish(
     bytes32 _ipfsHash,
     address payable _creator,
     bytes memory _signature
   ) public payable {
     require(_ipfsHash != "", "ipfs hash should not be empty");
     bytes32 hash = keccak256(abi.encodePacked(_getChainId(), address(this), _ipfsHash, _creator));
+    uint256 tokenId = uint256(hash);
+    require(ipfsHashes[tokenId] == "", "token is already minted");
     require(
       hash.toEthSignedMessageHash().recover(_signature) == _creator,
       "creator signature must be valid"
     );
-    uint256 tokenId = uint256(hash);
     ChocomintWallet(chocomintCreator).mint(_creator, tokenId);
     ChocomintWallet(chocomintMinter).mint(msg.sender, tokenId);
     ipfsHashes[tokenId] = _ipfsHash;
-    emit Registered(hash, _ipfsHash, _creator, msg.sender, _signature, block.timestamp, tokenId);
+    emit Published(hash, _ipfsHash, _creator, msg.sender, _signature, block.timestamp, tokenId);
   }
 }

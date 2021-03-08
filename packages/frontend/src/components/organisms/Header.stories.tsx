@@ -1,5 +1,5 @@
 import React from "react";
-
+import { MemoryRouter } from "react-router-dom";
 import { RecoilRoot } from "recoil";
 import { Header } from "./Header";
 
@@ -10,6 +10,8 @@ export default {
 
 export const Control: React.FC = () => (
   <RecoilRoot>
-    <Header />{" "}
+    <MemoryRouter>
+      <Header />
+    </MemoryRouter>
   </RecoilRoot>
 );
