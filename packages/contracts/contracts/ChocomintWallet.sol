@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./ChocomintRegistry.sol";
+import "./ChocomintPublisher.sol";
 import "./ChocomintUtils.sol";
 
 contract ChocomintWallet is ERC721, ChocomintUtils {
@@ -46,7 +46,7 @@ contract ChocomintWallet is ERC721, ChocomintUtils {
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
     require(_exists(_tokenId), "token must exist");
-    bytes32 hash = ChocomintRegistry(chocomintPublisher).ipfsHashes(_tokenId);
+    bytes32 hash = ChocomintPublisher(chocomintPublisher).ipfsHashes(_tokenId);
     return string(_addIpfsBaseUrlPrefix(_bytesToBase58(_addSha256FunctionCodePrefix(hash))));
   }
 }
