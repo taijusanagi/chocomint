@@ -41,9 +41,9 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
   address private chocomintCreator;
   address private chocomintPublisher;
 
-  uint256 constant GENESIS_RATIO = 910;
-  uint256 constant CREATOR_RATIO = 80;
-  uint256 constant MINTER_RATIO = 10;
+  uint256 constant GENESIS_RATIO = 700;
+  uint256 constant CREATOR_RATIO = 250;
+  uint256 constant MINTER_RATIO = 50;
   uint256 constant BASE_RATIO = 10000;
 
   // This curve pricing value is coped from Euler Beats
@@ -54,6 +54,8 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
   uint256 constant C = 26;
   uint256 constant D = 8;
   uint256 constant SIG_DIGITS = 3;
+
+  uint256 constant coefficient = 10;
 
   constructor() ERC1155("") {}
 
@@ -155,6 +157,7 @@ contract ChocomintPrint is ERC1155, ChocomintUtils {
     price = price.add(C.mul(printNumber));
     price = price.sub(D);
     price = price.mul(K).div(decimals);
+    price = price.div(coefficient);
   }
 
   // This curve pricing is coped from Euler Beats
