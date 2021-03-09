@@ -170,10 +170,6 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     return calculateRoyality(_price, royalityRatio);
   }
 
-  function calculateRoyality(uint256 _price, uint256 _royalityRatio) public pure returns (uint256) {
-    return _price.mul(_royalityRatio).div(BASE_RATIO);
-  }
-
   function calculatePrintPrice(
     uint256 _reserve,
     uint256 _supply,
@@ -188,6 +184,10 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     returns (uint256)
   {
     return _lastPrintPrice.sub(_lastPrintPrice.mul(_royalityRatio).div(BASE_RATIO));
+  }
+
+  function calculateRoyality(uint256 _price, uint256 _royalityRatio) public pure returns (uint256) {
+    return _price.mul(_royalityRatio).div(BASE_RATIO);
   }
 
   function uri(uint256 _tokenId) public view override returns (string memory) {

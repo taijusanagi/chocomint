@@ -170,7 +170,7 @@ export const Create: React.FC = () => {
       await functions.httpsCallable("createChoco")({ chocoId, choco });
       clearForm();
       setIsWaitingTransactionConfirmation(false);
-      openModal("🎉", "NFT is createed in Chocomint!", "Check", `/nft/${chocoId}`, false);
+      openModal("🎉", "NFT is created in Chocomint!", "Check", `/nft/${chocoId}`, false);
     } catch (err) {
       openModal("🙇‍♂️", err.message);
     }

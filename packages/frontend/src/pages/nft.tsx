@@ -47,7 +47,7 @@ export const NFT: React.FC = () => {
       .get()
       .then((doc) => {
         if (!doc.exists) {
-          openModal("😲", "It seems you're searching non existing NFT.", "Home", "/", false);
+          openModal("😲", "It seems you're searching for non existing NFT.", "Home", "/", false);
           return;
         }
         const choco = doc.data() as Choco;
@@ -74,7 +74,7 @@ export const NFT: React.FC = () => {
             chocomintPublisherContract.getPrintPrice(hash).then((printPriceBN) => {
               setPrintPrice(printPriceBN);
             });
-            chocomintPublisherContract.getPrintPrice(hash).then((burnPriceBN) => {
+            chocomintPublisherContract.getBurnPrice(hash).then((burnPriceBN) => {
               setBurnPrice(burnPriceBN);
             });
           }
@@ -157,7 +157,9 @@ export const NFT: React.FC = () => {
           <Container>
             <div className="w-80">
               <div className="mt-6 space-y-6">
-                <p className="text-center text-sm text-gray-600 font-medium">{printCount} Prints</p>
+                <p className="text-center text-sm text-gray-600 font-medium">
+                  {printCount} / {choco.supplyLimit} Printed
+                </p>
                 {!selectedAddress ? (
                   <Button onClick={connectWallet} type="primary">
                     Connect <span className="ml-1">🔐</span>

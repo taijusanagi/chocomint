@@ -4,13 +4,6 @@ export const dummyMetadataIpfsHash =
 export const hardhatChainId = "31337";
 
 // this is mock value for prices
-// export const BASE_RATIO = "10000";
-// export const defaultSupplyLimit = "128";
-// export const defaultVirtualSupply = "64";
-// export const defaultVirtualReserve = "10000000000000000";
-// export const defaultRoyalityRatio = "1000";
-// export const defaultCrr = "1000";
-
-export const expectedDefaultPriceForFirstPrint = "1562500000000000";
-export const expectedDefaultPriceForSecondPrint = "1754807692300000";
-export const expectedDefaultPriceForThirdPrint = "1967511655010000";
+export const expectedDefaultPriceForFirstPrint = "15625000000000000";
+export const expectedDefaultPriceForSecondPrint = "17548076923070000";
+export const expectedDefaultPriceForThirdPrint = "19675116550110000";

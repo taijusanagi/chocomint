@@ -13,11 +13,12 @@ export const initialize = async (debug?: boolean, gasPrice?: number) => {
   const publisher = await ChocomintPublisher.deploy({ gasPrice });
   debug && console.log("publisher deployed to:", publisher.address);
   const creator = await ChocomintCreator.deploy(creatorName, creatorSymbol, { gasPrice });
-  debug && console.log("gallery deployed to:", creator.address);
+  debug && console.log("creator deployed to:", creator.address);
   await publisher.initialize(creator.address, {
     gasPrice,
   });
   debug && console.log("publisher initialized");
   await creator.initialize(publisher.address, { gasPrice });
+  debug && console.log("creator initialized");
   return { publisher, creator };
 };
