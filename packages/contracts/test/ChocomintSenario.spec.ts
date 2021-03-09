@@ -2,7 +2,7 @@ import { ethers, waffle } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
 
-import { initialize, creatorName, creatorSymbol } from "../helpers/deploy";
+import { initialize, ownershipName, ownershipSymbol } from "../helpers/deploy";
 
 import { hashChoco } from "../helpers/util";
 
@@ -29,27 +29,27 @@ const { expect } = chai;
 
 describe("Chocomint", function () {
   let publisherContract;
-  let creatorContract;
+  let ownershipContract;
 
-  let ownerSigner, creatorSigner;
+  let ownerSigner, ownershipSigner;
   this.beforeEach("initialization.", async function () {
-    [ownerSigner, creatorSigner] = await ethers.getSigners();
-    const { publisher, creator } = await initialize();
+    [ownerSigner, ownershipSigner] = await ethers.getSigners();
+    const { publisher, ownership } = await initialize();
     publisherContract = publisher;
-    creatorContract = creator;
+    ownershipContract = ownership;
   });
 
   it("deploy: deploy is ok", async function () {
     // TODO: check ERC1155 name, symbol if opensea requires this
 
-    expect(await creatorContract.name()).to.equal(creatorName);
-    expect(await creatorContract.symbol()).to.equal(creatorSymbol);
-    expect(await creatorContract.chocomintPublisher()).to.equal(publisherContract.address);
-    expect(await publisherContract.chocomintCreator()).to.equal(creatorContract.address);
+    expect(await ownershipContract.name()).to.equal(ownershipName);
+    expect(await ownershipContract.symbol()).to.equal(ownershipSymbol);
+    expect(await ownershipContract.chocomintPublisher()).to.equal(publisherContract.address);
+    expect(await publisherContract.chocomintOwnership()).to.equal(ownershipContract.address);
   });
 
   it("initialization fails after initialized", async function () {
-    await expect(creatorContract.initialize(ownerSigner.address)).to.revertedWith(
+    await expect(ownershipContract.initialize(ownerSigner.address)).to.revertedWith(
       "contract is already initialized"
     );
     await expect(publisherContract.initialize(ownerSigner.address)).to.revertedWith(
@@ -61,7 +61,7 @@ describe("Chocomint", function () {
     const tokenId = hashChoco(
       hardhatChainId,
       publisherContract.address,
-      creatorSigner.address,
+      ownershipSigner.address,
       dummyMetadataIpfsHash,
       defaultSupplyLimit,
       defaultVirtualSupply,
@@ -70,7 +70,7 @@ describe("Chocomint", function () {
       defaultRoyalityRatio
     );
     const tokenIdBinary = ethers.utils.arrayify(tokenId);
-    const signature = await creatorSigner.signMessage(tokenIdBinary);
+    const signature = await ownershipSigner.signMessage(tokenIdBinary);
     const printPriceForFirstPrint = await publisherContract.calculatePrintPrice(
       defaultVirtualReserve,
       defaultVirtualSupply,
@@ -82,7 +82,7 @@ describe("Chocomint", function () {
       .connect(ownerSigner)
       .publishAndMintPrint(
         dummyMetadataIpfsHash,
-        creatorSigner.address,
+        ownershipSigner.address,
         defaultSupplyLimit,
         defaultVirtualSupply,
         defaultVirtualReserve,
@@ -112,16 +112,16 @@ describe("Chocomint", function () {
     expect(await publisherContract.crrs(tokenId)).to.equal(defaultCrr);
     expect(await publisherContract.royalityRatios(tokenId)).to.equal(defaultRoyalityRatio);
 
-    // check creator token is properly minted and get royality
-    expect(await creatorContract.ownerOf(tokenId)).to.equal(creatorSigner.address, "ownerOf");
-    expect(await creatorContract.balances(tokenId)).to.equal(royality, "balances");
+    // check ownership token is properly minted and get royality
+    expect(await ownershipContract.ownerOf(tokenId)).to.equal(ownershipSigner.address, "ownerOf");
+    expect(await ownershipContract.balances(tokenId)).to.equal(royality, "balances");
   });
 
   it("publish and print, print, burn, burn and check price", async function () {
     const tokenId = hashChoco(
       hardhatChainId,
       publisherContract.address,
-      creatorSigner.address,
+      ownershipSigner.address,
       dummyMetadataIpfsHash,
       defaultSupplyLimit,
       defaultVirtualSupply,
@@ -130,7 +130,7 @@ describe("Chocomint", function () {
       defaultRoyalityRatio
     );
     const tokenIdBinary = ethers.utils.arrayify(tokenId);
-    const signature = await creatorSigner.signMessage(tokenIdBinary);
+    const signature = await ownershipSigner.signMessage(tokenIdBinary);
     const printPriceForFirstPrint = await publisherContract.calculatePrintPrice(
       defaultVirtualReserve,
       defaultVirtualSupply,
@@ -140,7 +140,7 @@ describe("Chocomint", function () {
       .connect(ownerSigner)
       .publishAndMintPrint(
         dummyMetadataIpfsHash,
-        creatorSigner.address,
+        ownershipSigner.address,
         defaultSupplyLimit,
         defaultVirtualSupply,
         defaultVirtualReserve,
@@ -160,7 +160,7 @@ describe("Chocomint", function () {
       .connect(ownerSigner)
       .publishAndMintPrint(
         dummyMetadataIpfsHash,
-        creatorSigner.address,
+        ownershipSigner.address,
         defaultSupplyLimit,
         defaultVirtualSupply,
         defaultVirtualReserve,

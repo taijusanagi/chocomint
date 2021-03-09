@@ -13,9 +13,9 @@ const main = async () => {
   console.log("run deploy script on network:", networkName);
 
   if (networkName == "mainnet" || networkName == "rinkeby" || networkName == "localhost") {
-    const { publisher, creator } = await initialize(true, gasPrice);
+    const { publisher, ownership } = await initialize(true, gasPrice);
     configs[networkName].publisherAddress = publisher.address;
-    configs[networkName].creatorAddress = creator.address;
+    configs[networkName].ownershipAddress = ownership.address;
     fs.writeFileSync(path.join(__dirname, "../network.json"), JSON.stringify(configs));
   } else {
     console.log("network is wrong");

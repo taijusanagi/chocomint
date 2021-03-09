@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./ChocomintCreator.sol";
+import "./ChocomintOwnership.sol";
 import "./ChocomintUtils.sol";
 
 import "hardhat/console.sol";
@@ -46,13 +46,13 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   mapping(uint256 => uint256) public crrs;
   mapping(uint256 => uint256) public royalityRatios;
   uint256 constant BASE_RATIO = 10000;
-  address public chocomintCreator;
+  address public chocomintOwnership;
 
   constructor() ERC1155("") {}
 
-  function initialize(address _chocomintCreator) public {
-    require(chocomintCreator == address(0x0), "contract is already initialized");
-    chocomintCreator = _chocomintCreator;
+  function initialize(address _chocomintOwnership) public {
+    require(chocomintOwnership == address(0x0), "contract is already initialized");
+    chocomintOwnership = _chocomintOwnership;
   }
 
   function publishAndMintPrint(
@@ -93,7 +93,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
         hash.toEthSignedMessageHash().recover(_signature) == _creator,
         "creator signature must be valid"
       );
-      ChocomintCreator(chocomintCreator).mint(_creator, tokenId);
+      ChocomintOwnership(chocomintOwnership).mint(_creator, tokenId);
       ipfsHashes[tokenId] = _ipfsHash;
       supplyLimits[tokenId] = _supplyLimit;
       virtualSupplies[tokenId] = _virtualSupply;
@@ -134,7 +134,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
       priceKeeper[_tokenId][currentTotalSupply] = printPrice;
     }
     if (royality > 0) {
-      ChocomintCreator(chocomintCreator).deposit{ value: royality }(_tokenId);
+      ChocomintOwnership(chocomintOwnership).deposit{ value: royality }(_tokenId);
     }
     if (msg.value.sub(printPrice) > 0) {
       payable(msg.sender).transfer(msg.value.sub(printPrice));

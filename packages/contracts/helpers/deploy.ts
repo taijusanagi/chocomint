@@ -1,24 +1,24 @@
 import { ethers } from "hardhat";
 
 export const publisherName = "ChocomintPublisher";
-export const creatorName = "ChocomintCreator";
+export const ownershipName = "ChocomintOwnership";
 
 export const publisherSymbol = "CMP";
-export const creatorSymbol = "CMC";
+export const ownershipSymbol = "CMO";
 
 export const initialize = async (debug?: boolean, gasPrice?: number) => {
   debug && console.log("initialize start. gas price:", gasPrice);
   const ChocomintPublisher = await ethers.getContractFactory("ChocomintPublisher");
-  const ChocomintCreator = await ethers.getContractFactory("ChocomintCreator");
+  const ChocomintOwnership = await ethers.getContractFactory("ChocomintOwnership");
   const publisher = await ChocomintPublisher.deploy({ gasPrice });
   debug && console.log("publisher deployed to:", publisher.address);
-  const creator = await ChocomintCreator.deploy(creatorName, creatorSymbol, { gasPrice });
-  debug && console.log("creator deployed to:", creator.address);
-  await publisher.initialize(creator.address, {
+  const ownership = await ChocomintOwnership.deploy(ownershipName, ownershipSymbol, { gasPrice });
+  debug && console.log("ownership deployed to:", ownership.address);
+  await publisher.initialize(ownership.address, {
     gasPrice,
   });
   debug && console.log("publisher initialized");
-  await creator.initialize(publisher.address, { gasPrice });
-  debug && console.log("creator initialized");
-  return { publisher, creator };
+  await ownership.initialize(publisher.address, { gasPrice });
+  debug && console.log("ownership initialized");
+  return { publisher, ownership };
 };

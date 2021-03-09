@@ -9,8 +9,8 @@ import Torus from "@toruslabs/torus-embed";
 import { Metadata } from "../types";
 
 import { abi as chocomintPublisherAbi } from "../../../contracts/artifacts/contracts/ChocomintPublisher.sol/ChocomintPublisher.json";
-import { abi as chocomintCreatorAbi } from "../../../contracts/artifacts/contracts/ChocomintCreator.sol/ChocomintCreator.json";
-import { ChocomintPublisher, ChocomintCreator } from "../../../contracts/typechain";
+import { abi as chocomintOwnershipAbi } from "../../../contracts/artifacts/contracts/ChocomintOwnership.sol/ChocomintOwnership.json";
+import { ChocomintPublisher, ChocomintOwnership } from "../../../contracts/typechain";
 
 export { hashChoco } from "../../../contracts/helpers/util";
 
@@ -64,11 +64,11 @@ export const verifyMetadata = async (ipfsHash: string, metadata: Metadata) => {
 
 export const provider = new ethers.providers.JsonRpcProvider(rpc);
 
-export const chocomintCreatorContract = new ethers.Contract(
+export const chocomintOwnershipContract = new ethers.Contract(
   creatorAddress,
-  chocomintCreatorAbi,
+  chocomintOwnershipAbi,
   provider
-) as ChocomintCreator;
+) as ChocomintOwnership;
 
 export const chocomintPublisherContract = new ethers.Contract(
   publisherAddress,
