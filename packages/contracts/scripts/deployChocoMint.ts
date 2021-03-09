@@ -13,12 +13,9 @@ const main = async () => {
   console.log("run deploy script on network:", networkName);
 
   if (networkName == "mainnet" || networkName == "rinkeby" || networkName == "localhost") {
-    const { print, registry, gallery, creator, publisher } = await initialize(true, gasPrice);
-    configs[networkName].printAddress = print.address;
-    configs[networkName].registryAddress = registry.address;
-    configs[networkName].galleryAddress = gallery.address;
-    configs[networkName].creatorAddress = creator.address;
+    const { publisher, creator } = await initialize(true, gasPrice);
     configs[networkName].publisherAddress = publisher.address;
+    configs[networkName].creatorAddress = creator.address;
     fs.writeFileSync(path.join(__dirname, "../network.json"), JSON.stringify(configs));
   } else {
     console.log("network is wrong");

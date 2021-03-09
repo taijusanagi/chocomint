@@ -1,45 +1,66 @@
 import { ethers } from "hardhat";
 
-export const printName = "ChocomintPrint";
-export const registryName = "ChocomintRegistry";
-export const galleryName = "ChocomintGallery";
+export const publisherName = "ChocomintPublisher";
 export const creatorName = "ChocomintCreator";
-export const publisherName = "ChocomintMinter";
-export const printSymbol = "CMP";
-export const registrySymbol = "CMR";
-export const gallerySymbol = "CMG";
+
+export const publisherSymbol = "CMP";
 export const creatorSymbol = "CMC";
-export const publisherSymbol = "CMM";
 
 export const initialize = async (debug?: boolean, gasPrice?: number) => {
   debug && console.log("initialize start. gas price:", gasPrice);
-  const ChocomintPrint = await ethers.getContractFactory("ChocomintPrint");
-  const ChocomintRegistry = await ethers.getContractFactory("ChocomintRegistry");
-  const ChocomintWallet = await ethers.getContractFactory("ChocomintWallet");
-  const print = await ChocomintPrint.deploy({ gasPrice });
-  debug && console.log("print deployed to:", print.address);
-  const registry = await ChocomintRegistry.deploy({ gasPrice });
-  debug && console.log("registry deployed to:", registry.address);
-  const gallery = await ChocomintWallet.deploy(galleryName, gallerySymbol, { gasPrice });
-  debug && console.log("gallery deployed to:", gallery.address);
-  const creator = await ChocomintWallet.deploy(creatorName, creatorSymbol, { gasPrice });
-  debug && console.log("creator deployed to:", creator.address);
-  const publisher = await ChocomintWallet.deploy(publisherName, publisherSymbol, { gasPrice });
+  const ChocomintPublisher = await ethers.getContractFactory("ChocomintPublisher");
+  const ChocomintCreator = await ethers.getContractFactory("ChocomintCreator");
+  const publisher = await ChocomintPublisher.deploy({ gasPrice });
   debug && console.log("publisher deployed to:", publisher.address);
-  await print.initialize(registry.address, gallery.address, creator.address, publisher.address, {
+  const creator = await ChocomintCreator.deploy(creatorName, creatorSymbol, { gasPrice });
+  debug && console.log("gallery deployed to:", creator.address);
+  await publisher.initialize(creator.address, {
     gasPrice,
   });
-  debug && console.log("print initialized");
-  await registry.initialize(creator.address, publisher.address, { gasPrice });
-  debug && console.log("registry initialized");
-  await gallery.initialize(registry.address, print.address, { gasPrice });
-  debug && console.log("gallery initialized");
-  await creator.initialize(registry.address, registry.address, { gasPrice });
-  debug && console.log("creator initialized");
-  await publisher.initialize(registry.address, registry.address, { gasPrice });
   debug && console.log("publisher initialized");
-
-  return { print, registry, gallery, creator, publisher };
+  await creator.initialize(publisher.address, { gasPrice });
+  return { publisher, creator };
 };
 
 export const nullAddress = "0x0000000000000000000000000000000000000000";
+export const hardhatChainId = "31337";
+export const dummyMetadataIpfsCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz";
+export const dummyMetadataIpfsHash =
+  "0x7d5a99f603f231d53a4f39d1521f98d2e8bb279cf29bebfd0687dc98458e7f89";
+
+export const hashPublishMessage = (
+  chainId,
+  publisherAddress,
+  signerAddress,
+  ipfshash,
+  supplyLimit,
+  virtualSupply,
+  virtualReserve,
+  crr,
+  royalityRatio
+) => {
+  return ethers.utils.solidityKeccak256(
+    [
+      "uint256",
+      "address",
+      "address",
+      "bytes32",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+    ],
+    [
+      chainId,
+      publisherAddress,
+      signerAddress,
+      ipfshash,
+      supplyLimit,
+      virtualSupply,
+      virtualReserve,
+      crr,
+      royalityRatio,
+    ]
+  );
+};
