@@ -72,13 +72,28 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     bytes memory _signature
   ) public payable {
     require(_ipfsHash != "", "ipfs hash should not be empty");
-    require(_creator != address(0x0), "creator should not be empty");
-    require(_supplyLimit > 0, "supplyLimit must be more than 0");
-    require(_virtualSupply > 0, "virtual supply must be more than 0");
-    require(_virtualReserve > 0, "virtual reserve must be more than 0");
-    require(_crr > 0, "weight must be more than 0");
-    require(_crr <= BASE_RATIO, "weight must be less than base ratio");
-    require(_royalityRatio <= BASE_RATIO, "royality ratio must be less than base ratio");
+    require(_creator != address(0x0), "creator should not be empty"); // this is checked by ECDSA as well, but intentionally tested here
+    require(_supplyLimit > 0, "supplyLimit must be more than 0"); // if supply limit is 0, it can not be printed
+    require(_virtualSupply > 0, "virtual supply must be more than 0"); // if virtual supply is 0, it makes price calculation fail
+
+    // this check is just for data simplicity
+    if (_crr == 0 || _crr.add(_royalityRatio) == BASE_RATIO) {
+      require(_virtualSupply == 1, "virtual supply must be 1"); // if crr is 0 or crr and royality sum is 100%, virtual supply makes no difference
+    }
+
+    // if reserve is 0, it is 0 price sale, it seems like airdrop, so this case is intentinally allowed
+    // require(_virtualReserve > 0, "virtual reserve must be more than 0");
+
+    // if reserve is crr, get print price returns current reserve
+    // this can be used for fixed price sale: crr 0% & royality 100%
+    // this can be used for double price sale: crr 0% & royality 0%
+    // require(_crr > 0, "weight must be more than 0");
+
+    // if crr is more than base ratio it is ^100% crr and it is valid
+    // require(_crr <= BASE_RATIO, "weight must be less than base ratio");
+
+    require(_royalityRatio <= BASE_RATIO, "royality ratio must be less than base ratio"); // if royality ratio is more than 100% it will cause minus reserve
+
     bytes32 hash =
       keccak256(
         abi.encodePacked(
@@ -181,7 +196,12 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 _supply,
     uint256 _crr
   ) public pure returns (uint256) {
-    return _reserve.div(_supply.mul(_crr)).mul(BASE_RATIO);
+    // if crr is 0, it just returns reserve
+    if (_crr == 0) {
+      return _reserve;
+    } else {
+      return _reserve.div(_supply.mul(_crr)).mul(BASE_RATIO);
+    }
   }
 
   function calculateBurnPrice(uint256 _lastPrintPrice, uint256 _royalityRatio)
