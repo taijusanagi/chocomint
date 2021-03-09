@@ -62,7 +62,6 @@ describe("Chocomint", function () {
 
   it("deploy: deploy is ok", async function () {
     const price = await publisherContract.calculatePrintPrice(10000, 100, 0);
-    console.log(price.toString());
   });
 
   it("initialization fails after initialized", async function () {
@@ -172,6 +171,7 @@ describe("Chocomint", function () {
     expect(await publisherContract.getPrintPrice(tokenId)).to.equal(
       expectedDefaultPriceForSecondPrint
     );
+
     // this is using publish and mint for same time transaction
     await publisherContract
       .connect(ownerSigner)
@@ -198,7 +198,6 @@ describe("Chocomint", function () {
     await publisherContract.connect(ownerSigner).mintPrint(tokenId, {
       value: expectedDefaultPriceForThirdPrint,
     });
-
     expect(await publisherContract.getBurnPrice(tokenId)).to.equal(
       ethers.BigNumber.from(expectedDefaultPriceForThirdPrint).sub(
         await publisherContract.getRoyality(expectedDefaultPriceForThirdPrint, tokenId)

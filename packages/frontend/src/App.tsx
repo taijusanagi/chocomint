@@ -13,7 +13,7 @@ const App: React.FC = () => {
     <RecoilRoot>
       <Router>
         <Switch>
-          <Route path="/box" exact>
+          <Route path="/box/:address" exact>
             <Box />
           </Route>
           <Route path="/create" exact>

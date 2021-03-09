@@ -21,10 +21,8 @@ import {
 
 import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
-import { Container } from "../components/atoms/Container";
 import { Hero } from "../components/molecules/Hero";
 import { Modal, useModal } from "../components/molecules/Modal";
-import { Footer } from "../components/organisms/Footer";
 import { Header } from "../components/organisms/Header";
 
 import { Choco } from "../types";
@@ -147,7 +145,7 @@ export const NFT: React.FC = () => {
       {choco && (
         <>
           <Hero src={choco.metadata.image} onClick={() => openDescription(choco.metadata.name)} />
-          <Container>
+          <div className="flex justify-center flex-grow container mx-auto">
             <div className="w-80">
               <div className="mt-6 space-y-6">
                 <p className="text-center text-sm text-gray-600 font-medium">
@@ -177,12 +175,10 @@ export const NFT: React.FC = () => {
                 )}
               </div>
             </div>
-          </Container>
+          </div>
         </>
       )}
       {modal && <Modal {...modal} onClickDismiss={closeModal} />}
-
-      <Footer />
     </Body>
   );
 };

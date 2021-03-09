@@ -31,10 +31,18 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 indexed tokenId,
     address indexed operator,
     uint256 pricePaid,
+    uint256 nextPrintPrice,
+    uint256 nextBurnPrice,
     uint256 royality
   );
 
-  event PrintBurned(uint256 indexed tokenId, address indexed operator, uint256 priceReceived);
+  event PrintBurned(
+    uint256 indexed tokenId,
+    address indexed operator,
+    uint256 priceReceived,
+    uint256 nextPrintPrice,
+    uint256 nextBurnPrice
+  );
 
   mapping(uint256 => bytes32) public ipfsHashes;
   mapping(uint256 => mapping(uint256 => uint256)) public priceKeeper;
@@ -160,7 +168,9 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     if (msg.value.sub(printPrice) > 0) {
       payable(msg.sender).transfer(msg.value.sub(printPrice));
     }
-    emit PrintMinted(_tokenId, msg.sender, printPrice, royality);
+    uint256 nextPrintPrice = getPrintPrice(_tokenId);
+    uint256 nextBurnPrice = getBurnPrice(_tokenId);
+    emit PrintMinted(_tokenId, msg.sender, printPrice, royality, nextPrintPrice, nextBurnPrice);
   }
 
   function burnPrint(uint256 _tokenId, uint256 _minimumSupply) public {
@@ -172,7 +182,9 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     totalReserves[_tokenId] = totalReserves[_tokenId].sub(burnPrice);
     _burn(msg.sender, _tokenId, 1);
     payable(msg.sender).transfer(burnPrice);
-    emit PrintBurned(_tokenId, msg.sender, burnPrice);
+    uint256 nextPrintPrice = getPrintPrice(_tokenId);
+    uint256 nextBurnPrice = getBurnPrice(_tokenId);
+    emit PrintBurned(_tokenId, msg.sender, burnPrice, nextPrintPrice, nextBurnPrice);
   }
 
   function getPrintPrice(uint256 _tokenId) public view returns (uint256 price) {
@@ -182,8 +194,12 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   }
 
   function getBurnPrice(uint256 _tokenId) public view returns (uint256) {
-    uint256 lastPrintPrice = priceKeeper[_tokenId][totalSupplies[_tokenId].sub(1)];
-    return calculateBurnPrice(lastPrintPrice, royalityRatios[_tokenId]);
+    if (totalSupplies[_tokenId] == 0) {
+      return 0;
+    } else {
+      uint256 lastPrintPrice = priceKeeper[_tokenId][totalSupplies[_tokenId].sub(1)];
+      return calculateBurnPrice(lastPrintPrice, royalityRatios[_tokenId]);
+    }
   }
 
   function getRoyality(uint256 _price, uint256 _tokenId) public view returns (uint256) {
@@ -209,7 +225,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     pure
     returns (uint256)
   {
-    return _lastPrintPrice.sub(_lastPrintPrice.mul(_royalityRatio).div(BASE_RATIO));
+    return _lastPrintPrice.sub(calculateRoyality(_lastPrintPrice, _royalityRatio));
   }
 
   function calculateRoyality(uint256 _price, uint256 _royalityRatio) public pure returns (uint256) {
