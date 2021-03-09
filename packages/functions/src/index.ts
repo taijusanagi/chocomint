@@ -3,7 +3,7 @@ import * as admin from "firebase-admin";
 admin.initializeApp();
 const firestore = admin.firestore();
 
-export const registerChoco = functions.https.onCall(async (data, context) => {
+export const createChoco = functions.https.onCall(async (data, context) => {
   const { chocoId, choco } = data;
 
   // TODO: organize config value

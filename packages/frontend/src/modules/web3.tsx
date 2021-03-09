@@ -12,12 +12,21 @@ import { abi as chocomintPublisherAbi } from "../../../contracts/artifacts/contr
 import { abi as chocomintCreatorAbi } from "../../../contracts/artifacts/contracts/ChocomintCreator.sol/ChocomintCreator.json";
 import { ChocomintPublisher, ChocomintCreator } from "../../../contracts/typechain";
 
-export { hashChoco } from "../../../contracts/helper";
+export { hashChoco } from "../../../contracts/helpers/util";
+
+export {
+  defaultSupplyLimit,
+  defaultVirtualSupply,
+  defaultVirtualReserve,
+  defaultCrr,
+  defaultRoyalityRatio,
+} from "../../../contracts/helpers/constant";
 
 const bs58 = require("bs58");
 const createClient = require("ipfs-http-client");
 const ipfsOnlyHash = require("ipfs-only-hash");
 const canonicalize = require("canonicalize");
+const Decimal = require("decimal.js");
 
 export const networkName = process.env.REACT_APP_NETWORK_ID
   ? process.env.REACT_APP_NETWORK_ID
@@ -111,3 +120,15 @@ export const selectedAddressState = atom({
   key: "selectedAddress",
   default: "",
 });
+
+const maxDecimalDigits = 5;
+
+export const roundAndFormatPrintPrice = (price: ethers.BigNumber) => {
+  const num = new Decimal(ethers.utils.formatEther(price));
+  return num.toFixed(maxDecimalDigits, Decimal.ROUND_UP);
+};
+
+export const roundAndFormatBurnPrice = (price: ethers.BigNumber) => {
+  const num = new Decimal(ethers.utils.formatEther(price));
+  return num.toFixed(maxDecimalDigits, Decimal.ROUND_DOWN);
+};

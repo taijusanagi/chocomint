@@ -2,22 +2,25 @@ import { ethers, waffle } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
 
+import { initialize, creatorName, creatorSymbol } from "../helpers/deploy";
+
+import { hashChoco } from "../helpers/util";
+
 import {
-  initialize,
-  creatorName,
-  creatorSymbol,
-  hashChoco,
   hardhatChainId,
   dummyMetadataIpfsHash,
+  expectedDefaultPriceForFirstPrint,
+  expectedDefaultPriceForSecondPrint,
+  expectedDefaultPriceForThirdPrint,
+} from "../helpers/mock";
+
+import {
   defaultSupplyLimit,
   defaultVirtualSupply,
   defaultVirtualReserve,
   defaultRoyalityRatio,
   defaultCrr,
-  expectedDefaultPriceForFirstPrint,
-  expectedDefaultPriceForSecondPrint,
-  expectedDefaultPriceForThirdPrint,
-} from "../helper";
+} from "../helpers/constant";
 
 const provider = waffle.provider;
 

@@ -15,6 +15,8 @@ import {
   selectedAddressState,
   initializeWeb3Modal,
   explore,
+  roundAndFormatPrintPrice,
+  roundAndFormatBurnPrice,
 } from "../modules/web3";
 
 import { Body } from "../components/atoms/Body";
@@ -58,23 +60,26 @@ export const NFT: React.FC = () => {
         const ipfsUrl = ipfsHashToIpfsUrl(ipfsHash);
         setIpfsUrl(ipfsUrl);
         setChoco(choco);
+        chocomintPublisherContract.totalSupplies(hash).then((printCountBN) => {
+          const printCount = parseInt(printCountBN.toString());
+          setPrintCount(printCount);
+          if (printCount == 0) {
+            console.log(choco);
+            chocomintPublisherContract
+              .calculatePrintPrice(choco?.virtualReserve, choco?.virtualSupply, choco.crr)
+              .then((printPriceBN) => {
+                setPrintPrice(printPriceBN);
+              });
+          } else {
+            chocomintPublisherContract.getPrintPrice(hash).then((printPriceBN) => {
+              setPrintPrice(printPriceBN);
+            });
+            chocomintPublisherContract.getPrintPrice(hash).then((burnPriceBN) => {
+              setBurnPrice(burnPriceBN);
+            });
+          }
+        });
       });
-    chocomintPublisherContract.totalSupplies(hash).then((printCountBN) => {
-      const printCount = parseInt(printCountBN.toString());
-      setPrintCount(printCount);
-      if (printCount == 0) {
-        return;
-      }
-      chocomintPublisherContract.getPrintPrice(hash).then((printPriceBN) => {
-        setPrintPrice(printPriceBN);
-      });
-      if (printCount == 0) {
-        return;
-      }
-      chocomintPublisherContract.getPrintPrice(hash).then((burnPriceBN) => {
-        setBurnPrice(burnPriceBN);
-      });
-    });
   }, []);
 
   const openDescription = (desc: string) => {
@@ -87,7 +92,7 @@ export const NFT: React.FC = () => {
     setSelectedAddress(provider.selectedAddress);
   };
 
-  const publish = async () => {
+  const print = async () => {
     if (!choco) {
       return;
     }
@@ -100,27 +105,17 @@ export const NFT: React.FC = () => {
       }
       const { hash: tx } = await chocomintPublisherContract
         .connect(signer)
-        .publish(choco.ipfsHash, choco.creator, choco.signature);
-      openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
-    } catch (err) {
-      openModal("🙇‍♂️", err.message);
-    }
-  };
-
-  const print = async () => {
-    if (!choco || !printPrice) {
-      return;
-    }
-    try {
-      const signer = await getEthersSigner();
-      const signerNetwork = await signer.provider.getNetwork();
-      if (signerNetwork.chainId != chainId) {
-        openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
-        return;
-      }
-      const { hash: tx } = await chocomintPublisherContract
-        .connect(signer)
-        .mintPrint(hash, { value: printPrice });
+        .publishAndMintPrint(
+          choco.ipfsHash,
+          choco.creatorAddress,
+          choco.supplyLimit,
+          choco.virtualSupply,
+          choco.virtualReserve,
+          choco.crr,
+          choco.royalityRatio,
+          choco.signature,
+          { value: printPrice }
+        );
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
     } catch (err) {
       openModal("🙇‍♂️", err.message);
@@ -172,14 +167,14 @@ export const NFT: React.FC = () => {
                     {printPrice && (
                       <Button onClick={print} type="primary">
                         Mint Print
-                        <span className="ml-1">Ξ {ethers.utils.formatEther(printPrice)} </span>
+                        <span className="ml-1">Ξ {roundAndFormatPrintPrice(printPrice)} </span>
                         <span className="ml-1">💎</span>
                       </Button>
                     )}
                     {burnPrice && (
                       <Button onClick={burn} type="tertiary">
                         Burn Print
-                        <span className="ml-1">Ξ {ethers.utils.formatEther(burnPrice)} </span>
+                        <span className="ml-1">Ξ {roundAndFormatBurnPrice(burnPrice)} </span>
                         <span className="ml-1">🔥</span>
                       </Button>
                     )}

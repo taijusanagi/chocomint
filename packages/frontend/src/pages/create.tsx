@@ -1,7 +1,6 @@
 import React from "react";
 import { useRecoilState } from "recoil";
 
-import { ethers } from "ethers";
 import {
   ipfs,
   chainId,
@@ -12,7 +11,15 @@ import {
   initializeWeb3Modal,
   cidToIpfsHash,
   hashChoco,
+  defaultSupplyLimit,
+  defaultVirtualSupply,
+  defaultVirtualReserve,
+  defaultCrr,
+  defaultRoyalityRatio,
 } from "../modules/web3";
+
+import { Choco } from "../types";
+
 import { functions } from "../modules/firebase";
 
 import { Body } from "../components/atoms/Body";
@@ -119,7 +126,7 @@ export const Create: React.FC = () => {
     setSelectedAddress(provider.selectedAddress);
   };
 
-  const registerNft = async () => {
+  const createNft = async () => {
     if (!isFormReady() || !selectedAddress) {
       return;
     }
@@ -133,26 +140,37 @@ export const Create: React.FC = () => {
       const metadataString = canonicalize(metadata);
       const { cid } = await ipfs.add(metadataString);
       const ipfsHash = cidToIpfsHash(cid);
-      const creator = selectedAddress;
-      const messageHash = hashChoco(chainId);
+      const creatorAddress = selectedAddress;
       const web3 = await getWeb3();
-      const signature = await web3.eth.personal.sign(messageHash, creator, "");
-      const choco = {
+      const chocoId = hashChoco(
         chainId,
         publisherAddress,
+        creatorAddress,
         ipfsHash,
-        creator,
+        defaultSupplyLimit,
+        defaultVirtualSupply,
+        defaultVirtualReserve,
+        defaultCrr,
+        defaultRoyalityRatio
+      );
+      const signature = await web3.eth.personal.sign(chocoId, creatorAddress, "");
+      const choco: Choco = {
+        chainId,
+        publisherAddress,
+        creatorAddress,
+        ipfsHash,
+        supplyLimit: defaultSupplyLimit,
+        virtualSupply: defaultVirtualSupply,
+        virtualReserve: defaultVirtualReserve,
+        crr: defaultCrr,
+        royalityRatio: defaultRoyalityRatio,
         signature,
         metadata,
       };
-      const chocoId = ethers.utils.solidityKeccak256(
-        ["uint256", "address", "bytes32", "address"],
-        [chainId, publisherAddress, ipfsHash, creator]
-      );
-      await functions.httpsCallable("registerChoco")({ chocoId, choco });
+      await functions.httpsCallable("createChoco")({ chocoId, choco });
       clearForm();
       setIsWaitingTransactionConfirmation(false);
-      openModal("🎉", "NFT is registered in Chocomint!", "Check", `/nft/${chocoId}`, false);
+      openModal("🎉", "NFT is createed in Chocomint!", "Check", `/nft/${chocoId}`, false);
     } catch (err) {
       openModal("🙇‍♂️", err.message);
     }
@@ -236,8 +254,8 @@ export const Create: React.FC = () => {
                 Connect <span className="ml-1">🔐</span>
               </Button>
             ) : (
-              <Button onClick={registerNft} disabled={!isFormReady()} type="primary">
-                Register <span className="ml-1">💎</span>
+              <Button onClick={createNft} disabled={!isFormReady()} type="primary">
+                Create <span className="ml-1">💎</span>
               </Button>
             )}
           </div>

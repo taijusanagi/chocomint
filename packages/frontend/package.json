@@ -36,6 +36,7 @@
     "axios": "^0.21.1",
     "bs58": "^4.0.1",
     "canonicalize": "^1.0.5",
+    "decimal.js": "^10.2.1",
     "ethers": "^5.0.31",
     "firebase": "^8.2.9",
     "ipfs-http-client": "^49.0.2",

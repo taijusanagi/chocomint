@@ -6,9 +6,14 @@ export interface Metadata {
 
 export interface Choco {
   chainId: number;
-  registry: string;
+  publisherAddress: string;
+  creatorAddress: string;
   ipfsHash: string;
-  creator: string;
+  supplyLimit: string;
+  virtualSupply: string;
+  virtualReserve: string;
+  crr: string;
+  royalityRatio: string;
   signature: string;
   metadata: Metadata;
 }

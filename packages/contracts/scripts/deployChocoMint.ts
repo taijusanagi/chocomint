@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import hre, { ethers } from "hardhat";
-import { initialize } from "../helper";
+import { initialize } from "../helpers/deploy";
 import configsJson from "../network.json";
 const configs = configsJson as any;
 
