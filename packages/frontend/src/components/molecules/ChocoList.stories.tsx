@@ -1,4 +1,6 @@
 import React from "react";
+// import { ethers } from "ethers";
+
 import { ChocoList, ChocoListProps } from "./ChocoList";
 
 import { Choco } from "../../types";
@@ -60,10 +62,13 @@ const choco3: Choco = {
   virtualSupply: "64",
 };
 
+const price = "10000000000000000";
+
 const args: ChocoListProps = {
   // put 3 kind of image
   // put 7 same data for layout test
   chocos: [choco1, choco2, choco3, choco1, choco1, choco1, choco1],
+  prices: [price, price, price, price, price, price, price],
 };
 
 export default {

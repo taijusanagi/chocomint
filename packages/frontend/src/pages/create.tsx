@@ -184,7 +184,7 @@ export const Create: React.FC = () => {
         <div className="w-full sm:max-w-md p-4">
           <img
             onClick={() => openModal("🤫", "Tutorial?", "Check", "/about", false)}
-            className="cursor-pointer mx-auto h-20 rounded-xl w-auto border-b-2 border-green-600 shadow-md"
+            className="cursor-pointer mx-auto h-20 w-auto solidity"
             src="/logo.png"
             alt="logo"
           />
@@ -233,7 +233,7 @@ export const Create: React.FC = () => {
                   </div>
                 ) : (
                   <img
-                    className={`object-cover mx-auto h-20 w-20 rounded-xl border-b-2 border-gray-400 shadow-md ${
+                    className={`object-cover mx-auto h-20 w-20 solidity ${
                       isWaitingTransactionConfirmation && "animate-spin opacity-50"
                     }`}
                     src={imagePreview}

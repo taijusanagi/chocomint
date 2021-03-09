@@ -121,14 +121,18 @@ export const selectedAddressState = atom({
   default: "",
 });
 
-const maxDecimalDigits = 5;
-
-export const roundAndFormatPrintPrice = (price: ethers.BigNumber) => {
+export const roundAndFormatPrintPrice = (
+  price: string | ethers.BigNumber,
+  maxDecimalDigits: number
+) => {
   const num = new Decimal(ethers.utils.formatEther(price));
   return num.toFixed(maxDecimalDigits, Decimal.ROUND_UP);
 };
 
-export const roundAndFormatBurnPrice = (price: ethers.BigNumber) => {
+export const roundAndFormatBurnPrice = (
+  price: string | ethers.BigNumber,
+  maxDecimalDigits: number
+) => {
   const num = new Decimal(ethers.utils.formatEther(price));
   return num.toFixed(maxDecimalDigits, Decimal.ROUND_DOWN);
 };

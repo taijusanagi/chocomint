@@ -30,7 +30,7 @@ export const Modal: React.FC<ModalProps> = ({
           onClick={onClickDismiss}
           className="absolute inset-0 overflow-hidden bg-black opacity-40"
         ></div>
-        <div className="bg-white border-b-4 border-gray-200 shadow-md rounded-xl p-6 px-4 transform max-w-lg w-full">
+        <div className="bg-white solidity p-6 px-4 transform max-w-lg w-full">
           <p className="focus:outline-none absolute left-4 top-2 text-gray-400">{icon}</p>
           <button
             onClick={onClickDismiss}

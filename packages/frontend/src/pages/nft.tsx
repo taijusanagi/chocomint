@@ -162,14 +162,14 @@ export const NFT: React.FC = () => {
                     {printPrice && (
                       <Button onClick={print} type="primary">
                         Mint Print
-                        <span className="ml-1">Ξ {roundAndFormatPrintPrice(printPrice)} </span>
+                        <span className="ml-1">Ξ {roundAndFormatPrintPrice(printPrice, 5)} </span>
                         <span className="ml-1">💎</span>
                       </Button>
                     )}
                     {burnPrice && (
                       <Button onClick={burn} type="tertiary">
                         Burn Print
-                        <span className="ml-1">Ξ {roundAndFormatBurnPrice(burnPrice)} </span>
+                        <span className="ml-1">Ξ {roundAndFormatBurnPrice(burnPrice, 5)} </span>
                         <span className="ml-1">🔥</span>
                       </Button>
                     )}
