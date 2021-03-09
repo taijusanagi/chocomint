@@ -8,8 +8,7 @@ import { firestore, collectionName } from "../modules/firebase";
 import {
   ipfsHashToIpfsUrl,
   verifyMetadata,
-  chocomintRegistryContract,
-  chocomintPrintContract,
+  chocomintPublisherContract,
   getEthersSigner,
   chainId,
   networkName,
@@ -33,10 +32,6 @@ export const NFT: React.FC = () => {
   const [ipfsUrl, setIpfsUrl] = React.useState("");
   const { modal, openModal, closeModal } = useModal();
 
-  const [published, setPublished] = React.useState(false);
-  const [genesisRoyalityPool, setRoyalityPool] = React.useState("");
-  const [creatorRoyalityPool, setCreatorRoyalityPool] = React.useState("");
-  const [publisherRoyalityPool, setPublisherRoyalityPool] = React.useState("");
   const [printCount, setPrintCount] = React.useState(0);
   const [printPrice, setPrintPrice] = React.useState<ethers.BigNumber | undefined>(undefined);
   const [burnPrice, setBurnPrice] = React.useState<ethers.BigNumber | undefined>(undefined);
@@ -64,22 +59,20 @@ export const NFT: React.FC = () => {
         setIpfsUrl(ipfsUrl);
         setChoco(choco);
       });
-    chocomintRegistryContract.ipfsHashes(hash).then((ipfsHash: string) => {
-      const published =
-        ipfsHash != "0x0000000000000000000000000000000000000000000000000000000000000000";
-      setPublished(published);
-      if (!published) {
+    chocomintPublisherContract.totalSupplies(hash).then((printCountBN) => {
+      const printCount = parseInt(printCountBN.toString());
+      setPrintCount(printCount);
+      if (printCount == 0) {
         return;
       }
-      chocomintPrintContract.totalSupply(hash).then((printCountBN) => {
-        const printCount = parseInt(printCountBN.toString());
-        setPrintCount(printCount);
-        chocomintPrintContract.getPrintPrice(printCount + 1).then((printPriceBN) => {
-          setPrintPrice(printPriceBN);
-        });
-        chocomintPrintContract.getPrintPrice(printCount).then((burnPriceBN) => {
-          setBurnPrice(burnPriceBN);
-        });
+      chocomintPublisherContract.getPrintPrice(hash).then((printPriceBN) => {
+        setPrintPrice(printPriceBN);
+      });
+      if (printCount == 0) {
+        return;
+      }
+      chocomintPublisherContract.getPrintPrice(hash).then((burnPriceBN) => {
+        setBurnPrice(burnPriceBN);
       });
     });
   }, []);
@@ -105,7 +98,7 @@ export const NFT: React.FC = () => {
         openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
         return;
       }
-      const { hash: tx } = await chocomintRegistryContract
+      const { hash: tx } = await chocomintPublisherContract
         .connect(signer)
         .publish(choco.ipfsHash, choco.creator, choco.signature);
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
@@ -125,7 +118,7 @@ export const NFT: React.FC = () => {
         openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
         return;
       }
-      const { hash: tx } = await chocomintPrintContract
+      const { hash: tx } = await chocomintPublisherContract
         .connect(signer)
         .mintPrint(hash, { value: printPrice });
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
@@ -145,7 +138,7 @@ export const NFT: React.FC = () => {
         openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
         return;
       }
-      const { hash: tx } = await chocomintPrintContract.connect(signer).burnPrint(hash, 0);
+      const { hash: tx } = await chocomintPublisherContract.connect(signer).burnPrint(hash, 0);
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
     } catch (err) {
       openModal("🙇‍♂️", err.message);
@@ -176,23 +169,19 @@ export const NFT: React.FC = () => {
                   </Button>
                 ) : (
                   <>
-                    {!printPrice || !burnPrice ? (
-                      <Button onClick={publish} type="primary">
-                        Mint Publisher NFT <span className="ml-1">💎</span>
+                    {printPrice && (
+                      <Button onClick={print} type="primary">
+                        Mint Print
+                        <span className="ml-1">Ξ {ethers.utils.formatEther(printPrice)} </span>
+                        <span className="ml-1">💎</span>
                       </Button>
-                    ) : (
-                      <>
-                        <Button onClick={print} type="primary">
-                          Mint Print
-                          <span className="ml-1">Ξ {ethers.utils.formatEther(printPrice)} </span>
-                          <span className="ml-1">💎</span>
-                        </Button>
-                        <Button onClick={burn} type="tertiary">
-                          Burn Print
-                          <span className="ml-1">Ξ {ethers.utils.formatEther(burnPrice)} </span>
-                          <span className="ml-1">🔥</span>
-                        </Button>
-                      </>
+                    )}
+                    {burnPrice && (
+                      <Button onClick={burn} type="tertiary">
+                        Burn Print
+                        <span className="ml-1">Ξ {ethers.utils.formatEther(burnPrice)} </span>
+                        <span className="ml-1">🔥</span>
+                      </Button>
                     )}
                   </>
                 )}

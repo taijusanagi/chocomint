@@ -8,10 +8,11 @@ import Torus from "@toruslabs/torus-embed";
 
 import { Metadata } from "../types";
 
-import { abi as chocomintRegistryAbi } from "../../../contracts/artifacts/contracts/ChocomintRegistry.sol/ChocomintRegistry.json";
-import { abi as chocomintPrintAbi } from "../../../contracts/artifacts/contracts/ChocomintPrint.sol/ChocomintPrint.json";
-import { abi as chocomintWalletAbi } from "../../../contracts/artifacts/contracts/ChocomintWallet.sol/ChocomintWallet.json";
-import { ChocomintRegistry, ChocomintPrint, ChocomintWallet } from "../../../contracts/typechain";
+import { abi as chocomintPublisherAbi } from "../../../contracts/artifacts/contracts/ChocomintPublisher.sol/ChocomintPublisher.json";
+import { abi as chocomintCreatorAbi } from "../../../contracts/artifacts/contracts/ChocomintCreator.sol/ChocomintCreator.json";
+import { ChocomintPublisher, ChocomintCreator } from "../../../contracts/typechain";
+
+export { hashChoco } from "../../../contracts/helper";
 
 const bs58 = require("bs58");
 const createClient = require("ipfs-http-client");
@@ -23,16 +24,7 @@ export const networkName = process.env.REACT_APP_NETWORK_ID
   : "localhost";
 
 const network = require("../../../contracts/network.json");
-export const {
-  rpc,
-  chainId,
-  explore,
-  registryAddress,
-  printAddress,
-  galleryAddress,
-  creatorAddress,
-  publisherAddress,
-} = network[networkName];
+export const { rpc, chainId, explore, creatorAddress, publisherAddress } = network[networkName];
 
 export const nullAddress = "0x0000000000000000000000000000000000000000";
 
@@ -63,31 +55,17 @@ export const verifyMetadata = async (ipfsHash: string, metadata: Metadata) => {
 
 export const provider = new ethers.providers.JsonRpcProvider(rpc);
 
-export const chocomintRegistryContract = new ethers.Contract(
-  registryAddress,
-  chocomintRegistryAbi,
-  provider
-) as ChocomintRegistry;
-export const chocomintPrintContract = new ethers.Contract(
-  printAddress,
-  chocomintPrintAbi,
-  provider
-) as ChocomintPrint;
-export const chocomintGalleryContract = new ethers.Contract(
-  galleryAddress,
-  chocomintWalletAbi,
-  provider
-) as ChocomintWallet;
 export const chocomintCreatorContract = new ethers.Contract(
   creatorAddress,
-  chocomintWalletAbi,
+  chocomintCreatorAbi,
   provider
-) as ChocomintWallet;
+) as ChocomintCreator;
+
 export const chocomintPublisherContract = new ethers.Contract(
   publisherAddress,
-  chocomintWalletAbi,
+  chocomintPublisherAbi,
   provider
-) as ChocomintWallet;
+) as ChocomintPublisher;
 
 export const providerOptions = {
   walletconnect: {

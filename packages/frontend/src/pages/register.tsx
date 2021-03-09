@@ -6,11 +6,12 @@ import {
   ipfs,
   chainId,
   ipfsHttpsBaseUrl,
-  chocomintRegistryContract,
+  publisherAddress,
   getWeb3,
   selectedAddressState,
   initializeWeb3Modal,
   cidToIpfsHash,
+  hashChoco,
 } from "../modules/web3";
 import { functions } from "../modules/firebase";
 
@@ -132,17 +133,13 @@ export const Create: React.FC = () => {
       const metadataString = canonicalize(metadata);
       const { cid } = await ipfs.add(metadataString);
       const ipfsHash = cidToIpfsHash(cid);
-      const registry = chocomintRegistryContract.address;
       const creator = selectedAddress;
-      const messageHash = ethers.utils.solidityKeccak256(
-        ["uint256", "address", "bytes32", "address"],
-        [chainId, registry, ipfsHash, selectedAddress]
-      );
+      const messageHash = hashChoco(chainId);
       const web3 = await getWeb3();
       const signature = await web3.eth.personal.sign(messageHash, creator, "");
       const choco = {
         chainId,
-        registry,
+        publisherAddress,
         ipfsHash,
         creator,
         signature,
@@ -150,7 +147,7 @@ export const Create: React.FC = () => {
       };
       const chocoId = ethers.utils.solidityKeccak256(
         ["uint256", "address", "bytes32", "address"],
-        [chainId, registry, ipfsHash, creator]
+        [chainId, publisherAddress, ipfsHash, creator]
       );
       await functions.httpsCallable("registerChoco")({ chocoId, choco });
       clearForm();

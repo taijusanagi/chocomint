@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { firestore, collectionName } from "../modules/firebase";
 import { ethers } from "ethers";
-import { chainId, chocomintRegistryContract, getEthersSigner } from "../modules/web3";
+import { chainId, chocomintPublisherContract, getEthersSigner } from "../modules/web3";
 
 import { Modal } from "../components/molecules/Modal";
 import { Header } from "../components/organisms/Header";
@@ -36,7 +36,7 @@ export const Box: React.FC = () => {
         setPairmints(pairmints);
       });
 
-    // const filter = chocomintRegistryContract.filters.Mint(null, address);
+    // const filter = chocomintPublisherContract.filters.Mint(null, address);
     // contract.queryFilter(filter).then((events) => {
     //   const args = events.map((event) => event.args);
     //   setEvents(args as any);

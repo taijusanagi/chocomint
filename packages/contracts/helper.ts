@@ -29,7 +29,18 @@ export const dummyMetadataIpfsCid = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r58
 export const dummyMetadataIpfsHash =
   "0x7d5a99f603f231d53a4f39d1521f98d2e8bb279cf29bebfd0687dc98458e7f89";
 
-export const hashPublishMessage = (
+export const defaultSupplyLimit = 256;
+export const defaultVirtualSupply = 100;
+export const defaultVirtualReserve = ethers.utils.parseEther("0.1");
+export const defaultRoyalityRatio = 1000;
+export const defaultCrr = 1000;
+
+export const expectedDefaultPriceForFirstPrint = "10000000000000000";
+export const expectedDefaultPriceForSecondPrint = "10792079207920000";
+export const expectedDefaultPriceForThirdPrint = "11638516792850000";
+export const expectedDefaultPriceForForthPrint = "12542479262200000";
+
+export const hashChoco = (
   chainId,
   publisherAddress,
   signerAddress,
