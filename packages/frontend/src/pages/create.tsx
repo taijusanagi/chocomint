@@ -30,7 +30,6 @@ import { Modal, useModal } from "../components/molecules/Modal";
 import { Footer } from "../components/organisms/Footer";
 import { Header } from "../components/organisms/Header";
 
-const logo = require("../assets/icon.png").default;
 const canonicalize = require("canonicalize");
 
 export const Create: React.FC = () => {
@@ -167,6 +166,7 @@ export const Create: React.FC = () => {
         signature,
         metadata,
       };
+      console.log(choco);
       await functions.httpsCallable("createChoco")({ chocoId, choco });
       clearForm();
       setIsWaitingTransactionConfirmation(false);
@@ -180,11 +180,12 @@ export const Create: React.FC = () => {
     <Body>
       <Header />
       <Container>
+        {/* TODO: align center for smart phone */}
         <div className="w-full sm:max-w-md p-4">
           <img
             onClick={() => openModal("🤫", "Tutorial?", "Check", "/about", false)}
             className="cursor-pointer mx-auto h-20 rounded-xl w-auto border-b-2 border-green-600 shadow-md"
-            src={logo}
+            src="/logo.png"
             alt="logo"
           />
 

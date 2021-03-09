@@ -22,6 +22,7 @@ import {
 import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
 import { Container } from "../components/atoms/Container";
+import { Hero } from "../components/molecules/Hero";
 import { Modal, useModal } from "../components/molecules/Modal";
 import { Footer } from "../components/organisms/Footer";
 import { Header } from "../components/organisms/Header";
@@ -145,15 +146,7 @@ export const NFT: React.FC = () => {
       <Header />
       {choco && (
         <>
-          <div className="w-full">
-            <div className="flex flex-col items-center mx-auto bg-gradient-to-r from-green-100 via-blue-100 to-green-100 p-8">
-              <img
-                onClick={() => openDescription(choco.metadata.name)}
-                className="max-w-96 max-h-80 cursor-pointer transition duration-500 transform hover:-translate-y-1 rounded-xl border-b-2 border-gray-400 shadow-md"
-                src={choco.metadata.image}
-              />
-            </div>
-          </div>
+          <Hero src={choco.metadata.image} onClick={() => openDescription(choco.metadata.name)} />
           <Container>
             <div className="w-80">
               <div className="mt-6 space-y-6">

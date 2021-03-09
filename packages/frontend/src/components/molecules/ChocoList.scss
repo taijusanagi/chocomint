@@ -1,0 +1,20 @@
+// for square grid
+// https://stackoverflow.com/questions/5445491/height-equal-to-dynamic-width-css-fluid-layout
+
+.chocolist-container {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+}
+
+.chocolist-dummy {
+  margin-top: 100%;
+}
+
+.chocolist-element {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
