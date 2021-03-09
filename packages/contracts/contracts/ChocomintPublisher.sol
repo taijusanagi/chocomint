@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./ChocomintCreator.sol";
 import "./ChocomintUtils.sol";
 
+import "hardhat/console.sol";
+
 contract ChocomintPublisher is ERC1155, ChocomintUtils {
   using ECDSA for bytes32;
   using SafeMath for uint256;
@@ -128,6 +130,9 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 reserve = printPrice.sub(royality);
     totalReserves[_tokenId] = totalReserves[_tokenId].add(reserve);
     _mint(msg.sender, _tokenId, 1, "");
+    if (priceKeeper[_tokenId][currentTotalSupply] == 0) {
+      priceKeeper[_tokenId][currentTotalSupply] = printPrice;
+    }
     if (royality > 0) {
       ChocomintCreator(chocomintCreator).deposit{ value: royality }(_tokenId);
     }
@@ -137,11 +142,11 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     emit PrintMinted(_tokenId, msg.sender, printPrice, royality);
   }
 
-  function burnPrint(uint256 _tokenId, uint256 minimumSupply) public {
+  function burnPrint(uint256 _tokenId, uint256 _minimumSupply) public {
     uint256 currentTotalSupply = totalSupplies[_tokenId];
-    require(currentTotalSupply > 0, "total supply must be more 0");
-    require(currentTotalSupply >= minimumSupply, "Min supply not met");
-    uint256 burnPrice = getBurnPrice(currentTotalSupply);
+    require(currentTotalSupply > 0, "total supply must be more than 0");
+    require(currentTotalSupply >= _minimumSupply, "Min supply not met");
+    uint256 burnPrice = getBurnPrice(_tokenId);
     totalSupplies[_tokenId] = currentTotalSupply.sub(1);
     totalReserves[_tokenId] = totalReserves[_tokenId].sub(burnPrice);
     _burn(msg.sender, _tokenId, 1);
@@ -150,8 +155,8 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   }
 
   function getPrintPrice(uint256 _tokenId) public view returns (uint256 price) {
-    uint256 reserve = totalReserves[_tokenId].add(virtualReserves[_tokenId]);
     uint256 supply = totalSupplies[_tokenId].add(virtualSupplies[_tokenId]);
+    uint256 reserve = totalReserves[_tokenId].add(virtualReserves[_tokenId]);
     return calculatePrintPrice(reserve, supply, crrs[_tokenId]);
   }
 
@@ -174,7 +179,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 _supply,
     uint256 _crr
   ) public pure returns (uint256) {
-    return _reserve.div(_supply.mul(_crr).div(BASE_RATIO));
+    return _reserve.div(_supply.mul(_crr)).mul(BASE_RATIO);
   }
 
   function calculateBurnPrice(uint256 _lastPrintPrice, uint256 _royalityRatio)
@@ -182,7 +187,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     pure
     returns (uint256)
   {
-    return _lastPrintPrice.mul(_royalityRatio).div(BASE_RATIO);
+    return _lastPrintPrice.sub(_lastPrintPrice.mul(_royalityRatio).div(BASE_RATIO));
   }
 
   function uri(uint256 _tokenId) public view override returns (string memory) {
