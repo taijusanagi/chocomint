@@ -28,12 +28,12 @@ const ipfsOnlyHash = require("ipfs-only-hash");
 const canonicalize = require("canonicalize");
 const Decimal = require("decimal.js");
 
-export const networkName = process.env.REACT_APP_NETWORK_ID
-  ? process.env.REACT_APP_NETWORK_ID
+export const networkName = process.env.REACT_APP_NETWORK_NAME
+  ? process.env.REACT_APP_NETWORK_NAME
   : "localhost";
 
 const network = require("../../../contracts/network.json");
-export const { rpc, chainId, explore, creatorAddress, publisherAddress } = network[networkName];
+export const { rpc, chainId, explore, ownershipAddress, publisherAddress } = network[networkName];
 
 export const nullAddress = "0x0000000000000000000000000000000000000000";
 
@@ -65,7 +65,7 @@ export const verifyMetadata = async (ipfsHash: string, metadata: Metadata) => {
 export const provider = new ethers.providers.JsonRpcProvider(rpc);
 
 export const chocomintOwnershipContract = new ethers.Contract(
-  creatorAddress,
+  ownershipAddress,
   chocomintOwnershipAbi,
   provider
 ) as ChocomintOwnership;
@@ -89,7 +89,7 @@ export const providerOptions = {
 };
 
 export const web3Modal = new Web3Modal({
-  network: process.env.REACT_APP_NETWORK_ID ? process.env.REACT_APP_NETWORK_ID : "",
+  network: process.env.REACT_APP_NETWORK_NAME ? process.env.REACT_APP_NETWORK_NAME : "",
   providerOptions,
   cacheProvider: true,
 });

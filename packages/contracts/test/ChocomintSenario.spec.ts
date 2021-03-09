@@ -2,7 +2,13 @@ import { ethers, waffle } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
 
-import { initialize, ownershipName, ownershipSymbol } from "../helpers/deploy";
+import {
+  initialize,
+  publisherName,
+  publisherSymbol,
+  ownershipName,
+  ownershipSymbol,
+} from "../helpers/deploy";
 
 import { hashChoco } from "../helpers/util";
 
@@ -42,6 +48,8 @@ describe("Chocomint", function () {
   it("deploy: deploy is ok", async function () {
     // TODO: check ERC1155 name, symbol if opensea requires this
 
+    expect(await publisherContract.name()).to.equal(publisherName);
+    expect(await publisherContract.symbol()).to.equal(publisherSymbol);
     expect(await ownershipContract.name()).to.equal(ownershipName);
     expect(await ownershipContract.symbol()).to.equal(ownershipSymbol);
     expect(await ownershipContract.chocomintPublisher()).to.equal(publisherContract.address);

@@ -1,5 +1,6 @@
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-etherscan";
 import "hardhat-typechain";
 import "solidity-coverage";
 
@@ -28,5 +29,8 @@ module.exports = {
       url: network.rinkeby.rpc,
       accounts: [privateKey],
     },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 };

@@ -10,7 +10,7 @@ export const initialize = async (debug?: boolean, gasPrice?: number) => {
   debug && console.log("initialize start. gas price:", gasPrice);
   const ChocomintPublisher = await ethers.getContractFactory("ChocomintPublisher");
   const ChocomintOwnership = await ethers.getContractFactory("ChocomintOwnership");
-  const publisher = await ChocomintPublisher.deploy({ gasPrice });
+  const publisher = await ChocomintPublisher.deploy(publisherName, publisherSymbol, { gasPrice });
   debug && console.log("publisher deployed to:", publisher.address);
   const ownership = await ChocomintOwnership.deploy(ownershipName, ownershipSymbol, { gasPrice });
   debug && console.log("ownership deployed to:", ownership.address);

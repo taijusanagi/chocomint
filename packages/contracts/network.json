@@ -10,8 +10,8 @@
     "chainId": "4",
     "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://rinkeby.etherscan.io/tx/",
-    "ownershipAddress": "0xf8f006Cf4b1F027f7C7e78f6EB419546B38d36ca",
-    "publisherAddress": "0x80f7879BC4CE398286920004717E8c27dA1B1E77"
+    "ownershipAddress": "0xd07E84Aa171e1e6781562C2405117f1796791eBC",
+    "publisherAddress": "0xc77a509d7260716c41E346ba12ED406971A8B69E"
   },
   "localhost": {
     "chainId": "31337",

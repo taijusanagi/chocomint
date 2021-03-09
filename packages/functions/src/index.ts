@@ -7,7 +7,8 @@ export const createChoco = functions.https.onCall(async (data, context) => {
   const { chocoId, choco } = data;
 
   // TODO: organize config value
-  const collectionName = process.env.NODE_ENV == "production" ? "nft_production" : "nft_staging";
+  const collectionName =
+    process.env.REACT_APP_NETWORK_NAME == "mainnet" ? "nft_production" : "nft_staging";
 
   // TODO: add validate
   await firestore.collection(collectionName).doc(chocoId).set(choco);

@@ -48,7 +48,13 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   uint256 constant BASE_RATIO = 10000;
   address public chocomintOwnership;
 
-  constructor() ERC1155("") {}
+  string public name;
+  string public symbol;
+
+  constructor(string memory _name, string memory _symbol) ERC1155("") {
+    name = _name;
+    symbol = _symbol;
+  }
 
   function initialize(address _chocomintOwnership) public {
     require(chocomintOwnership == address(0x0), "contract is already initialized");
