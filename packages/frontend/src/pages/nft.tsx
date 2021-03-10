@@ -35,6 +35,8 @@ export const NFT: React.FC = () => {
   const [printCount, setPrintCount] = React.useState(0);
   const [printPrice, setPrintPrice] = React.useState<ethers.BigNumber | undefined>(undefined);
   const [burnPrice, setBurnPrice] = React.useState<ethers.BigNumber | undefined>(undefined);
+  const [slippage, setSlippage] = React.useState(0);
+  const slippageList = [0, 1, 2, 3];
 
   const [selectedAddress, setSelectedAddress] = useRecoilState(selectedAddressState);
 
@@ -158,7 +160,10 @@ export const NFT: React.FC = () => {
       {choco && (
         <div className="px-6 sm:px-0 mb-10 sm:mb-24">
           <div className="flex flex-wrap justify-center pt-6 sm:pt-28">
-            <a className="mb-4" onClick={() => openDescription(choco.metadata.description)}>
+            <a
+              className="mb-4 sm:my-auto"
+              onClick={() => openDescription(choco.metadata.description)}
+            >
               <img className="solidity max-h-96 sm:min-w-5xl sm:mr-24" src={choco.metadata.image} />
             </a>
             <div className="sm:w-72 px-2 sm:px-0">
@@ -208,6 +213,28 @@ export const NFT: React.FC = () => {
                       50%
                       {/* 仮 */}
                     </p>
+                  </div>
+                </div>
+                <div className="mx-2 mb-10 px-2">
+                  <p className="text-lg text-gray-600 font-medium mb-4">Slippage Settings</p>
+                  <div className="flex">
+                    {slippageList.map((_slippage, i) => {
+                      return (
+                        <div
+                          key={i}
+                          className={`${slippage === _slippage ? "animate-bounce" : ""}`}
+                        >
+                          <a
+                            className={`cursor-pointer text-gray-500 hover:text-gray-700 px-3 py-2 font-medium text-sm rounded-md ${
+                              slippage === _slippage ? "bg-gray-200" : ""
+                            }`}
+                            onClick={() => setSlippage(_slippage)}
+                          >
+                            {_slippage}
+                          </a>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-5 mb-5">
