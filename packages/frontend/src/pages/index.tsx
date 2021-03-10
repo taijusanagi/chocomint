@@ -19,7 +19,7 @@ export const Home: React.FC = () => {
   return (
     <Body>
       <Header />
-      <Hero src="/ogp.png" onClick={onClockHero} />
+      <Hero src="/hero.png" onClick={onClockHero} />
       <Container>container</Container>
       <Footer />
     </Body>
