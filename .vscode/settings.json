@@ -7,5 +7,5 @@
   "eslint.workingDirectories": [{ "mode": "auto" }],
   "solidity.packageDefaultDependenciesContractsDirectory": "",
   "solidity.packageDefaultDependenciesDirectory": "node_modules",
-  "solidity.compileUsingRemoteVersion": "v0.8.0+commit.c7dfd78e"
+  "solidity.compileUsingRemoteVersion": "v0.8.2+commit.661d1103"
 }

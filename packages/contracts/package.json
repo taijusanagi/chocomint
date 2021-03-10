@@ -5,23 +5,25 @@
   "scripts": {
     "test": "hardhat test",
     "coverage": "hardhat coverage",
-    "run-localchain": "hardhat node",
+    "run-localchain": "yarn hardhat node --fork https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "deploy-contract-to-localchain": "hardhat run scripts/deployChocomint.ts --network localhost",
     "deploy-contract-to-rinkeby": "hardhat run scripts/deployChocomint.ts --network rinkeby",
     "deploy-contract-to-mainnet": "hardhat run scripts/deployChocomint.ts --network mainnet"
   },
   "devDependencies": {
+    "@aave/protocol-v2": "^1.0.1",
     "@nomiclabs/hardhat-ethers": "^2.0.1",
     "@nomiclabs/hardhat-etherscan": "^2.1.1",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
-    "@openzeppelin/contracts": "^4.0.0-beta.1",
+    "@openzeppelin/contracts": "4.0.0-rc.0",
     "@typechain/ethers-v5": "^5.0.0",
     "@types/mocha": "^8.2.0",
+    "chai": "^4.3.1",
     "ethereum-waffle": "^3.2.2",
     "ethers": "^5.0.31",
     "hardhat": "^2.0.10",
     "hardhat-typechain": "^0.3.4",
-    "prettier-plugin-solidity": "^1.0.0-beta.5",
+    "prettier-plugin-solidity": "1.0.0-beta.5",
     "solidity-coverage": "^0.7.15",
     "ts-generator": "^0.1.1",
     "ts-node": "^9.1.1",
@@ -29,10 +31,6 @@
     "typescript": "^4.1.5"
   },
   "dependencies": {
-    "chai": "^4.3.1",
-    "ipfs-only-hash": "^2.0.1",
-    "keccak256": "^1.0.2",
-    "merkletreejs": "^0.2.13",
-    "multi-token-standard": "^2.0.1"
+    "ipfs-only-hash": "^2.0.1"
   }
 }

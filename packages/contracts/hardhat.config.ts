@@ -12,7 +12,7 @@ const network = networkJson as any;
 
 module.exports = {
   solidity: {
-    version: "0.8.0",
+    version: "0.8.2",
     settings: {
       optimizer: {
         enabled: true,
@@ -21,6 +21,14 @@ module.exports = {
     },
   },
   networks: {
+    localhost: {
+      timeout: 50000,
+    },
+    hardhat: {
+      forking: {
+        url: network.mainnet.rpc,
+      },
+    },
     mainnet: {
       url: network.mainnet.rpc,
       accounts: [privateKey],
@@ -32,5 +40,8 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  mocha: {
+    timeout: 50000,
   },
 };
