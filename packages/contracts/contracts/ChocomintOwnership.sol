@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.12;
+pragma solidity ^0.8.2;
 
-import { IWETHGateway } from "@aave/protocol-v2/contracts/misc/interfaces/IWETHGateway.sol";
-
+// @openzeppelin/contracts@4.0.0-rc.0
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./ChocomintPublisher.sol";
 import "./ChocomintUtils.sol";
@@ -18,10 +17,9 @@ contract ChocomintOwnership is ERC721, ChocomintUtils {
 
   constructor(string memory name, string memory symbol) public ERC721(name, symbol) {}
 
-  function initialize(address _chocomintPublisher, address _aaveEthGateway) public {
+  function initialize(address _chocomintPublisher) public {
     require(chocomintPublisher == address(0x0), "contract is already initialized");
     chocomintPublisher = _chocomintPublisher;
-    aaveEthGateway = _aaveEthGateway;
   }
 
   function deposit(uint256 _tokenId) public payable {

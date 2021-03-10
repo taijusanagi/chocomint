@@ -1,29 +1,33 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.12;
+pragma solidity ^0.8.2;
 
-import { WETHGateway } from "@aave/protocol-v2/contracts/misc/WETHGateway.sol";
-
+// @openzeppelin/contracts@4.0.0-rc.0
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+// @aave/protocol-v2@1.0.1
+import "./ILendingPool.sol";
+import "./IWETHGateway.sol";
+
 import "./ChocomintOwnership.sol";
 import "./ChocomintUtils.sol";
-
-import "hardhat/console.sol";
 
 contract ChocomintPublisher is ERC1155, ChocomintUtils {
   using ECDSA for bytes32;
   using SafeMath for uint256;
 
   event Published(
-    uint256 indexed tokenId,
+    uint256 tokenId,
     bytes32 indexed ipfsHash,
     address indexed creator,
     address operator,
+    address indexed currency,
     uint256 supplyLimit,
-    uint256 virtualSupply,
-    uint256 virtualReserve,
+    uint256 initialPrice,
+    uint256 diluter,
     uint256 weight,
     uint256 royalityRatio,
     bytes signature
@@ -46,17 +50,22 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 nextBurnPrice
   );
 
+  mapping(uint256 => address) public currencies;
   mapping(uint256 => bytes32) public ipfsHashes;
-  mapping(uint256 => mapping(uint256 => uint256)) public priceKeeper;
   mapping(uint256 => uint256) public supplyLimits;
   mapping(uint256 => uint256) public totalSupplies;
-  mapping(uint256 => uint256) public virtualSupplies;
-  mapping(uint256 => uint256) public totalReserves;
-  mapping(uint256 => uint256) public virtualReserves;
+  mapping(uint256 => uint256) public initialPrices;
+  mapping(uint256 => uint256) public diluters;
   mapping(uint256 => uint256) public crrs;
   mapping(uint256 => uint256) public royalityRatios;
+  mapping(uint256 => mapping(uint256 => uint256)) public priceKeeper;
+  mapping(uint256 => uint256) public reserveBalance;
+  mapping(uint256 => uint256) public royalityBalance;
+
   uint256 constant BASE_RATIO = 10000;
+
   address public chocomintOwnership;
+  address payable public aaveGateway;
   address payable public aaveEthGateway;
   string public name;
   string public symbol;
@@ -66,59 +75,56 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     symbol = _symbol;
   }
 
-  function initialize(address _chocomintOwnership, address payable _aaveEthGateway) public {
-    require(chocomintOwnership == address(0x0), "contract is already initialized");
+  function initialize(
+    address _chocomintOwnership,
+    address payable _aaveGateway,
+    address payable _aaveEthGateway
+  ) public {
+    require(
+      chocomintOwnership == address(0x0) ||
+        aaveGateway == address(0x0) ||
+        aaveEthGateway == address(0x0),
+      "contract is already initialized"
+    );
     chocomintOwnership = _chocomintOwnership;
+    aaveGateway = _aaveGateway;
     aaveEthGateway = _aaveEthGateway;
-  }
-
-  function deposit() public payable {
-    console.log(WETHGateway(aaveEthGateway).getWETHAddress());
   }
 
   function publishAndMintPrint(
     bytes32 _ipfsHash,
     address payable _creator,
+    address _currency,
     uint256 _supplyLimit,
-    uint256 _virtualSupply,
-    uint256 _virtualReserve,
+    uint256 _initialPrice,
+    uint256 _diluter,
     uint256 _crr,
     uint256 _royalityRatio,
-    bytes memory _signature
+    bytes memory _signature,
+    uint256 _price, // to mint print, this is not included for signature
+    uint16 _referralCode // to mint print, this is not included for signature
   ) public payable {
     require(_ipfsHash != "", "ipfs hash should not be empty");
-    require(_creator != address(0x0), "creator should not be empty"); // this is checked by ECDSA as well, but intentionally tested here
-    require(_supplyLimit > 0, "supplyLimit must be more than 0"); // if supply limit is 0, it can not be printed
-    require(_virtualSupply > 0, "virtual supply must be more than 0"); // if virtual supply is 0, it makes price calculation fail
-
-    // this check is just for data simplicity
-    if (_crr == 0 || _crr.add(_royalityRatio) == BASE_RATIO) {
-      require(_virtualSupply == 1, "virtual supply must be 1"); // if crr is 0 or crr and royality sum is 100%, virtual supply makes no difference
-    }
-
-    // if reserve is 0, it is 0 price sale, it seems like airdrop, so this case is intentinally allowed
-    // require(_virtualReserve > 0, "virtual reserve must be more than 0");
-
-    // if reserve is crr, get print price returns current reserve
-    // this can be used for fixed price sale: crr 0% & royality 100%
-    // this can be used for double price sale: crr 0% & royality 0%
-    // require(_crr > 0, "weight must be more than 0");
-
-    // if crr is more than base ratio it is ^100% crr and it is valid
-    // require(_crr <= BASE_RATIO, "weight must be less than base ratio");
-
-    require(_royalityRatio <= BASE_RATIO, "royality ratio must be less than base ratio"); // if royality ratio is more than 100% it will cause minus reserve
-
+    require(_creator != address(0x0), "creator should not be empty");
+    require(_supplyLimit > 0, "supplyLimit must be more than 0");
+    require(_initialPrice > 0, "initialPrice must be more than 0");
+    require(_diluter > 0, "virtual supply must be more than 0");
+    require(_crr > 0, "crr must be more than 0");
+    require(
+      _crr.add(_royalityRatio) <= BASE_RATIO,
+      "crr and royality ratio sum must be less than base ratio"
+    );
     bytes32 hash =
       keccak256(
         abi.encodePacked(
           _getChainId(),
           address(this),
           _creator,
+          _currency,
           _ipfsHash,
           _supplyLimit,
-          _virtualSupply,
-          _virtualReserve,
+          _initialPrice,
+          _diluter,
           _crr,
           _royalityRatio
         )
@@ -129,11 +135,11 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
         hash.toEthSignedMessageHash().recover(_signature) == _creator,
         "creator signature must be valid"
       );
-      ChocomintOwnership(chocomintOwnership).mint(_creator, tokenId);
       ipfsHashes[tokenId] = _ipfsHash;
+      currencies[tokenId] = _currency;
       supplyLimits[tokenId] = _supplyLimit;
-      virtualSupplies[tokenId] = _virtualSupply;
-      virtualReserves[tokenId] = _virtualReserve;
+      initialPrices[tokenId] = _initialPrice;
+      diluters[tokenId] = _diluter;
       crrs[tokenId] = _crr;
       royalityRatios[tokenId] = _royalityRatio;
       emit Published(
@@ -141,48 +147,60 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
         _ipfsHash,
         _creator,
         msg.sender,
+        _currency,
         _supplyLimit,
-        _virtualSupply,
-        _virtualReserve,
+        _initialPrice,
+        _diluter,
         _crr,
         _royalityRatio,
         _signature
       );
     }
-    mintPrint(tokenId);
+    mintPrint(tokenId, _price, _referralCode);
   }
 
-  function mintPrint(uint256 _tokenId) public payable {
+  function mintPrint(
+    uint256 _tokenId,
+    uint256 _price,
+    uint16 _referralCode
+  ) public payable {
     require(ipfsHashes[_tokenId] != "", "token is still not published");
     uint256 currentTotalSupply = totalSupplies[_tokenId];
     require(
       currentTotalSupply < supplyLimits[_tokenId],
       "total supply must be more than supply limit"
     );
+
     uint256 printPrice = getPrintPrice(_tokenId);
-    require(msg.value >= printPrice, "msg value must be more than print price");
+    require(_price >= printPrice, "msg value must be more than print price");
+    address currency = currencies[_tokenId];
+    if (currency == address(0x0)) {
+      require(msg.value == _price, "msg value must be same as input price");
+    }
+
     totalSupplies[_tokenId] = currentTotalSupply.add(1);
     uint256 royality = getRoyality(printPrice, _tokenId);
     uint256 reserve = printPrice.sub(royality);
-    totalReserves[_tokenId] = totalReserves[_tokenId].add(reserve);
-    _mint(msg.sender, _tokenId, 1, "");
-
-    // this is aave integration
-    // IWETHGateway(aaveEthGateway).depositETH{ value: reserve }(msg.sender, 0);
-
+    reserveBalance[_tokenId] = reserveBalance[_tokenId].add(reserve);
     if (priceKeeper[_tokenId][currentTotalSupply] == 0) {
       priceKeeper[_tokenId][currentTotalSupply] = printPrice;
     }
-    if (royality > 0) {
-      // this is aave integration
-      // IWETHGateway(aaveEthGateway).depositETH{ value: reserve }(chocomintOwnership, 0);
-      ChocomintOwnership(chocomintOwnership).deposit{ value: royality }(_tokenId);
+    royalityBalance[royality] = royalityBalance[royality].add(royality);
+    _mint(msg.sender, _tokenId, 1, "");
+
+    if (currency == address(0x0)) {
+      IWETHGateway(aaveEthGateway).depositETH{ value: printPrice }(address(this), _referralCode);
+    } else {
+      ERC20(currency).transferFrom(msg.sender, address(this), _price);
+      ILendingPool(aaveGateway).deposit(currency, printPrice, address(this), _referralCode);
     }
-    if (msg.value.sub(printPrice) > 0) {
-      payable(msg.sender).transfer(msg.value.sub(printPrice));
-    }
+
     uint256 nextPrintPrice = getPrintPrice(_tokenId);
     uint256 nextBurnPrice = getBurnPrice(_tokenId);
+
+    if (_price.sub(printPrice) > 0 && currency == address(0x0)) {
+      payable(msg.sender).transfer(_price.sub(printPrice));
+    }
     emit PrintMinted(_tokenId, msg.sender, printPrice, royality, nextPrintPrice, nextBurnPrice);
   }
 
@@ -192,11 +210,11 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     require(currentTotalSupply >= _minimumSupply, "Min supply not met");
     uint256 burnPrice = getBurnPrice(_tokenId);
     totalSupplies[_tokenId] = currentTotalSupply.sub(1);
-    totalReserves[_tokenId] = totalReserves[_tokenId].sub(burnPrice);
+    reserveBalance[_tokenId] = reserveBalance[_tokenId].sub(burnPrice);
     _burn(msg.sender, _tokenId, 1);
 
     // this is aave integration
-    // IWETHGateway(aaveEthGateway).withdrawETH(burnPrice, msg.sender);
+    IWETHGateway(aaveEthGateway).withdrawETH(burnPrice, msg.sender);
     // payable(msg.sender).transfer(burnPrice);
 
     uint256 nextPrintPrice = getPrintPrice(_tokenId);
@@ -205,8 +223,10 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   }
 
   function getPrintPrice(uint256 _tokenId) public view returns (uint256 price) {
-    uint256 supply = totalSupplies[_tokenId].add(virtualSupplies[_tokenId]);
-    uint256 reserve = totalReserves[_tokenId].add(virtualReserves[_tokenId]);
+    // uint256 supply = totalSupplies[_tokenId].add(virtualSupplies[_tokenId]);
+    // uint256 reserve = reserveBalance[_tokenId].add(virtualReserves[_tokenId]);
+    uint256 supply = 0;
+    uint256 reserve = 0;
     return calculatePrintPrice(reserve, supply, crrs[_tokenId]);
   }
 
@@ -229,12 +249,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 _supply,
     uint256 _crr
   ) public pure returns (uint256) {
-    // if crr is 0, it just returns reserve
-    if (_crr == 0) {
-      return _reserve;
-    } else {
-      return _reserve.div(_supply.mul(_crr)).mul(BASE_RATIO);
-    }
+    return _reserve.div(_supply.mul(_crr)).mul(BASE_RATIO);
   }
 
   function calculateBurnPrice(uint256 _lastPrintPrice, uint256 _royalityRatio)
