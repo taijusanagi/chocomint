@@ -58,21 +58,17 @@ describe("Chocomint", function () {
     expect(await publisherContract.chocomintOwnership()).to.equal(ownershipContract.address);
   });
 
-  // uint256 _reserve,
-  // uint256 _supply,
-  // uint256 _crr
-
-  it("deploy: deploy is ok", async function () {
-    const price = await publisherContract.calculatePrintPrice(10000, 100, 0);
+  it("initialization fails after initialized", async function () {
+    await expect(
+      ownershipContract.initialize(ownerSigner.address, ownerSigner.address)
+    ).to.revertedWith("contract is already initialized");
+    await expect(
+      publisherContract.initialize(ownerSigner.address, ownerSigner.address)
+    ).to.revertedWith("contract is already initialized");
   });
 
-  it("initialization fails after initialized", async function () {
-    await expect(ownershipContract.initialize(ownerSigner.address)).to.revertedWith(
-      "contract is already initialized"
-    );
-    await expect(publisherContract.initialize(ownerSigner.address)).to.revertedWith(
-      "contract is already initialized"
-    );
+  it("aave integration", async function () {
+    await publisherContract.deposit({ value: 1000 });
   });
 
   it("publish", async function () {

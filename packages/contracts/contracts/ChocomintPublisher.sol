@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
-import { IWETHGateway } from "@aave/protocol-v2/contracts/misc/interfaces/IWETHGateway.sol";
+import { WETHGateway } from "@aave/protocol-v2/contracts/misc/WETHGateway.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
@@ -57,7 +57,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   mapping(uint256 => uint256) public royalityRatios;
   uint256 constant BASE_RATIO = 10000;
   address public chocomintOwnership;
-  address public aaveEthGateway;
+  address payable public aaveEthGateway;
   string public name;
   string public symbol;
 
@@ -66,10 +66,14 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     symbol = _symbol;
   }
 
-  function initialize(address _chocomintOwnership, address _aaveEthGateway) public {
+  function initialize(address _chocomintOwnership, address payable _aaveEthGateway) public {
     require(chocomintOwnership == address(0x0), "contract is already initialized");
     chocomintOwnership = _chocomintOwnership;
     aaveEthGateway = _aaveEthGateway;
+  }
+
+  function deposit() public payable {
+    console.log(WETHGateway(aaveEthGateway).getWETHAddress());
   }
 
   function publishAndMintPrint(
@@ -164,15 +168,15 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     _mint(msg.sender, _tokenId, 1, "");
 
     // this is aave integration
-    IWETHGateway(aaveEthGateway).depositETH{ value: reserve }(msg.sender, 0);
+    // IWETHGateway(aaveEthGateway).depositETH{ value: reserve }(msg.sender, 0);
 
     if (priceKeeper[_tokenId][currentTotalSupply] == 0) {
       priceKeeper[_tokenId][currentTotalSupply] = printPrice;
     }
     if (royality > 0) {
       // this is aave integration
-      IWETHGateway(aaveEthGateway).depositETH{ value: reserve }(chocomintOwnership, 0);
-      // ChocomintOwnership(chocomintOwnership).deposit{ value: royality }(_tokenId);
+      // IWETHGateway(aaveEthGateway).depositETH{ value: reserve }(chocomintOwnership, 0);
+      ChocomintOwnership(chocomintOwnership).deposit{ value: royality }(_tokenId);
     }
     if (msg.value.sub(printPrice) > 0) {
       payable(msg.sender).transfer(msg.value.sub(printPrice));
@@ -192,7 +196,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     _burn(msg.sender, _tokenId, 1);
 
     // this is aave integration
-    IWETHGateway(aaveEthGateway).withdrawETH(burnPrice, msg.sender);
+    // IWETHGateway(aaveEthGateway).withdrawETH(burnPrice, msg.sender);
     // payable(msg.sender).transfer(burnPrice);
 
     uint256 nextPrintPrice = getPrintPrice(_tokenId);

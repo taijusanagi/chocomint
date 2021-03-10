@@ -1,6 +1,6 @@
 {
   "mainnet": {
-    "chainId": "5",
+    "chainId": "1",
     "rpc": "https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://etherscan.io/tx/",
     "aaveWETHGatewayAddress": "0xDcD33426BA191383f1c9B431A342498fdac73488",
