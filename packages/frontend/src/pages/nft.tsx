@@ -65,14 +65,14 @@ export const NFT: React.FC = () => {
           setPrintCount(printCount);
           if (printCount == 0) {
             console.log(choco);
-            chocomintPublisherContract
-              .calculatePrintPrice(choco?.virtualReserve, choco?.virtualSupply, choco.crr)
-              .then((printPriceBN) => {
-                setPrintPrice(printPriceBN);
-              });
+            // chocomintPublisherContract
+            //   .calculatePrintPrice(choco?.virtualReserve, choco?.virtualSupply, choco.crr)
+            //   .then((printPriceBN) => {
+            //     setPrintPrice(printPriceBN);
+            //   });
           } else {
             chocomintPublisherContract.getPrintPrice(hash).then((printPriceBN) => {
-              setPrintPrice(printPriceBN);
+              setPrintPrice(printPriceBN[0]);
             });
             chocomintPublisherContract.getBurnPrice(hash).then((burnPriceBN) => {
               setBurnPrice(burnPriceBN);
@@ -117,19 +117,20 @@ export const NFT: React.FC = () => {
         openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
         return;
       }
-      const { hash: tx } = await chocomintPublisherContract
-        .connect(signer)
-        .publishAndMintPrint(
-          choco.ipfsHash,
-          choco.creatorAddress,
-          choco.supplyLimit,
-          choco.virtualSupply,
-          choco.virtualReserve,
-          choco.crr,
-          choco.royalityRatio,
-          choco.signature,
-          { value: printPrice }
-        );
+      const tx = "";
+      // const { hash: tx } = await chocomintPublisherContract
+      //   .connect(signer)
+      //   .publishAndMintPrint(
+      //     choco.ipfsHash,
+      //     choco.creatorAddress,
+      //     choco.supplyLimit,
+      //     choco.virtualSupply,
+      //     choco.virtualReserve,
+      //     choco.crr,
+      //     choco.royalityRatio,
+      //     choco.signature,
+      //     { value: printPrice }
+      //   );
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
     } catch (err) {
       openModal("🙇‍♂️", err.message);

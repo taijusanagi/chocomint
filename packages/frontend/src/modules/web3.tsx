@@ -16,10 +16,11 @@ export { hashChoco } from "../../../contracts/helpers/util";
 
 export {
   defaultSupplyLimit,
-  defaultVirtualSupply,
-  defaultVirtualReserve,
+  defaultDiluter,
+  defaultInitialPrice,
   defaultCrr,
-  defaultRoyalityRatio,
+  defaultRoyaltyRatio,
+  nullAddress,
 } from "../../../contracts/helpers/constant";
 
 const bs58 = require("bs58");
@@ -34,8 +35,6 @@ export const networkName = process.env.REACT_APP_NETWORK_NAME
 
 const network = require("../../../contracts/network.json");
 export const { rpc, chainId, explore, ownershipAddress, publisherAddress } = network[networkName];
-
-export const nullAddress = "0x0000000000000000000000000000000000000000";
 
 export const ipfsBaseUrl = "ipfs://";
 export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";

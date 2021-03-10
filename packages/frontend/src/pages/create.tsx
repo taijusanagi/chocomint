@@ -12,10 +12,11 @@ import {
   cidToIpfsHash,
   hashChoco,
   defaultSupplyLimit,
-  defaultVirtualSupply,
-  defaultVirtualReserve,
+  defaultDiluter,
+  defaultInitialPrice,
   defaultCrr,
-  defaultRoyalityRatio,
+  defaultRoyaltyRatio,
+  nullAddress,
 } from "../modules/web3";
 
 import { Choco } from "../types";
@@ -130,6 +131,8 @@ export const Create: React.FC = () => {
     }
     setIsWaitingTransactionConfirmation(true);
     try {
+      const currencyAddress = nullAddress;
+      const creatorAddress = selectedAddress;
       const metadata = {
         name,
         description,
@@ -138,31 +141,33 @@ export const Create: React.FC = () => {
       const metadataString = canonicalize(metadata);
       const { cid } = await ipfs.add(metadataString);
       const ipfsHash = cidToIpfsHash(cid);
-      const creatorAddress = selectedAddress;
       const web3 = await getWeb3();
+
       const chocoId = hashChoco(
         chainId,
         publisherAddress,
+        currencyAddress,
         creatorAddress,
         ipfsHash,
         defaultSupplyLimit,
-        defaultVirtualSupply,
-        defaultVirtualReserve,
+        defaultInitialPrice,
+        defaultDiluter,
         defaultCrr,
-        defaultRoyalityRatio
+        defaultRoyaltyRatio
       );
       const signature = await web3.eth.personal.sign(chocoId, creatorAddress, "");
       const choco: Choco = {
         chocoId,
         chainId,
         publisherAddress,
+        currencyAddress,
         creatorAddress,
         ipfsHash,
         supplyLimit: defaultSupplyLimit,
-        virtualSupply: defaultVirtualSupply,
-        virtualReserve: defaultVirtualReserve,
+        initialPrice: defaultInitialPrice,
+        diluter: defaultDiluter,
         crr: defaultCrr,
-        royalityRatio: defaultRoyalityRatio,
+        royaltyRatio: defaultRoyaltyRatio,
         signature,
         metadata,
       };
