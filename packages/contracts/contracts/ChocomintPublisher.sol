@@ -8,9 +8,8 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-// @aave/protocol-v2@1.0.1
-import "./ILendingPool.sol";
-import "./IWETHGateway.sol";
+import "./interfaces/ILendingPool.sol";
+import "./interfaces/IWETHGateway.sol";
 
 import "./ChocomintOwnership.sol";
 import "./ChocomintUtils.sol";
@@ -22,7 +21,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   using SafeMath for uint256;
 
   event OwnershipClaimed(address indexed operator, uint256 indexed tokenId);
-  event RoyalityWithdrawed(address indexed operato, uint256 indexed tokenId, uint256 amount);
+  event RoyaltyWithdrawed(address indexed operato, uint256 indexed tokenId, uint256 amount);
 
   event Published(
     address operator,
@@ -34,7 +33,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 initialPrice,
     uint256 diluter,
     uint256 crr,
-    uint256 royalityRatio,
+    uint256 royaltyRatio,
     bytes signature
   );
 
@@ -44,7 +43,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 currentSupply,
     uint256 currentReserve,
     uint256 printPrice,
-    uint256 royality
+    uint256 royalty
   );
 
   event PrintBurned(
@@ -64,16 +63,16 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   mapping(uint256 => uint256) public initialPrices;
   mapping(uint256 => uint256) public diluters;
   mapping(uint256 => uint256) public crrs;
-  mapping(uint256 => uint256) public royalityRatios;
+  mapping(uint256 => uint256) public royaltyRatios;
   mapping(uint256 => mapping(uint256 => uint256)) public priceKeeper;
   mapping(uint256 => uint256) public reserveBalances;
   mapping(uint256 => uint256) public royaltyBalances;
 
   uint256 constant BASE_RATIO = 10000;
-
+  uint256 constant MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
   address public chocomintOwnership;
-  address payable public aaveGateway;
-  address payable public aaveEthGateway;
+  address payable public aaveLendingPool;
+  address payable public aaveWEthGateway;
   string public name;
   string public symbol;
 
@@ -84,20 +83,33 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     symbol = _symbol;
   }
 
+  receive() external payable {}
+
   function initialize(
     address _chocomintOwnership,
-    address payable _aaveGateway,
-    address payable _aaveEthGateway
+    address payable _aaveLendingPool,
+    address payable _aaveWEthGateway
   ) public {
     require(
       chocomintOwnership == address(0x0) ||
-        aaveGateway == address(0x0) ||
-        aaveEthGateway == address(0x0),
+        aaveLendingPool == address(0x0) ||
+        aaveWEthGateway == address(0x0),
       "contract is already initialized"
     );
     chocomintOwnership = _chocomintOwnership;
-    aaveGateway = _aaveGateway;
-    aaveEthGateway = _aaveEthGateway;
+    aaveLendingPool = _aaveLendingPool;
+    aaveWEthGateway = _aaveWEthGateway;
+
+    // TODO: approve
+    // address[] memory getReservesList = ILendingPool(aaveLendingPool).getReservesList();
+
+    // for (uint256 i = 0; i < getReservesList.length; i++) {
+    //   console.log(getReservesList[i]);
+    // }
+
+    // ここもう少しきれいに書きたい
+    // aaveからトークンリストを取得する、もろもろapproveするっていう感じのロジックを書くのがいいと思っている
+    ERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e).approve(aaveWEthGateway, MAX_INT);
   }
 
   // nft owner operation
@@ -110,7 +122,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     emit OwnershipClaimed(to, _tokenId);
   }
 
-  function withdraw(uint256 _tokenId) public {
+  function withdrawRoyalty(uint256 _tokenId) public {
     address tempTo;
     if (ownershipClaimed[_tokenId]) {
       tempTo = ChocomintOwnership(chocomintOwnership).ownerOf(_tokenId);
@@ -120,16 +132,10 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     address payable to = payable(tempTo);
     require(msg.sender == to, "msg sender must be eligible");
     address currency = currencies[_tokenId];
-    uint256 royality = royaltyBalances[_tokenId];
+    uint256 royalty = royaltyBalances[_tokenId];
     royaltyBalances[_tokenId] = 0;
-    if (currency == address(0x0)) {
-      IWETHGateway(aaveEthGateway).withdrawETH(royality, address(this));
-      to.transfer(royality);
-    } else {
-      ILendingPool(aaveGateway).withdraw(currency, royality, address(this));
-      IERC20(currency).transferFrom(address(this), to, royality);
-    }
-    RoyalityWithdrawed(to, _tokenId, royality);
+    _withdraw(to, currency, royalty);
+    emit RoyaltyWithdrawed(to, _tokenId, royalty);
   }
 
   // user operation
@@ -142,7 +148,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 _initialPrice,
     uint256 _diluter,
     uint256 _crr,
-    uint256 _royalityRatio,
+    uint256 _royaltyRatio,
     bytes memory _signature,
     uint256 _price, // to mint print, this is not included for signature
     uint16 _referralCode // to mint print, this is not included for signature
@@ -154,8 +160,8 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     require(_diluter > 0, "virtual supply must be more than 0");
     require(_crr > 0, "crr must be more than 0");
     require(
-      _crr.add(_royalityRatio) <= BASE_RATIO,
-      "crr and royality ratio sum must be less than base ratio"
+      _crr.add(_royaltyRatio) <= BASE_RATIO,
+      "crr and royalty ratio sum must be less than base ratio"
     );
     bytes32 hash =
       keccak256(
@@ -169,7 +175,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
           _initialPrice,
           _diluter,
           _crr,
-          _royalityRatio
+          _royaltyRatio
         )
       );
     uint256 tokenId = uint256(hash);
@@ -187,7 +193,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
       initialPrices[tokenId] = _initialPrice;
       diluters[tokenId] = _diluter;
       crrs[tokenId] = _crr;
-      royalityRatios[tokenId] = _royalityRatio;
+      royaltyRatios[tokenId] = _royaltyRatio;
       emit Published(
         msg.sender,
         tokenId,
@@ -198,7 +204,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
         _initialPrice,
         _diluter,
         _crr,
-        _royalityRatio,
+        _royaltyRatio,
         _signature
       );
     }
@@ -221,8 +227,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     );
 
     // get prices and validate
-    (uint256 printPrice, uint256 reserve, uint256 royalty) =
-      _getPrintPrices(_tokenId, currentTotalSupply, currentReserveBalance);
+    (uint256 printPrice, uint256 reserve, uint256 royalty) = getPrintPrice(_tokenId); // this should be done before update storage
     require(_price >= printPrice, "msg value must be more than print price");
     address currency = currencies[_tokenId];
     if (currency == address(0x0)) {
@@ -235,8 +240,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     // update storage
     totalSupplies[_tokenId] = currentTotalSupply.add(1);
     reserveBalances[_tokenId] = currentReserveBalance.add(reserve);
-    royaltyBalances[royalty] = royaltyBalances[royalty].add(royalty);
-
+    royaltyBalances[_tokenId] = royaltyBalances[royalty].add(royalty);
     // mint token
     _mint(msg.sender, _tokenId, 1, "");
 
@@ -268,28 +272,27 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 currentReserveBalance = reserveBalances[_tokenId];
     require(currentTotalSupply > 0, "total supply must be more than 0");
     require(currentTotalSupply >= _minimumSupply, "Min supply not met");
-    uint256 burnPrice = 0; //getBurnPrice(_tokenId);
-
+    uint256 burnPrice = getBurnPrice(_tokenId); // this should be done before update storage
     // update storage
     totalSupplies[_tokenId] = currentTotalSupply.sub(1);
     reserveBalances[_tokenId] = currentReserveBalance.sub(burnPrice);
     _burn(msg.sender, _tokenId, 1);
 
+    address currency = currencies[_tokenId];
     // this is aave integration
-    IWETHGateway(aaveEthGateway).withdrawETH(burnPrice, msg.sender);
-    // payable(msg.sender).transfer(burnPrice);
+    _withdraw(payable(msg.sender), currency, burnPrice);
 
-    uint256 nextPrintPrice = 0; //getPrintPrice(_tokenId);
-    uint256 nextBurnPrice = 0; //getBurnPrice(_tokenId);
-    emit PrintBurned(msg.sender, _tokenId, burnPrice, nextPrintPrice, nextBurnPrice);
+    emit PrintBurned(
+      msg.sender,
+      _tokenId,
+      totalSupplies[_tokenId],
+      reserveBalances[_tokenId],
+      burnPrice
+    );
   }
 
-  function _getPrintPrices(
-    uint256 _tokenId,
-    uint256 _currentTotalSupply,
-    uint256 _currentReserveBalance
-  )
-    internal
+  function getPrintPrice(uint256 _tokenId)
+    public
     view
     returns (
       uint256,
@@ -297,45 +300,58 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
       uint256
     )
   {
-    uint256 supply = _currentTotalSupply.add(diluters[_tokenId]);
-    uint256 initialPrice = initialPrices[_tokenId];
+    uint256 currentTotalSupply = totalSupplies[_tokenId];
+    uint256 currentReserveBalance = reserveBalances[_tokenId];
     uint256 diluter = diluters[_tokenId];
+    uint256 supply = currentTotalSupply.add(diluter);
+    uint256 initialPrice = initialPrices[_tokenId];
     uint256 crr = crrs[_tokenId];
     uint256 virtualReserve = calculateVirtualReserve(initialPrice, diluter, crr);
     uint256 printPrice =
-      calculatePrintPrice(_currentReserveBalance.add(virtualReserve), supply, crr);
-    uint256 royalityRatio = royalityRatios[_tokenId];
-    uint256 royalty = calculateRoyality(printPrice, royalityRatio);
+      calculatePrintPrice(currentReserveBalance.add(virtualReserve), supply, crr);
+    uint256 royaltyRatio = royaltyRatios[_tokenId];
+    uint256 royalty = calculateRoyalty(printPrice, royaltyRatio);
     uint256 reserve = printPrice.sub(royalty);
     return (printPrice, reserve, royalty);
   }
 
-  function _getBurnPrices(uint256 _tokenId, uint256 _currentTotalSupply)
-    internal
-    view
-    returns (uint256)
-  {
-    if (_currentTotalSupply == 0) {
+  function getBurnPrice(uint256 _tokenId) public view returns (uint256) {
+    uint256 currentTotalSupply = totalSupplies[_tokenId];
+    if (currentTotalSupply == 0) {
       return 0;
     } else {
-      uint256 lastTotalSupply = _currentTotalSupply.sub(1);
+      uint256 lastTotalSupply = currentTotalSupply.sub(1);
       uint256 lastPrintPrice = priceKeeper[_tokenId][lastTotalSupply];
-      uint256 royalityRatio = royalityRatios[_tokenId];
-      uint256 lastRoyality = calculateRoyality(lastPrintPrice, royalityRatio);
-      return lastPrintPrice.sub(lastRoyality);
+      uint256 royaltyRatio = royaltyRatios[_tokenId];
+      uint256 lastRoyalty = calculateRoyalty(lastPrintPrice, royaltyRatio);
+      return lastPrintPrice.sub(lastRoyalty);
     }
   }
 
   function _deposit(
-    address currency,
+    address _currency,
     uint256 _price,
     uint16 _referralCode
   ) internal {
-    if (currency == address(0x0)) {
-      IWETHGateway(aaveEthGateway).depositETH{ value: _price }(address(this), _referralCode);
+    if (_currency == address(0x0)) {
+      IWETHGateway(aaveWEthGateway).depositETH{ value: _price }(address(this), _referralCode);
     } else {
-      ERC20(currency).transferFrom(msg.sender, address(this), _price);
-      ILendingPool(aaveGateway).deposit(currency, _price, address(this), _referralCode);
+      ERC20(_currency).transferFrom(msg.sender, address(this), _price);
+      ILendingPool(aaveLendingPool).deposit(_currency, _price, address(this), _referralCode);
+    }
+  }
+
+  function _withdraw(
+    address payable _to,
+    address _currency,
+    uint256 _price
+  ) internal {
+    if (_currency == address(0x0)) {
+      IWETHGateway(aaveWEthGateway).withdrawETH(_price, address(this));
+      _to.transfer(_price);
+    } else {
+      ILendingPool(aaveLendingPool).withdraw(_currency, _price, address(this));
+      IERC20(_currency).transferFrom(address(this), _to, _price);
     }
   }
 
@@ -357,8 +373,19 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     return _reserve.mul(BASE_RATIO).div(_crr).div(_supply);
   }
 
-  function calculateRoyality(uint256 _price, uint256 _royalityRatio) public pure returns (uint256) {
-    return _price.mul(_royalityRatio).div(BASE_RATIO);
+  function calculateBurnPrice(
+    uint256 _reserve,
+    uint256 _supply,
+    uint256 _crr
+  ) public pure returns (uint256) {
+    uint256 temp3 = (_reserve / (_supply.sub(1) * _crr)).mul(BASE_RATIO);
+    uint256 royalityFee = (temp3 * _crr) / BASE_RATIO;
+    uint256 addedToDeposit = temp3 - royalityFee;
+    return addedToDeposit;
+  }
+
+  function calculateRoyalty(uint256 _price, uint256 _royaltyRatio) public pure returns (uint256) {
+    return _price.mul(_royaltyRatio).div(BASE_RATIO);
   }
 
   function uri(uint256 _tokenId) public view override returns (string memory) {

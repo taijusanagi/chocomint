@@ -3,17 +3,18 @@ pragma solidity ^0.8.2;
 
 // @openzeppelin/contracts@4.0.0-rc.0
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
 import "./ChocomintPublisher.sol";
 import "./ChocomintUtils.sol";
 
 contract ChocomintOwnership is ERC721, ChocomintUtils {
   mapping(uint256 => uint256) public balances;
 
-  address public chocomintPublisher;
+  address payable public chocomintPublisher;
 
   constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
-  function initialize(address _chocomintPublisher) public {
+  function initialize(address payable _chocomintPublisher) public {
     require(chocomintPublisher == address(0x0), "contract is already initialized");
     chocomintPublisher = _chocomintPublisher;
   }

@@ -3,7 +3,8 @@
     "chainId": "1",
     "rpc": "https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://etherscan.io/tx/",
-    "aaveGatewayAddress": "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
+    "aWETHAddress": "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e",
+    "aaveLendingPoolAddress": "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
     "aaveWETHGatewayAddress": "0xDcD33426BA191383f1c9B431A342498fdac73488",
     "ownershipAddress": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
     "publisherAddress": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
@@ -12,7 +13,8 @@
     "chainId": "4",
     "rpc": "https://rinkeby.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://rinkeby.etherscan.io/tx/",
-    "aaveGatewayAddress": "",
+    "aWETHAddress": "",
+    "aaveLendingPoolAddress": "",
     "aaveWETHGatewayAddress": "",
     "ownershipAddress": "0xd07E84Aa171e1e6781562C2405117f1796791eBC",
     "publisherAddress": "0xc77a509d7260716c41E346ba12ED406971A8B69E"
@@ -21,7 +23,8 @@
     "chainId": "42",
     "rpc": "https://kovan.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://kovan.etherscan.io/tx/",
-    "aaveGatewayAddress": "0xe0fba4fc209b4948668006b2be61711b7f465bae",
+    "aWETHAddress": "",
+    "aaveLendingPoolAddress": "0xe0fba4fc209b4948668006b2be61711b7f465bae",
     "aaveWETHGatewayAddress": "0xf8aC10E65F2073460aAD5f28E1EABE807D",
     "ownershipAddress": "0xd07E84Aa171e1e6781562C2405117f1796791eBC",
     "publisherAddress": "0xc77a509d7260716c41E346ba12ED406971A8B69E"
@@ -30,7 +33,8 @@
     "chainId": "31337",
     "rpc": "http://localhost:8545",
     "explore": "https://rinkeby.etherscan.io/tx/",
-    "aaveGatewayAddress": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
+    "aWETHAddress": "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e",
+    "aaveLendingPoolAddress": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
     "aaveWETHGatewayAddress": "0xDcD33426BA191383f1c9B431A342498fdac73488",
     "ownershipAddress": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
     "publisherAddress": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"
