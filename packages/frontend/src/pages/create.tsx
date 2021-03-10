@@ -24,10 +24,9 @@ import { functions } from "../modules/firebase";
 
 import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
-import { Container } from "../components/atoms/Container";
+
 import { ImageUploadIcon } from "../components/atoms/ImageUploadIcon";
 import { Modal, useModal } from "../components/molecules/Modal";
-import { Footer } from "../components/organisms/Footer";
 import { Header } from "../components/organisms/Header";
 
 const canonicalize = require("canonicalize");
@@ -154,6 +153,7 @@ export const Create: React.FC = () => {
       );
       const signature = await web3.eth.personal.sign(chocoId, creatorAddress, "");
       const choco: Choco = {
+        chocoId,
         chainId,
         publisherAddress,
         creatorAddress,
@@ -179,15 +179,10 @@ export const Create: React.FC = () => {
   return (
     <Body>
       <Header />
-      <Container>
+      <div className="flex justify-center flex-grow container mx-auto">
         {/* TODO: align center for smart phone */}
         <div className="w-full sm:max-w-md p-4">
-          <img
-            onClick={() => openModal("🤫", "Tutorial?", "Check", "/about", false)}
-            className="cursor-pointer mx-auto h-20 w-auto solidity"
-            src="/logo.png"
-            alt="logo"
-          />
+          <img className=" mx-auto h-20 w-auto solidity" src="/logo.png" alt="logo" />
 
           <div className="mt-2">
             <label
@@ -261,9 +256,8 @@ export const Create: React.FC = () => {
             )}
           </div>
         </div>
-      </Container>
+      </div>
       {modal && <Modal {...modal} onClickDismiss={closeModal} />}
-      <Footer />
     </Body>
   );
 };

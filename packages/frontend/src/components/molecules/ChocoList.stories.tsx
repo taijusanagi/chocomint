@@ -1,11 +1,12 @@
 import React from "react";
-// import { ethers } from "ethers";
+import { MemoryRouter } from "react-router-dom";
 
 import { ChocoList, ChocoListProps } from "./ChocoList";
 
 import { Choco } from "../../types";
 
 const choco1: Choco = {
+  chocoId: "4435690493372526655330147267588841630046410064741316095447846859281088522158",
   chainId: 31337,
   creatorAddress: "0x84e9445f43995b0c6a4d4c1d40bb123571c2eb06",
   crr: "1000",
@@ -25,6 +26,7 @@ const choco1: Choco = {
 };
 
 const choco2: Choco = {
+  chocoId: "51442300240555014016623932697986773926116258888507822246197410255769692108486",
   chainId: 31337,
   creatorAddress: "0x84e9445f43995b0c6a4d4c1d40bb123571c2eb06",
   crr: "1000",
@@ -44,6 +46,7 @@ const choco2: Choco = {
 };
 
 const choco3: Choco = {
+  chocoId: "54880312000758586603641038366832891953162885824902367771385943563178378782527",
   chainId: 31337,
   creatorAddress: "0x84e9445f43995b0c6a4d4c1d40bb123571c2eb06",
   crr: "1000",
@@ -62,13 +65,20 @@ const choco3: Choco = {
   virtualSupply: "64",
 };
 
-const price = "10000000000000000";
+const prices = {
+  "4435690493372526655330147267588841630046410064741316095447846859281088522158":
+    "1754807692307000",
+  "51442300240555014016623932697986773926116258888507822246197410255769692108486":
+    "1562500000000000",
+  "54880312000758586603641038366832891953162885824902367771385943563178378782527":
+    "140625000000000000",
+};
 
 const args: ChocoListProps = {
   // put 3 kind of image
   // put 7 same data for layout test
   chocos: [choco1, choco2, choco3, choco1, choco1, choco1, choco1],
-  prices: [price, price, price, price, price, price, price],
+  prices,
 };
 
 export default {
@@ -77,4 +87,8 @@ export default {
   args,
 };
 
-export const Control: React.FC<ChocoListProps> = (props) => <ChocoList {...props} />;
+export const Control: React.FC<ChocoListProps> = (props) => (
+  <MemoryRouter>
+    <ChocoList {...props} />
+  </MemoryRouter>
+);

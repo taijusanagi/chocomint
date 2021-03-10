@@ -5,6 +5,7 @@ export interface Metadata {
 }
 
 export interface Choco {
+  chocoId: string;
   chainId: number;
   publisherAddress: string;
   creatorAddress: string;

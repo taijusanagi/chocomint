@@ -91,7 +91,6 @@ export const providerOptions = {
 export const web3Modal = new Web3Modal({
   network: process.env.REACT_APP_NETWORK_NAME ? process.env.REACT_APP_NETWORK_NAME : "",
   providerOptions,
-  cacheProvider: true,
 });
 
 export const initializeWeb3Modal = async () => {
