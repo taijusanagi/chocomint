@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.6.12;
+
+import { IWETHGateway } from "@aave/protocol-v2/contracts/misc/interfaces/IWETHGateway.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./ChocomintOwnership.sol";
 import "./ChocomintUtils.sol";
 
@@ -55,18 +57,19 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   mapping(uint256 => uint256) public royalityRatios;
   uint256 constant BASE_RATIO = 10000;
   address public chocomintOwnership;
-
+  address public aaveEthGateway;
   string public name;
   string public symbol;
 
-  constructor(string memory _name, string memory _symbol) ERC1155("") {
+  constructor(string memory _name, string memory _symbol) public ERC1155("") {
     name = _name;
     symbol = _symbol;
   }
 
-  function initialize(address _chocomintOwnership) public {
+  function initialize(address _chocomintOwnership, address _aaveEthGateway) public {
     require(chocomintOwnership == address(0x0), "contract is already initialized");
     chocomintOwnership = _chocomintOwnership;
+    aaveEthGateway = _aaveEthGateway;
   }
 
   function publishAndMintPrint(
@@ -159,11 +162,17 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 reserve = printPrice.sub(royality);
     totalReserves[_tokenId] = totalReserves[_tokenId].add(reserve);
     _mint(msg.sender, _tokenId, 1, "");
+
+    // this is aave integration
+    IWETHGateway(aaveEthGateway).depositETH{ value: reserve }(msg.sender, 0);
+
     if (priceKeeper[_tokenId][currentTotalSupply] == 0) {
       priceKeeper[_tokenId][currentTotalSupply] = printPrice;
     }
     if (royality > 0) {
-      ChocomintOwnership(chocomintOwnership).deposit{ value: royality }(_tokenId);
+      // this is aave integration
+      IWETHGateway(aaveEthGateway).depositETH{ value: reserve }(chocomintOwnership, 0);
+      // ChocomintOwnership(chocomintOwnership).deposit{ value: royality }(_tokenId);
     }
     if (msg.value.sub(printPrice) > 0) {
       payable(msg.sender).transfer(msg.value.sub(printPrice));
@@ -181,7 +190,11 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     totalSupplies[_tokenId] = currentTotalSupply.sub(1);
     totalReserves[_tokenId] = totalReserves[_tokenId].sub(burnPrice);
     _burn(msg.sender, _tokenId, 1);
-    payable(msg.sender).transfer(burnPrice);
+
+    // this is aave integration
+    IWETHGateway(aaveEthGateway).withdrawETH(burnPrice, msg.sender);
+    // payable(msg.sender).transfer(burnPrice);
+
     uint256 nextPrintPrice = getPrintPrice(_tokenId);
     uint256 nextBurnPrice = getBurnPrice(_tokenId);
     emit PrintBurned(_tokenId, msg.sender, burnPrice, nextPrintPrice, nextBurnPrice);

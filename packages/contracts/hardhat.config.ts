@@ -12,7 +12,7 @@ const network = networkJson as any;
 
 module.exports = {
   solidity: {
-    version: "0.8.0",
+    version: "0.6.12",
     settings: {
       optimizer: {
         enabled: true,
@@ -21,6 +21,11 @@ module.exports = {
     },
   },
   networks: {
+    hardhat: {
+      forking: {
+        url: network.mainnet.rpc,
+      },
+    },
     mainnet: {
       url: network.mainnet.rpc,
       accounts: [privateKey],

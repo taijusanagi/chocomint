@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.6.12;
+
+import { IWETHGateway } from "@aave/protocol-v2/contracts/misc/interfaces/IWETHGateway.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./ChocomintPublisher.sol";
@@ -12,12 +14,14 @@ contract ChocomintOwnership is ERC721, ChocomintUtils {
   event Withdrawed(address indexed operator, uint256 indexed tokenId, uint256 amount);
 
   address public chocomintPublisher;
+  address public aaveEthGateway;
 
-  constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
+  constructor(string memory name, string memory symbol) public ERC721(name, symbol) {}
 
-  function initialize(address _chocomintPublisher) public {
+  function initialize(address _chocomintPublisher, address _aaveEthGateway) public {
     require(chocomintPublisher == address(0x0), "contract is already initialized");
     chocomintPublisher = _chocomintPublisher;
+    aaveEthGateway = _aaveEthGateway;
   }
 
   function deposit(uint256 _tokenId) public payable {
@@ -30,6 +34,7 @@ contract ChocomintOwnership is ERC721, ChocomintUtils {
     uint256 reward = balances[_tokenId];
     require(reward > 0, "reward must be more than 0");
     balances[_tokenId] = 0;
+    IWETHGateway(aaveEthGateway).withdrawETH(reward, address(this));
     payable(msg.sender).transfer(reward);
     emit Withdrawed(msg.sender, _tokenId, reward);
   }

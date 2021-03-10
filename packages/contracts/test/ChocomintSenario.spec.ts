@@ -1,7 +1,8 @@
-import { ethers, waffle } from "hardhat";
+import hre, { ethers, waffle } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
 
+import { NetworkName } from "../type";
 import {
   initialize,
   publisherName,
@@ -29,7 +30,7 @@ import {
 } from "../helpers/constant";
 
 const provider = waffle.provider;
-
+const networkName = hre.network.name as NetworkName;
 chai.use(solidity);
 const { expect } = chai;
 
@@ -39,8 +40,9 @@ describe("Chocomint", function () {
 
   let ownerSigner, ownershipSigner;
   this.beforeEach("initialization.", async function () {
+    const networkName = hre.network.name as NetworkName;
     [ownerSigner, ownershipSigner] = await ethers.getSigners();
-    const { publisher, ownership } = await initialize();
+    const { publisher, ownership } = await initialize(networkName);
     publisherContract = publisher;
     ownershipContract = ownership;
   });
