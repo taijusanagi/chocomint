@@ -82,11 +82,6 @@ export const NFT: React.FC = () => {
       });
   }, []);
 
-  const openDescription = (desc: string) => {
-    const messageText = desc ? desc : "This NFT does not have description.";
-    openModal("📝", messageText);
-  };
-
   const connectWallet = async () => {
     const provider = await initializeWeb3Modal();
     setSelectedAddress(provider.selectedAddress);
@@ -117,20 +112,23 @@ export const NFT: React.FC = () => {
         openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
         return;
       }
-      const tx = "";
-      // const { hash: tx } = await chocomintPublisherContract
-      //   .connect(signer)
-      //   .publishAndMintPrint(
-      //     choco.ipfsHash,
-      //     choco.creatorAddress,
-      //     choco.supplyLimit,
-      //     choco.virtualSupply,
-      //     choco.virtualReserve,
-      //     choco.crr,
-      //     choco.royalityRatio,
-      //     choco.signature,
-      //     { value: printPrice }
-      //   );
+
+      const { hash: tx } = await chocomintPublisherContract
+        .connect(signer)
+        .publishAndMintPrint(
+          choco.currencyAddress,
+          choco.creatorAddress,
+          choco.ipfsHash,
+          choco.supplyLimit,
+          choco.initialPrice,
+          choco.diluter,
+          choco.crr,
+          choco.royaltyRatio,
+          choco.signature,
+          choco.initialPrice,
+          0,
+          { value: choco.initialPrice }
+        );
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
     } catch (err) {
       openModal("🙇‍♂️", err.message);
@@ -159,117 +157,88 @@ export const NFT: React.FC = () => {
     <Body>
       <Header />
       {choco && (
-        <div className="px-6 sm:px-0 mb-10 sm:mb-24">
-          <div className="flex flex-wrap justify-center pt-6 sm:pt-28">
-            <a
-              className="mb-4 sm:my-auto"
-              onClick={() => openDescription(choco.metadata.description)}
-            >
-              <img className="solidity max-h-96 sm:min-w-5xl sm:mr-24" src={choco.metadata.image} />
-            </a>
-            <div className="sm:w-72 px-2 sm:px-0">
-              <div className="flex my-4 mb-8">
-                <Link to={`/box/${selectedAddress}`}>
-                  <button className="w-44 bg-white text-black font-medium rounded-full shadow-md mr-2 sm:mr-3 p-2">
-                    👩‍🎨
-                    <span className="pl-3">{shortenAddress(choco.creatorAddress)}</span>
-                  </button>
-                </Link>
-                <button className="w-full bg-green-400 text-white font-medium rounded-full shadow-md p-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 flex">
+          <div className="p-4 flex justify-center md:justify-end relative">
+            <div className="flex">
+              <div className="absolute opacity-90 m-4">
+                <button
+                  onClick={connectWallet}
+                  className="solidity bg-gray-100 text-xs p-2 text-gray-700 text-xs font-medium"
+                >
                   {printCount} / {choco.supplyLimit}
                 </button>
               </div>
-              <div className="sm:w-96">
-                <p className="break-all text-black text-5xl sm:text-7xl font-semibold px-2 sm:px-0 mb-5">
-                  {shortenName(choco.metadata.name)}
-                </p>
-                <div className="grid grid-cols-2 gap-5 m-2">
-                  <div>
-                    {printPrice ? (
-                      <>
-                        <p className="text-lg text-gray-600 font-medium px-2 mb-1">Print Price</p>
-                        <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
-                          {roundAndFormatPrintPrice(printPrice, 3)} ETH
-                        </p>
-                      </>
-                    ) : burnPrice ? (
-                      <>
-                        <p className="text-lg text-gray-600 font-medium px-2 mb-1">Burn Price</p>
-                        <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
-                          {roundAndFormatBurnPrice(burnPrice, 3)} ETH
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-lg text-gray-600 font-medium px-2 mb-1">Price</p>
-                        <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
-                          Not privce
-                        </p>
-                      </>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-lg text-gray-600 font-medium px-2 mb-1">Roylatity Ratio</p>
-                    <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
-                      50%
-                      {/* 仮 */}
-                    </p>
-                  </div>
-                </div>
-                <div className="mx-2 mb-10 px-2">
-                  <p className="text-lg text-gray-600 font-medium mb-4">Slippage Settings</p>
-                  <div className="flex">
-                    {slippageList.map((_slippage, i) => {
-                      return (
-                        <div
-                          key={i}
-                          className={`${slippage === _slippage ? "animate-bounce" : ""}`}
-                        >
-                          <a
-                            className={`cursor-pointer text-gray-500 hover:text-gray-700 px-3 py-2 font-medium text-sm rounded-md ${
-                              slippage === _slippage ? "bg-gray-200" : ""
-                            }`}
-                            onClick={() => setSlippage(_slippage)}
-                          >
-                            {_slippage}
-                          </a>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-5 mb-5">
-                  {!selectedAddress ? (
-                    <Button onClick={connectWallet} type="primary">
-                      Connect <span className="ml-1">🔐</span>
+              <img
+                className="object-contain max-h-96 max-w-sm olidity"
+                src={choco.metadata.image}
+              />
+            </div>
+          </div>
+          <div className="p-4 w-full md:w-7/12 flex justify-start flex-col">
+            <button className="w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2 mb-2">
+              <span className="pr-2">👩‍🎨</span>
+              {shortenAddress(choco.creatorAddress)}
+            </button>
+            <p className="break-all text-gray-700 text-5xl sm:text-7xl font-medium mb-2">
+              {shortenName(choco.metadata.name)}
+            </p>
+            <p className="break-all text-gray-400 text-xs font-medium mb-4">
+              {choco.metadata.description}
+            </p>
+            <div className="grid grid-cols-2 mb-4">
+              <div>
+                <p className="text-lg text-gray-500 font-medium">Print Price</p>
+                <p className="text-2xl sm:text-3xl text-gray-700 font-medium">0.01 ETH</p>
+              </div>
+              <div>
+                <p className="text-lg text-gray-500 font-medium">Royality</p>
+                <p className="text-2xl sm:text-3xl text-gray-700 font-medium">10%</p>
+              </div>
+            </div>
+            <div className="mb-8">
+              <p className="text-gray-500 text-xs font-medium">Slippage Settings</p>
+              <div className="flex">
+                {slippageList.map((_slippage, i) => {
+                  return (
+                    <div key={i}>
+                      <button
+                        className={`cursor-pointer text-xs text-gray-500 focus:outline-none focus:bg-gray-200 hover:bg-gray-100 py-1 px-2 font-medium rounded-md ${
+                          slippage === _slippage ? "bg-gray-200" : ""
+                        }`}
+                        onClick={() => setSlippage(_slippage)}
+                      >
+                        {_slippage}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              {!selectedAddress ? (
+                <Button onClick={connectWallet} type="primary">
+                  Connect <span className="ml-1">🔐</span>
+                </Button>
+              ) : (
+                <div className="grid grid-cols-2">
+                  {printPrice && (
+                    <Button onClick={print} type="secondary">
+                      Mint
+                      <span className="ml-1">💎</span>
                     </Button>
-                  ) : (
-                    <>
-                      {printPrice && (
-                        <Button onClick={print} type="secondary">
-                          Mint
-                          <span className="ml-1">💎</span>
-                        </Button>
-                      )}
-                      {burnPrice && (
-                        <Button onClick={burn} type="tertiary">
-                          Burn
-                          <span className="ml-1">🔥</span>
-                        </Button>
-                      )}
-                    </>
+                  )}
+                  {burnPrice && (
+                    <Button onClick={burn} type="tertiary">
+                      Burn
+                      <span className="ml-1">🔥</span>
+                    </Button>
                   )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
       )}
-      <div className="relative w-5/6 sm:w-1/2 mx-auto mb-6">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-gray-300"></div>
-        </div>
-      </div>
       {modal && <Modal {...modal} onClickDismiss={closeModal} />}
     </Body>
   );

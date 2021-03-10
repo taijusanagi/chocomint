@@ -12,7 +12,7 @@ import { abi as chocomintPublisherAbi } from "../../../contracts/artifacts/contr
 import { abi as chocomintOwnershipAbi } from "../../../contracts/artifacts/contracts/ChocomintOwnership.sol/ChocomintOwnership.json";
 import { ChocomintPublisher, ChocomintOwnership } from "../../../contracts/typechain";
 
-export { hashChoco } from "../../../contracts/helpers/util";
+export { hashChoco, getPrices } from "../../../contracts/helpers/util";
 
 export {
   defaultSupplyLimit,

@@ -142,7 +142,6 @@ export const Create: React.FC = () => {
       const { cid } = await ipfs.add(metadataString);
       const ipfsHash = cidToIpfsHash(cid);
       const web3 = await getWeb3();
-
       const chocoId = hashChoco(
         chainId,
         publisherAddress,

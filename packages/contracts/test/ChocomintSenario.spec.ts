@@ -100,11 +100,11 @@ describe("Chocomint", function () {
 
   it("publish", async function () {
     const creatorAddress = ownershipSigner.address;
-    const currenty = nullAddress;
+    const currency = nullAddress;
     const tokenId = hashChoco(
       hardhatChainId,
       publisherContract.address,
-      currenty,
+      currency,
       creatorAddress,
       dummyMetadataIpfsHash,
       defaultSupplyLimit,
@@ -118,7 +118,7 @@ describe("Chocomint", function () {
     await publisherContract
       .connect(ownerSigner)
       .publishAndMintPrint(
-        currenty,
+        currency,
         creatorAddress,
         dummyMetadataIpfsHash,
         defaultSupplyLimit,
@@ -134,7 +134,7 @@ describe("Chocomint", function () {
         }
       );
     // check input is properly kept in contract
-    expect(await publisherContract.currencies(tokenId)).to.equal(currenty);
+    expect(await publisherContract.currencies(tokenId)).to.equal(currency);
     expect(await publisherContract.creators(tokenId)).to.equal(creatorAddress);
     expect(await publisherContract.ipfsHashes(tokenId)).to.equal(dummyMetadataIpfsHash);
     expect(await publisherContract.totalSupplies(tokenId)).to.equal(1);
@@ -153,11 +153,11 @@ describe("Chocomint", function () {
 
   it.only("publish and print, print, burn, burn and check price", async function () {
     const creatorAddress = ownershipSigner.address;
-    const currenty = nullAddress;
+    const currency = nullAddress;
     const tokenId = hashChoco(
       hardhatChainId,
       publisherContract.address,
-      currenty,
+      currency,
       creatorAddress,
       dummyMetadataIpfsHash,
       defaultSupplyLimit,
@@ -171,7 +171,7 @@ describe("Chocomint", function () {
     await publisherContract
       .connect(ownerSigner)
       .publishAndMintPrint(
-        currenty,
+        currency,
         creatorAddress,
         dummyMetadataIpfsHash,
         defaultSupplyLimit,
@@ -193,7 +193,7 @@ describe("Chocomint", function () {
     await publisherContract
       .connect(ownerSigner)
       .publishAndMintPrint(
-        currenty,
+        currency,
         creatorAddress,
         dummyMetadataIpfsHash,
         defaultSupplyLimit,

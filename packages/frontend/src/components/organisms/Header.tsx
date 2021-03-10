@@ -54,8 +54,8 @@ export const Header: React.FC = () => {
           ) : (
             <Link to={`/box/${selectedAddress}`}>
               <Button type="tertiary">
+                <span className="mr-1">👩‍🎨</span>
                 {shortenAddress(selectedAddress)}
-                <span className="ml-1">👷‍♂️</span>
               </Button>
             </Link>
           )}
