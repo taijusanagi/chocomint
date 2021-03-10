@@ -30,16 +30,7 @@
     "chainId": "31337",
     "rpc": "http://localhost:8545",
     "explore": "https://rinkeby.etherscan.io/tx/",
-    "aaveGatewayAddress": "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
-    "aaveWETHGatewayAddress": "0xDcD33426BA191383f1c9B431A342498fdac73488",
-    "ownershipAddress": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
-    "publisherAddress": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"
-  },
-  "hardhat": {
-    "chainId": "31337",
-    "rpc": "http://localhost:8545",
-    "explore": "https://rinkeby.etherscan.io/tx/",
-    "aaveGatewayAddress": "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
+    "aaveGatewayAddress": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
     "aaveWETHGatewayAddress": "0xDcD33426BA191383f1c9B431A342498fdac73488",
     "ownershipAddress": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
     "publisherAddress": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"

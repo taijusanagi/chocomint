@@ -2,16 +2,16 @@ import * as fs from "fs";
 import * as path from "path";
 
 import hre, { ethers } from "hardhat";
-import { initialize } from "../helpers/deploy";
+import { initialize, getNetwork } from "../helpers/deploy";
+
 import configs from "../network.json";
 
 import { NetworkName } from "../type";
 const gasPrice = process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 100000000000;
 
 const main = async () => {
-  const networkName = hre.network.name as NetworkName;
+  const networkName = getNetwork();
   console.log("run deploy script on network:", networkName);
-
   if (
     networkName == "mainnet" ||
     networkName == "rinkeby" ||

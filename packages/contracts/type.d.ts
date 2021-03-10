@@ -1,1 +1,1 @@
-export type NetworkName = "mainnet" | "rinkeby" | "kovan" | "localhost";
+export type NetworkName = "mainnet" | "rinkeby" | "kovan" | "localhost" | "hardhat";

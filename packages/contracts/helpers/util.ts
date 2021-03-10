@@ -3,17 +3,19 @@ import { ethers } from "ethers";
 export const hashChoco = (
   chainId,
   publisherAddress,
-  signerAddress,
+  currencyAddress,
+  creatorAddress,
   ipfshash,
   supplyLimit,
-  virtualSupply,
-  virtualReserve,
+  initialPrice,
+  diluter,
   crr,
   royalityRatio
 ) => {
   return ethers.utils.solidityKeccak256(
     [
       "uint256",
+      "address",
       "address",
       "address",
       "bytes32",
@@ -26,11 +28,12 @@ export const hashChoco = (
     [
       chainId,
       publisherAddress,
-      signerAddress,
+      currencyAddress,
+      creatorAddress,
       ipfshash,
       supplyLimit,
-      virtualSupply,
-      virtualReserve,
+      initialPrice,
+      diluter,
       crr,
       royalityRatio,
     ]

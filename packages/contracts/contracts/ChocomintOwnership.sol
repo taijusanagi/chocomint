@@ -9,32 +9,13 @@ import "./ChocomintUtils.sol";
 contract ChocomintOwnership is ERC721, ChocomintUtils {
   mapping(uint256 => uint256) public balances;
 
-  event Depositted(address indexed operator, uint256 indexed tokenId, uint256 amount);
-  event Withdrawed(address indexed operator, uint256 indexed tokenId, uint256 amount);
-
   address public chocomintPublisher;
-  address public aaveEthGateway;
 
-  constructor(string memory name, string memory symbol) public ERC721(name, symbol) {}
+  constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
   function initialize(address _chocomintPublisher) public {
     require(chocomintPublisher == address(0x0), "contract is already initialized");
     chocomintPublisher = _chocomintPublisher;
-  }
-
-  function deposit(uint256 _tokenId) public payable {
-    balances[_tokenId] += msg.value;
-    emit Depositted(msg.sender, _tokenId, msg.value);
-  }
-
-  function withdraw(uint256 _tokenId) public {
-    require(msg.sender == ownerOf(_tokenId), "msg sender must be nft owner");
-    uint256 reward = balances[_tokenId];
-    require(reward > 0, "reward must be more than 0");
-    balances[_tokenId] = 0;
-    IWETHGateway(aaveEthGateway).withdrawETH(reward, address(this));
-    payable(msg.sender).transfer(reward);
-    emit Withdrawed(msg.sender, _tokenId, reward);
   }
 
   function mint(address _to, uint256 _tokenId) public {

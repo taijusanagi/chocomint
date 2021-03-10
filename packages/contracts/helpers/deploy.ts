@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 
 export const publisherName = "ChocomintPublisher";
 export const ownershipName = "ChocomintOwnership";
@@ -14,7 +14,6 @@ export const initialize = async (networkName: NetworkName, debug?: boolean, gasP
   const ChocomintOwnership = await ethers.getContractFactory("ChocomintOwnership");
   const { aaveGatewayAddress, aaveWETHGatewayAddress } = configs[networkName];
   const publisher = await ChocomintPublisher.deploy(publisherName, publisherSymbol, { gasPrice });
-
   debug && console.log("publisher deployed to:", publisher.address);
   const ownership = await ChocomintOwnership.deploy(ownershipName, ownershipSymbol, { gasPrice });
   debug && console.log("ownership deployed to:", ownership.address);
@@ -27,4 +26,8 @@ export const initialize = async (networkName: NetworkName, debug?: boolean, gasP
   });
   debug && console.log("ownership initialized");
   return { publisher, ownership };
+};
+
+export const getNetwork = () => {
+  return hre.network.name == "hardhat" ? "localhost" : (hre.network.name as NetworkName);
 };
