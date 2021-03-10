@@ -155,93 +155,92 @@ export const NFT: React.FC = () => {
   return (
     <Body>
       <Header />
-      <div className="flex flex-col">
-        {choco && (
-          <div className="px-6 sm:px-0 mb-6">
-            <div className="flex flex-wrap justify-center pt-6 sm:pt-28">
-              <a className="mb-4" onClick={() => openDescription(choco.metadata.description)}>
-                <img
-                  className="solidity max-h-96 sm:min-w-5xl sm:mr-24"
-                  src={choco.metadata.image}
-                />
-              </a>
-              <div className="sm:w-72 px-2 sm:px-0">
-                <div className="flex my-4 mb-8">
-                  <Link to={`/box/${selectedAddress}`}>
-                    <button className="w-44 bg-white text-black font-medium rounded-full shadow-md mr-2 sm:mr-3 p-2">
-                      👩‍🎨
-                      <span className="pl-3">{shortenAddress(choco.creatorAddress)}</span>
-                    </button>
-                  </Link>
-                  <button className="w-full bg-green-400 text-white font-medium rounded-full shadow-md p-2">
-                    {printCount} / {choco.supplyLimit}
+      {choco && (
+        <div className="px-6 sm:px-0 mb-10 sm:mb-24">
+          <div className="flex flex-wrap justify-center pt-6 sm:pt-28">
+            <a className="mb-4" onClick={() => openDescription(choco.metadata.description)}>
+              <img className="solidity max-h-96 sm:min-w-5xl sm:mr-24" src={choco.metadata.image} />
+            </a>
+            <div className="sm:w-72 px-2 sm:px-0">
+              <div className="flex my-4 mb-8">
+                <Link to={`/box/${selectedAddress}`}>
+                  <button className="w-44 bg-white text-black font-medium rounded-full shadow-md mr-2 sm:mr-3 p-2">
+                    👩‍🎨
+                    <span className="pl-3">{shortenAddress(choco.creatorAddress)}</span>
                   </button>
-                </div>
-                <div className="sm:w-96">
-                  <p className="break-all text-black text-5xl sm:text-7xl font-semibold px-2 sm:px-0 mb-5">
-                    {shortenName(choco.metadata.name)}
-                  </p>
-                  <div className="grid grid-cols-2 gap-5 m-2">
-                    <div>
-                      {printPrice ? (
-                        <>
-                          <p className="text-lg text-gray-600 font-medium px-2 mb-1">Print Price</p>
-                          <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
-                            {roundAndFormatPrintPrice(printPrice, 3)} ETH
-                          </p>
-                        </>
-                      ) : burnPrice ? (
-                        <>
-                          <p className="text-lg text-gray-600 font-medium px-2 mb-1">Burn Price</p>
-                          <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
-                            {roundAndFormatBurnPrice(burnPrice, 3)} ETH
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-lg text-gray-600 font-medium px-2 mb-1">Price</p>
-                          <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
-                            Not privce
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-lg text-gray-600 font-medium px-2 mb-1">Roylatity Ratio</p>
-                      <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
-                        50%
-                        {/* 仮 */}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-5 mb-5">
-                    {!selectedAddress ? (
-                      <Button onClick={connectWallet} type="primary">
-                        Connect <span className="ml-1">🔐</span>
-                      </Button>
+                </Link>
+                <button className="w-full bg-green-400 text-white font-medium rounded-full shadow-md p-2">
+                  {printCount} / {choco.supplyLimit}
+                </button>
+              </div>
+              <div className="sm:w-96">
+                <p className="break-all text-black text-5xl sm:text-7xl font-semibold px-2 sm:px-0 mb-5">
+                  {shortenName(choco.metadata.name)}
+                </p>
+                <div className="grid grid-cols-2 gap-5 m-2">
+                  <div>
+                    {printPrice ? (
+                      <>
+                        <p className="text-lg text-gray-600 font-medium px-2 mb-1">Print Price</p>
+                        <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
+                          {roundAndFormatPrintPrice(printPrice, 3)} ETH
+                        </p>
+                      </>
+                    ) : burnPrice ? (
+                      <>
+                        <p className="text-lg text-gray-600 font-medium px-2 mb-1">Burn Price</p>
+                        <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
+                          {roundAndFormatBurnPrice(burnPrice, 3)} ETH
+                        </p>
+                      </>
                     ) : (
                       <>
-                        {printPrice && (
-                          <Button onClick={print} type="secondary">
-                            Mint
-                            <span className="ml-1">💎</span>
-                          </Button>
-                        )}
-                        {burnPrice && (
-                          <Button onClick={burn} type="tertiary">
-                            Burn
-                            <span className="ml-1">🔥</span>
-                          </Button>
-                        )}
+                        <p className="text-lg text-gray-600 font-medium px-2 mb-1">Price</p>
+                        <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
+                          Not privce
+                        </p>
                       </>
                     )}
                   </div>
+                  <div>
+                    <p className="text-lg text-gray-600 font-medium px-2 mb-1">Roylatity Ratio</p>
+                    <p className="text-2xl sm:text-3xl text-gray-800 font-medium px-2 mb-7">
+                      50%
+                      {/* 仮 */}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-5 mb-5">
+                  {!selectedAddress ? (
+                    <Button onClick={connectWallet} type="primary">
+                      Connect <span className="ml-1">🔐</span>
+                    </Button>
+                  ) : (
+                    <>
+                      {printPrice && (
+                        <Button onClick={print} type="secondary">
+                          Mint
+                          <span className="ml-1">💎</span>
+                        </Button>
+                      )}
+                      {burnPrice && (
+                        <Button onClick={burn} type="tertiary">
+                          Burn
+                          <span className="ml-1">🔥</span>
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        )}
-        {/* <div>他のアセットへの繋ぎのリスト</div> */}
+        </div>
+      )}
+      <div className="relative w-5/6 sm:w-1/2 mx-auto mb-6">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
       </div>
       {modal && <Modal {...modal} onClickDismiss={closeModal} />}
     </Body>
