@@ -24,7 +24,7 @@ export const Hero: React.FC<HeroProps> = ({ src, onClick }) => {
             <div className="flex items-center justify-center sm:px-1">
               {src.match(new RegExp("hero.png")) ? (
                 <Button type="tertiary" onClick={onClick}>
-                  Get started
+                  Get Started
                 </Button>
               ) : (
                 <a
