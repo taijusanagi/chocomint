@@ -61,7 +61,7 @@ export const Home: React.FC = () => {
   return (
     <Body>
       <Header />
-      <Hero src="/ogp.png" onClick={onClockHero} />
+      <Hero src="/hero.png" onClick={onClockHero} />
       <h3 className="text-center text-2xl text-gray-600 font-bold p-12">Newly Created NFTs</h3>
       <div className="container px-8 mx-auto max-w-5xl">
         {chocos ? <ChocoList chocos={chocos} prices={prices}></ChocoList> : <></>}
