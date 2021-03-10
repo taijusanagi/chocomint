@@ -144,11 +144,7 @@ export const NFT: React.FC = () => {
       <Header />
       {choco && (
         <>
-          <Hero
-            type="nft"
-            src={choco.metadata.image}
-            onClick={() => openDescription(choco.metadata.name)}
-          />
+          <Hero src={choco.metadata.image} onClick={() => openDescription(choco.metadata.name)} />
           <div className="flex justify-center flex-grow container mx-auto">
             <div className="w-80">
               <div className="mt-6 space-y-6">

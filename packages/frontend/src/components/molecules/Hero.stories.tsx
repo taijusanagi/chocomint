@@ -2,7 +2,6 @@ import React from "react";
 import { Hero, HeroProps } from "./Hero";
 
 const args: HeroProps = {
-  type: "top",
   src: "/hero.png",
 };
 
