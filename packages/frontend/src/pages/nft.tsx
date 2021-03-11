@@ -159,7 +159,7 @@ export const NFT: React.FC = () => {
 
           <div className="p-4 w-full sm:w-7/12 flex justify-start flex-col">
             <Link to={`/creator/${choco.creatorAddress}`}>
-              <button className="w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md mb-2 p-2">
+              <button className="w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2">
                 <span className="pr-2">👩‍🎨</span>
                 {shortenAddress(choco.creatorAddress)}
               </button>
