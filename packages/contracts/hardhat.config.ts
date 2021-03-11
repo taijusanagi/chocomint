@@ -37,6 +37,10 @@ module.exports = {
       url: network.rinkeby.rpc,
       accounts: [privateKey],
     },
+    kovan: {
+      url: network.kovan.rpc,
+      accounts: [privateKey],
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
