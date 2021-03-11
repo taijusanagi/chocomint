@@ -224,14 +224,24 @@ export const NFT: React.FC = () => {
               <div className="grid grid-cols-2 space-x-2">
                 {printPrice > 0 && (
                   <Button onClick={print} type="primary">
-                    Buy
-                    <span className="ml-1">💎</span>
+                    <div className="flex justify-center items-center">
+                      Buy
+                      <span className="ml-1">🛒</span>
+                    </div>
                   </Button>
                 )}
                 {burnPrice > 0 && (
                   <Button onClick={burn} type="tertiary">
-                    Sell
-                    <span className="ml-1">🔥</span>
+                    <div className="flex justify-center items-center">
+                      Sell
+                      <span className="ml-1">
+                        <img
+                          className="h-4 h-4 rounded-full opacity-80"
+                          src="/cell.png"
+                          alt="cell"
+                        />
+                      </span>
+                    </div>
                   </Button>
                 )}
               </div>
