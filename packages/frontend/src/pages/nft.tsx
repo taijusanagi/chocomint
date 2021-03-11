@@ -1,5 +1,6 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
+
 import { firestore, collectionName } from "../modules/firebase";
 import {
   verifyMetadata,
@@ -19,6 +20,7 @@ import { shortenAddress, shortenName } from "../modules/util";
 import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
 import { Modal, useModal } from "../components/molecules/Modal";
+import { Shares } from "../components/molecules/Shares";
 import { Header } from "../components/organisms/Header";
 
 import { Choco } from "../types";
@@ -157,7 +159,7 @@ export const NFT: React.FC = () => {
 
           <div className="p-4 w-full sm:w-7/12 flex justify-start flex-col">
             <Link to={`/creator/${choco.creatorAddress}`}>
-              <button className="w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2 mb-2">
+              <button className="w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md mb-2 p-2">
                 <span className="pr-2">👩‍🎨</span>
                 {shortenAddress(choco.creatorAddress)}
               </button>
@@ -186,7 +188,7 @@ export const NFT: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="mb-8">
+            <div className="mb-4">
               <p className="text-gray-500 text-xs font-medium">Slippage Settings</p>
               <div className="flex">
                 {slippageList.map((_slippage, i) => {
@@ -205,7 +207,7 @@ export const NFT: React.FC = () => {
                 })}
               </div>
             </div>
-            <div>
+            <div className="mb-4">
               <div className="grid grid-cols-2 space-x-2">
                 {printPrice > 0 && (
                   <Button onClick={print} type="primary">
@@ -221,6 +223,7 @@ export const NFT: React.FC = () => {
                 )}
               </div>
             </div>
+            <Shares />
           </div>
         </div>
       )}

@@ -21,7 +21,9 @@ export const Home: React.FC = () => {
         querySnapshot.forEach((doc) => {
           createdChocos.push(doc.data() as Choco);
         });
-        setCreatedChocos(createdChocos);
+        if (createdChocos.length > 0) {
+          setCreatedChocos(createdChocos);
+        }
       });
   }, []);
 
@@ -29,14 +31,14 @@ export const Home: React.FC = () => {
     <Body>
       <Header />
       <Hero src="/hero.png" />
-      <h3 className="text-center text-2xl text-gray-600 font-bold p-12">Newly Purchased</h3>
-      <div className="container px-2 mx-auto max-w-5xl">
-        {createdChocos ? <ChocoList chocos={createdChocos}></ChocoList> : <></>}
-      </div>
-      <h3 className="text-center text-2xl text-gray-600 font-bold p-12">Newly Created</h3>
-      <div className="container px-2 mx-auto max-w-5xl">
-        {createdChocos ? <ChocoList chocos={createdChocos}></ChocoList> : <></>}
-      </div>
+      {createdChocos && (
+        <>
+          <h3 className="text-center text-2xl text-gray-600 font-bold p-12">New Chocos!</h3>
+          <div className="container px-2 mx-auto max-w-5xl">
+            <ChocoList chocos={createdChocos}></ChocoList>
+          </div>
+        </>
+      )}
     </Body>
   );
 };
