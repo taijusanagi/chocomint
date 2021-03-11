@@ -11,7 +11,7 @@ import {
   explore,
   getPrices,
   roundAndFormatPrintPrice,
-  BASE_RATIO,
+  roundAndFormatBurnPrice,
   useWallet,
 } from "../modules/web3";
 
@@ -188,10 +188,14 @@ export const NFT: React.FC = () => {
                 )}
               </div>
               <div>
-                <p className="text-lg text-gray-500 font-medium">Royality</p>
-                <p className="text-2xl sm:text-3xl text-gray-700 font-medium">
-                  {BASE_RATIO / choco.royaltyRatio}%
-                </p>
+                {printPrice > 0 && (
+                  <>
+                    <p className="text-lg text-gray-500 font-medium">Burn Price</p>
+                    <p className="text-2xl sm:text-3xl text-gray-700 font-medium">
+                      {roundAndFormatBurnPrice(burnPrice, 3)} ETH
+                    </p>
+                  </>
+                )}
               </div>
             </div>
             <div className="mb-4">
