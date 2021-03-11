@@ -150,7 +150,7 @@ export const NFT: React.FC = () => {
       {choco && (
         <div className="grid grid-cols-1 sm:grid-cols-2 flex">
           <div className="p-4 flex justify-center sm:justify-end relative">
-            <div className="flex">
+            <div className="flex w-full sm:justify-end">
               <div className="absolute opacity-90 m-4">
                 <button
                   onClick={connectWallet}
@@ -159,7 +159,10 @@ export const NFT: React.FC = () => {
                   {printCount}/ {choco.supplyLimit}
                 </button>
               </div>
-              <img className="object-cover max-h-96 max-w-sm olidity" src={choco.metadata.image} />
+              <img
+                className="object-cover max-h-96 max-w-m h-full solidity"
+                src={choco.metadata.image}
+              />
             </div>
           </div>
 
