@@ -19,7 +19,7 @@ import { shortenAddress, shortenName } from "../modules/util";
 
 import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
-import { Modal, useModal } from "../components/molecules/Modal";
+import { MessageModal, useMessageModal } from "../components/molecules/MessageModal";
 import { Shares } from "../components/molecules/Shares";
 import { Header } from "../components/organisms/Header";
 import { Footer } from "../components/organisms/Footer";
@@ -28,7 +28,7 @@ import { Choco } from "../types";
 export const NFT: React.FC = () => {
   const { hash } = useParams<{ hash: string }>();
   const [choco, setChoco] = React.useState<Choco | undefined>(undefined);
-  const { modal, openModal, closeModal } = useModal();
+  const { messageModal, openModal, closeModal } = useMessageModal();
 
   const [printCount, setPrintCount] = React.useState(0);
   const [printPrice, setPrintPrice] = React.useState(0);
@@ -170,7 +170,7 @@ export const NFT: React.FC = () => {
                 {shortenAddress(choco.creatorAddress)}
               </button>
             </Link>
-            <p className="break-all text-gray-700 text-5xl sm:text-7xl font-medium mb-2">
+            <p className="break-all text-gray-700 text-5xl sm:text-7xl font-medium mt-2 mb-2">
               {shortenName(choco.metadata.name)}
             </p>
             <p className="break-all text-gray-400 text-xs font-medium mb-4">
@@ -237,7 +237,7 @@ export const NFT: React.FC = () => {
           </div>
         </div>
       )}
-      {modal && <Modal {...modal} onClickDismiss={closeModal} />}
+      {messageModal && <MessageModal {...messageModal} onClickDismiss={closeModal} />}
       <Footer />
     </Body>
   );

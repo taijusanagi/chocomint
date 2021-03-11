@@ -2,6 +2,21 @@
 const { ethers } = require("ethers");
 const { BASE_RATIO } = require("./constant");
 
+const aaveConfig = require("../aave.json");
+
+exports.getAaveTokens = (_networkName) => {
+  const networkName = _networkName == "kovan" ? "kovan" : "mainnet";
+  return aaveConfig[networkName].filter((config) => {
+    return (
+      config.symbol == "WETH" ||
+      config.symbol == "UNI" ||
+      config.symbol == "DAI" ||
+      config.symbol == "ENJ" ||
+      config.symbol == "REN"
+    );
+  });
+};
+
 exports.getPrice = (currentSupply, currentReserve, initialPrice, diluter, crr) => {
   const virtualReserve = ethers.BigNumber.from(initialPrice).mul(diluter).mul(crr).div(BASE_RATIO);
   const supply = ethers.BigNumber.from(currentSupply).add(diluter);

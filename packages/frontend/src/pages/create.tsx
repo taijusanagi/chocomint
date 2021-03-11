@@ -27,7 +27,7 @@ import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
 
 import { ImageUploadIcon } from "../components/atoms/ImageUploadIcon";
-import { Modal, useModal } from "../components/molecules/Modal";
+import { MessageModal, useMessageModal } from "../components/molecules/MessageModal";
 import { Header } from "../components/organisms/Header";
 import { Footer } from "../components/organisms/Footer";
 const canonicalize = require("canonicalize");
@@ -43,7 +43,7 @@ export const Create: React.FC = () => {
   );
   const [, setSelectedAddress] = useRecoilState(selectedAddressState);
   const { connectWallet } = useWallet();
-  const { modal, openModal, closeModal } = useModal();
+  const { messageModal, openModal, closeModal } = useMessageModal();
 
   const readAsArrayBufferAsync = (file: File) => {
     return new Promise((resolve) => {
@@ -186,7 +186,6 @@ export const Create: React.FC = () => {
         {/* TODO: align center for smart phone */}
         <div className="w-full sm:max-w-md p-4">
           <img className=" mx-auto h-20 w-auto solidity" src="/logo.png" alt="logo" />
-
           <div className="mt-2">
             <label
               htmlFor="name"
@@ -247,6 +246,20 @@ export const Create: React.FC = () => {
               </div>
             </div>
           </div>
+          <div className="text-sm font-bold text-gray-600 sm:mt-px sm:pt-2">Advanced</div>
+          <div className="flex flex-row justify-start">
+            <button
+              onClick={() =>
+                openModal("🎉", "NFT is created in Chocomint!", "Check", `/nft`, false)
+              }
+              className="focus:outline-none grab-animation m-2 text-xs text-gray-700 font-bold bg-gray-100 solidity p-2"
+            >
+              Currency
+            </button>
+            <button className="focus:outline-none grab-animation m-2 text-xs text-gray-700 font-bold bg-gray-100 solidity p-2">
+              Pricing
+            </button>
+          </div>
           <div className="mt-8">
             <Button onClick={createNft} disabled={!isFormReady()} type="primary">
               Create <span className="ml-1">💎</span>
@@ -254,7 +267,7 @@ export const Create: React.FC = () => {
           </div>
         </div>
       </div>
-      {modal && <Modal {...modal} onClickDismiss={closeModal} />}
+      {messageModal && <MessageModal {...messageModal} onClickDismiss={closeModal} />}
       <Footer />
     </Body>
   );

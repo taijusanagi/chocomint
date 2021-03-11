@@ -8,11 +8,15 @@ import Torus from "@toruslabs/torus-embed";
 
 import { Metadata } from "../types";
 
+import { abi as erc20Abi } from "../../../contracts/artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
 import { abi as chocomintPublisherAbi } from "../../../contracts/artifacts/contracts/ChocomintPublisher.sol/ChocomintPublisher.json";
 import { abi as chocomintOwnershipAbi } from "../../../contracts/artifacts/contracts/ChocomintOwnership.sol/ChocomintOwnership.json";
-import { ChocomintPublisher, ChocomintOwnership } from "../../../contracts/typechain";
+import { ChocomintPublisher, ChocomintOwnership, ERC20 } from "../../../contracts/typechain";
 
+import { getAaveTokens } from "../../../contracts/helpers/util";
 export { hashChoco, getPrices, getPrice } from "../../../contracts/helpers/util";
+
+import { nullAddress } from "../../../contracts/helpers/constant";
 
 export {
   defaultSupplyLimit,
@@ -75,6 +79,26 @@ export const chocomintPublisherContract = new ethers.Contract(
   chocomintPublisherAbi,
   provider
 ) as ChocomintPublisher;
+
+// export const chocomintOwnershipContract = new ethers.Contract(
+//   ownershipAddress,
+//   chocomintOwnershipAbi,
+//   provider
+// ) as ChocomintOwnership;
+
+export const getAtokenWithBalance = async () => {
+  const aaveTokens = getAaveTokens(networkName);
+  const promises = aaveTokens.map(async (aaveToken: any) => {
+    const erc20Contract = new ethers.Contract(aaveToken.aTokenAddress, erc20Abi, provider) as ERC20;
+    const balance = await erc20Contract.balanceOf(chocomintPublisherContract.address);
+    return balance.toString();
+  });
+  const resolved = await Promise.all(promises);
+  return aaveTokens.map((aaveToken: any, i) => {
+    aaveToken.depositted = resolved[i];
+    return aaveToken;
+  });
+};
 
 export const providerOptions = {
   walletconnect: {
