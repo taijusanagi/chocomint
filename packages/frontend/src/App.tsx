@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 import { RecoilRoot } from "recoil";
 
-import Box from "./pages/box";
+import Creator from "./pages/creator";
 import Create from "./pages/create";
 import Home from "./pages/index";
 import NFT from "./pages/nft";
@@ -13,8 +13,8 @@ const App: React.FC = () => {
     <RecoilRoot>
       <Router>
         <Switch>
-          <Route path="/box/:address" exact>
-            <Box />
+          <Route path="/creator/:address" exact>
+            <Creator />
           </Route>
           <Route path="/create" exact>
             <Create />

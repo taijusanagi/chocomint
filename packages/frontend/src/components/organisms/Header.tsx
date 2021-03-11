@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { useRecoilState } from "recoil";
 
@@ -34,7 +34,7 @@ export const Header: React.FC = () => {
               Connect<span className="ml-1">🔐</span>
             </Button>
           ) : (
-            <Link to={`/box/${selectedAddress}`}>
+            <Link to={`/creator/${selectedAddress}`}>
               <Button type="tertiary">
                 <span className="mr-1">👩‍🎨</span>
                 {shortenAddress(selectedAddress)}

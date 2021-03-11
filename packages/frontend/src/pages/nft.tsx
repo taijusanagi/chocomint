@@ -1,6 +1,5 @@
 import React from "react";
-import { useParams } from "react-router-dom";
-
+import { useParams, Link } from "react-router-dom";
 import { firestore, collectionName } from "../modules/firebase";
 import {
   verifyMetadata,
@@ -155,11 +154,14 @@ export const NFT: React.FC = () => {
               <img className="object-cover max-h-96 max-w-sm olidity" src={choco.metadata.image} />
             </div>
           </div>
+
           <div className="p-4 w-full sm:w-7/12 flex justify-start flex-col">
-            <button className="w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2 mb-2">
-              <span className="pr-2">👩‍🎨</span>
-              {shortenAddress(choco.creatorAddress)}
-            </button>
+            <Link to={`/creator/${choco.creatorAddress}`}>
+              <button className="w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2 mb-2">
+                <span className="pr-2">👩‍🎨</span>
+                {shortenAddress(choco.creatorAddress)}
+              </button>
+            </Link>
             <p className="break-all text-gray-700 text-5xl sm:text-7xl font-medium mb-2">
               {shortenName(choco.metadata.name)}
             </p>
