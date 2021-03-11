@@ -3,6 +3,9 @@ module.exports = {
   darkMode: false,
   theme: {
     extend: {},
+    fontFamily: {
+      'way': ['Raleway']
+    },
   },
   variants: {
     extend: {
