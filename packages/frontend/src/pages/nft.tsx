@@ -180,7 +180,7 @@ export const NFT: React.FC = () => {
               <div>
                 {printPrice > 0 && (
                   <>
-                    <p className="text-lg text-gray-500 font-medium">Print Price</p>
+                    <p className="text-lg text-gray-500 font-medium">Buy Price</p>
                     <p className="text-2xl sm:text-3xl text-gray-700 font-medium">
                       {roundAndFormatPrintPrice(printPrice, 3)} ETH
                     </p>
@@ -190,7 +190,7 @@ export const NFT: React.FC = () => {
               <div>
                 {printPrice > 0 && (
                   <>
-                    <p className="text-lg text-gray-500 font-medium">Burn Price</p>
+                    <p className="text-lg text-gray-500 font-medium">Sell Price</p>
                     <p className="text-2xl sm:text-3xl text-gray-700 font-medium">
                       {roundAndFormatBurnPrice(burnPrice, 3)} ETH
                     </p>
@@ -221,13 +221,13 @@ export const NFT: React.FC = () => {
               <div className="grid grid-cols-2 space-x-2">
                 {printPrice > 0 && (
                   <Button onClick={print} type="primary">
-                    Mint
+                    Buy
                     <span className="ml-1">💎</span>
                   </Button>
                 )}
                 {burnPrice > 0 && (
                   <Button onClick={burn} type="tertiary">
-                    Burn
+                    Sell
                     <span className="ml-1">🔥</span>
                   </Button>
                 )}
