@@ -31,7 +31,7 @@ export const Header: React.FC = () => {
         <div className="p-4 absolute right-0">
           {!selectedAddress ? (
             <Button onClick={connectWallet} type="tertiary">
-              Connect<span className="ml-1">🔐</span>
+              Connect<span className="ml-1">🔌</span>
             </Button>
           ) : (
             <Link to={`/creator/${selectedAddress}`}>
