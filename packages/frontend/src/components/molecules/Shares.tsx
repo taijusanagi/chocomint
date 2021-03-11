@@ -11,8 +11,8 @@ export const Shares: React.FC<SharesProps> = ({ url, title }) => {
   const _url = url ? url : window.location.href;
   return (
     <div>
-      <TwitterShareButton title={_title} via="chocomintapp" url={_url}>
-        <TwitterIcon size={24} round={true}></TwitterIcon>
+      <TwitterShareButton className="solidity" title={_title} via="chocomintapp" url={_url}>
+        <TwitterIcon size={24} className="rounded-lg"></TwitterIcon>
       </TwitterShareButton>
     </div>
   );
