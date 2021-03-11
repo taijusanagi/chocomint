@@ -61,7 +61,7 @@ export const ChocoList: React.FC<ChocoListProps> = ({ chocos, prices }) => {
 
   return (
     <section>
-      <ul className="grid grid-cols-2 md:grid-cols-3 gap-2">
+      <ul className="grid grid-cols-2 md:grid-cols-3 gap-2 font-way">
         {chocos.map((choco, i) => {
           return (
             <Link key={i} to={`/nft/${choco.chocoId}`}>
