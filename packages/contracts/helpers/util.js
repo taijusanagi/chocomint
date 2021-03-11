@@ -11,7 +11,7 @@ exports.getAaveTokens = (_networkName) => {
       config.symbol == "WETH" ||
       config.symbol == "UNI" ||
       config.symbol == "DAI" ||
-      config.symbol == "ENJ" ||
+      config.symbol == "AAVE" ||
       config.symbol == "REN"
     );
   });
