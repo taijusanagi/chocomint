@@ -12,6 +12,7 @@ export const main = async () => {
   await initializeChocopound();
   await initializeChocopoundOwnership();
   await approveCurrency("WETH");
+  await approveCurrency("DAI");
 };
 
 main()

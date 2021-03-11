@@ -8,15 +8,17 @@ import Torus from "@toruslabs/torus-embed";
 
 import { Metadata } from "../types";
 
-import { abi as erc20Abi } from "../../../contracts/artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
-import { abi as chocomintPublisherAbi } from "../../../contracts/artifacts/contracts/ChocomintPublisher.sol/ChocomintPublisher.json";
-import { abi as chocomintOwnershipAbi } from "../../../contracts/artifacts/contracts/ChocomintOwnership.sol/ChocomintOwnership.json";
-import { ChocomintPublisher, ChocomintOwnership, ERC20 } from "../../../contracts/typechain";
+import { abi as erc20Abi } from "../../../contracts/artifacts/contracts/dependencies/@openzeppelin/token/ERC20/IERC20.sol/IERC20.json";
+import { abi as chocopoundAbi } from "../../../contracts/artifacts/contracts/Chocopound.sol/Chocopound.json";
+import { abi as chocomintOwnershipAbi } from "../../../contracts/artifacts/contracts/ChocopoundOwnership.sol/ChocopoundOwnership.json";
+import {
+  Chocopound as IChocopound,
+  ChocopoundOwnership as IChocopoundOwnership,
+  IERC20,
+} from "../../../contracts/typechain";
 
 import { getAaveTokens } from "../../../contracts/helpers/util";
 export { hashChoco, getPrices, getPrice, getAaveTokens } from "../../../contracts/helpers/util";
-
-import { nullAddress } from "../../../contracts/helpers/constant";
 
 export {
   defaultSupplyLimit,
@@ -39,7 +41,7 @@ export const networkName = process.env.REACT_APP_NETWORK_NAME
   : "localhost";
 
 const network = require("../../../contracts/network.json");
-export const { rpc, chainId, explore, ownershipAddress, publisherAddress } = network[networkName];
+export const { rpc, chainId, explore, ChocopoundOwnership, Chocopound } = network[networkName];
 
 export const ipfsBaseUrl = "ipfs://";
 export const ipfsHttpsBaseUrl = "https://ipfs.io/ipfs/";
@@ -69,28 +71,32 @@ export const verifyMetadata = async (ipfsHash: string, metadata: Metadata) => {
 export const provider = new ethers.providers.JsonRpcProvider(rpc);
 
 export const chocomintOwnershipContract = new ethers.Contract(
-  ownershipAddress,
+  ChocopoundOwnership,
   chocomintOwnershipAbi,
   provider
-) as ChocomintOwnership;
+) as IChocopoundOwnership;
 
-export const chocomintPublisherContract = new ethers.Contract(
-  publisherAddress,
-  chocomintPublisherAbi,
+export const chocopoundContract = new ethers.Contract(
+  Chocopound,
+  chocopoundAbi,
   provider
-) as ChocomintPublisher;
+) as IChocopound;
 
 // export const chocomintOwnershipContract = new ethers.Contract(
-//   ownershipAddress,
+//   ChocopoundOwnership,
 //   chocomintOwnershipAbi,
 //   provider
-// ) as ChocomintOwnership;
+// ) as ChocopoundOwnership;
 
 export const getAtokenWithBalance = async () => {
   const aaveTokens = getAaveTokens(networkName);
   const promises = aaveTokens.map(async (aaveToken: any) => {
-    const erc20Contract = new ethers.Contract(aaveToken.aTokenAddress, erc20Abi, provider) as ERC20;
-    const balance = await erc20Contract.balanceOf(chocomintPublisherContract.address);
+    const erc20Contract = new ethers.Contract(
+      aaveToken.aTokenAddress,
+      erc20Abi,
+      provider
+    ) as IERC20;
+    const balance = await erc20Contract.balanceOf(chocopoundContract.address);
     return balance.toString();
   });
   const resolved = await Promise.all(promises);

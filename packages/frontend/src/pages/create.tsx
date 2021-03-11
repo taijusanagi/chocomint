@@ -5,7 +5,7 @@ import {
   ipfs,
   chainId,
   ipfsHttpsBaseUrl,
-  publisherAddress,
+  Chocopound,
   getWeb3,
   selectedAddressState,
   cidToIpfsHash,
@@ -165,7 +165,7 @@ export const Create: React.FC = () => {
 
       const chocoId = hashChoco(
         chainId,
-        publisherAddress,
+        Chocopound,
         currencyAddress,
         creatorAddress,
         ipfsHash,
@@ -179,7 +179,7 @@ export const Create: React.FC = () => {
       const choco: Choco = {
         chocoId,
         chainId,
-        publisherAddress,
+        chocopoundAddress: Chocopound,
         currencyAddress,
         creatorAddress,
         ipfsHash,
@@ -268,7 +268,7 @@ export const Create: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="text-xs font-bold text-gray-600 sm:mt-px sm:pt-2">Advanced</div>
+          <div className="block text-sm font-bold text-gray-600 sm:mt-px sm:pt-2">Advanced</div>
           <div className="flex flex-row justify-start">
             <button
               onClick={toggelCurrencyModal}

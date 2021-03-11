@@ -23,7 +23,7 @@
     "explore": "https://rinkeby.etherscan.io/tx/",
     "LendingPool": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
     "WETHGateway": "0xDcD33426BA191383f1c9B431A342498fdac73488",
-    "ChocopoundOwnership": "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90",
-    "Chocopound": "0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575"
+    "ChocopoundOwnership": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
+    "Chocopound": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"
   }
 }

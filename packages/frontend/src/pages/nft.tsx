@@ -4,7 +4,7 @@ import { useParams, Link } from "react-router-dom";
 import { firestore, collectionName } from "../modules/firebase";
 import {
   verifyMetadata,
-  chocomintPublisherContract,
+  chocopoundContract,
   getEthersSigner,
   chainId,
   networkName,
@@ -61,7 +61,7 @@ export const NFT: React.FC = () => {
         }
         setChoco(choco);
 
-        chocomintPublisherContract.totalSupplies(hash).then((printCountBN) => {
+        chocopoundContract.totalSupplies(hash).then((printCountBN) => {
           const printCount = parseInt(printCountBN.toString());
           setPrintCount(printCount);
           const { pricesAtEachSupply } = getPrices(
@@ -104,7 +104,7 @@ export const NFT: React.FC = () => {
 
       const { printPrice } = pricesAtEachSupply[printCount + slippage];
 
-      const { hash: tx } = await chocomintPublisherContract
+      const { hash: tx } = await chocopoundContract
         .connect(signer)
         .publishAndMintPrint(
           choco.currencyAddress,
@@ -135,7 +135,7 @@ export const NFT: React.FC = () => {
       if (!signer) {
         return;
       }
-      const { hash: tx } = await chocomintPublisherContract
+      const { hash: tx } = await chocopoundContract
         .connect(signer)
         .burnPrint(hash, printCount - slippage);
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
@@ -226,7 +226,7 @@ export const NFT: React.FC = () => {
                   <Button onClick={print} type="primary">
                     <div className="flex justify-center items-center">
                       Buy
-                      <span className="ml-1">🛒</span>
+                      <span className="ml-4">🛒</span>
                     </div>
                   </Button>
                 )}
@@ -234,12 +234,8 @@ export const NFT: React.FC = () => {
                   <Button onClick={burn} type="tertiary">
                     <div className="flex justify-center items-center">
                       Sell
-                      <span className="ml-1">
-                        <img
-                          className="h-4 h-4 rounded-full opacity-80"
-                          src="/cell.png"
-                          alt="cell"
-                        />
+                      <span className="ml-4">
+                        <img className="h-4 h-4 rounded-md opacity-80" src="/cell.png" alt="cell" />
                       </span>
                     </div>
                   </Button>

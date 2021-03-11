@@ -4,7 +4,7 @@ import { Choco } from "../types";
 import { useParams } from "react-router-dom";
 
 import { firestore, collectionName } from "../modules/firebase";
-import { chocomintPublisherContract } from "../modules/web3";
+import { chocopoundContract } from "../modules/web3";
 import { middlenAddress } from "../modules/util";
 
 import { Body } from "../components/atoms/Body";
@@ -30,18 +30,11 @@ export const Creator: React.FC = () => {
         });
         setChocos(chocos);
       });
-    const MintEvent = chocomintPublisherContract.filters.PrintMinted(
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    );
-    const BurnEvent = chocomintPublisherContract.filters.PrintBurned(null, null, null, null, null);
+    const MintEvent = chocopoundContract.filters.PrintMinted(null, null, null, null, null, null);
+    const BurnEvent = chocopoundContract.filters.PrintBurned(null, null, null, null, null);
     Promise.all([
-      chocomintPublisherContract.queryFilter(MintEvent, 0, "latest"),
-      chocomintPublisherContract.queryFilter(BurnEvent, 0, "latest"),
+      chocopoundContract.queryFilter(MintEvent, 0, "latest"),
+      chocopoundContract.queryFilter(BurnEvent, 0, "latest"),
     ]).then((resolved) => {
       const events = resolved[0].concat(resolved[1]);
       events.sort((a, b) => (a.blockNumber > b.blockNumber ? 1 : -1));

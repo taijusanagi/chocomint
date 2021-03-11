@@ -57,6 +57,7 @@ describe("Chocomint", function () {
     await initializeChocopound();
     await initializeChocopoundOwnership();
     await approveCurrency("WETH");
+    await approveCurrency("DAI");
   });
 
   it("deploy: deploy is ok", async function () {

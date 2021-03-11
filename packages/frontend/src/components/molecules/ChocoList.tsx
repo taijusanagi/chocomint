@@ -7,7 +7,7 @@ import "./ChocoList.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
-import { roundAndFormatPrintPrice, chocomintPublisherContract, getPrice } from "../../modules/web3";
+import { roundAndFormatPrintPrice, chocopoundContract, getPrice } from "../../modules/web3";
 
 export interface ChocoListProps {
   chocos: Choco[];
@@ -32,18 +32,11 @@ export const ChocoList: React.FC<ChocoListProps> = ({ chocos, prices }) => {
   };
 
   React.useEffect(() => {
-    const MintEvent = chocomintPublisherContract.filters.PrintMinted(
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    );
-    const BurnEvent = chocomintPublisherContract.filters.PrintBurned(null, null, null, null, null);
+    const MintEvent = chocopoundContract.filters.PrintMinted(null, null, null, null, null, null);
+    const BurnEvent = chocopoundContract.filters.PrintBurned(null, null, null, null, null);
     Promise.all([
-      chocomintPublisherContract.queryFilter(MintEvent, 0, "latest"),
-      chocomintPublisherContract.queryFilter(BurnEvent, 0, "latest"),
+      chocopoundContract.queryFilter(MintEvent, 0, "latest"),
+      chocopoundContract.queryFilter(BurnEvent, 0, "latest"),
     ]).then((resolved) => {
       const events = resolved[0].concat(resolved[1]);
       events.sort((a, b) => (a.blockNumber > b.blockNumber ? 1 : -1));

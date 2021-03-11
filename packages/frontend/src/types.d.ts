@@ -7,7 +7,7 @@ export interface Metadata {
 export interface Choco {
   chocoId: string;
   chainId: number;
-  publisherAddress: string;
+  chocopoundAddress: string;
   currencyAddress: string;
   creatorAddress: string;
   ipfsHash: string;
