@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.1;
 
 // @openzeppelin/contracts@4.0.0-rc.0
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -55,6 +55,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   );
 
   mapping(uint256 => bool) public ownershipClaimed;
+  mapping(address => bool) public approvedCurrencies;
   mapping(uint256 => address) public currencies;
   mapping(uint256 => address) public creators;
   mapping(uint256 => bytes32) public ipfsHashes;
@@ -99,17 +100,18 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     chocomintOwnership = _chocomintOwnership;
     aaveLendingPool = _aaveLendingPool;
     aaveWETHGateway = _aaveWETHGateway;
+  }
 
-    // TODO: approve
-    // address[] memory getReservesList = ILendingPool(aaveLendingPool).getReservesList();
+  // owner operation
 
-    // for (uint256 i = 0; i < getReservesList.length; i++) {
-    //   console.log(getReservesList[i]);
-    // }
-
-    // ここもう少しきれいに書きたい
-    // aaveからトークンリストを取得する、もろもろapproveするっていう感じのロジックを書くのがいいと思っている
-    ERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e).approve(aaveWETHGateway, MAX_INT);
+  function approveCurrency(address _currency) public {
+    address aTokenAddress = ILendingPool(aaveLendingPool).getReserveData(_currency).aTokenAddress;
+    require(aTokenAddress != address(0x0), "Not included in aave currency");
+    if (keccak256(bytes(ERC20(aTokenAddress).name())) == keccak256(bytes("aWETH"))) {
+      ERC20(aTokenAddress).approve(aaveWETHGateway, MAX_INT);
+    }
+    ERC20(aTokenAddress).approve(aaveLendingPool, MAX_INT);
+    approvedCurrencies[_currency] = true;
   }
 
   // nft owner operation
@@ -153,6 +155,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 _price, // to mint print, this is not included for signature
     uint16 _referralCode // to mint print, this is not included for signature
   ) public payable {
+    require(approvedCurrencies[_currency], "Not included in aave currency");
     require(_creator != address(0x0), "creator should not be empty");
     require(_ipfsHash != "", "ipfs hash should not be empty");
     require(_supplyLimit > 0, "supplyLimit must be more than 0");

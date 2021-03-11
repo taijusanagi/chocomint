@@ -20,11 +20,30 @@ export const initialize = async (networkName: NetworkName, debug?: boolean, gasP
   await publisher.initialize(ownership.address, aaveLendingPoolAddress, aaveWETHGatewayAddress, {
     gasPrice,
   });
+
+  // approve
+  // await publisher.approve(""); //weth
+  // await publisher.approve(""); //dai
+
   debug && console.log("publisher initialized");
   await ownership.initialize(publisher.address, {
     gasPrice,
   });
   debug && console.log("ownership initialized");
+
+  if (networkName === "kovan" || networkName === "mainnet") {
+    // etherscan verify
+    await hre.run("verify:verify", {
+      address: publisher.address,
+      constructorArguments: [publisherName, publisherSymbol],
+    });
+
+    await hre.run("verify:verify", {
+      address: ownership.address,
+      constructorArguments: [ownershipName, ownershipSymbol],
+    });
+  }
+
   return { publisher, ownership };
 };
 

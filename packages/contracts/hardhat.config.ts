@@ -12,7 +12,7 @@ const network = networkJson as any;
 
 module.exports = {
   solidity: {
-    version: "0.8.2",
+    version: "0.8.1",
     settings: {
       optimizer: {
         enabled: true,
