@@ -11,7 +11,7 @@ import {
   getNetwork,
 } from "../helpers/deploy";
 
-import { hashChoco, getPrices } from "../helpers/util";
+import { hashChoco, getPrices, getAaveTokens } from "../helpers/util";
 
 import { hardhatChainId, dummyMetadataIpfsHash } from "../helpers/mock";
 
@@ -50,6 +50,10 @@ describe("Chocomint", function () {
     const { publisher, ownership } = await initialize(networkName);
     publisherContract = publisher;
     ownershipContract = ownership;
+  });
+
+  it.only("get", async function () {
+    console.log(getAaveTokens());
   });
 
   it("deploy: deploy is ok", async function () {

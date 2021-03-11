@@ -12,7 +12,7 @@ export const Button: React.FC<ButtonProps> = ({ type, disabled, onClick, childre
     <button
       onClick={onClick}
       disabled={disabled}
-      className="disabled:opacity-50 focus:outline-none w-full bg-green-500 text-white font-medium p-4 solidity"
+      className="disabled:opacity-50 focus:outline-none w-full bg-green-500 text-white font-medium p-4 border-b-2 shadow-md rounded-xl border-green-600"
     >
       {children}
     </button>
@@ -20,7 +20,7 @@ export const Button: React.FC<ButtonProps> = ({ type, disabled, onClick, childre
     <button
       onClick={onClick}
       disabled={disabled}
-      className="disabled:opacity-50 focus:outline-none w-full bg-gray-700 text-white font-medium p-4 solidity"
+      className="disabled:opacity-50 focus:outline-none w-full bg-gray-700 text-white font-medium p-4 order-b-2 shadow-md rounded-xl border-gray-800"
     >
       {children}
     </button>
