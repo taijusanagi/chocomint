@@ -17,6 +17,7 @@ import {
   defaultRoyaltyRatio,
   nullAddress,
   useWallet,
+  getAaveTokens,
 } from "../modules/web3";
 
 import { Choco } from "../types";
@@ -25,7 +26,7 @@ import { functions } from "../modules/firebase";
 
 import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
-
+import { Modal } from "../components/atoms/Modal";
 import { ImageUploadIcon } from "../components/atoms/ImageUploadIcon";
 import { MessageModal, useMessageModal } from "../components/molecules/MessageModal";
 import { Header } from "../components/organisms/Header";
@@ -38,12 +39,20 @@ export const Create: React.FC = () => {
   const [imagePreview, setImagePreview] = React.useState("");
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
+  const [currency, setCurrency] = React.useState("WETH");
   const [isWaitingTransactionConfirmation, setIsWaitingTransactionConfirmation] = React.useState(
     false
   );
+  const [aTokens, setAtokens] = React.useState<any>(undefined);
+  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = React.useState(false);
+
   const [, setSelectedAddress] = useRecoilState(selectedAddressState);
   const { connectWallet } = useWallet();
   const { messageModal, openModal, closeModal } = useMessageModal();
+
+  const toggelCurrencyModal = () => {
+    setIsCurrencyModalOpen(!isCurrencyModalOpen);
+  };
 
   const readAsArrayBufferAsync = (file: File) => {
     return new Promise((resolve) => {
@@ -101,12 +110,18 @@ export const Create: React.FC = () => {
       }
       event.preventDefault();
     };
+    setAtokens(getAaveTokens());
   }, []);
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       processImage(event.target.files[0]);
     }
+  };
+
+  const handleCurrencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(event.target.value);
+    setCurrency(event.target.value);
   };
 
   const isFormReady = () => {
@@ -131,7 +146,6 @@ export const Create: React.FC = () => {
       const [creatorAddress] = await web3.eth.getAccounts();
       setSelectedAddress(creatorAddress);
 
-      const currencyAddress = nullAddress;
       const metadata = {
         name,
         description,
@@ -140,6 +154,14 @@ export const Create: React.FC = () => {
       const metadataString = canonicalize(metadata);
       const { cid } = await ipfs.add(metadataString);
       const ipfsHash = cidToIpfsHash(cid);
+
+      let currencyAddress;
+      if (currency == "WETH") {
+        currencyAddress = nullAddress;
+      } else {
+        const aToken = aTokens.filter((aToken: any) => aToken.symbol == currency);
+        currencyAddress = aToken[0].address;
+      }
 
       const chocoId = hashChoco(
         chainId,
@@ -246,17 +268,15 @@ export const Create: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="text-sm font-bold text-gray-600 sm:mt-px sm:pt-2">Advanced</div>
+          <div className="text-xs font-bold text-gray-600 sm:mt-px sm:pt-2">Advanced</div>
           <div className="flex flex-row justify-start">
             <button
-              onClick={() =>
-                openModal("🎉", "NFT is created in Chocomint!", "Check", `/nft`, false)
-              }
-              className="focus:outline-none grab-animation m-2 text-xs text-gray-700 font-bold bg-gray-100 solidity p-2"
+              onClick={toggelCurrencyModal}
+              className="focus:outline-none m-2 text-xs text-gray-700 font-bold bg-gray-100 solidity p-2"
             >
               Currency
             </button>
-            <button className="focus:outline-none grab-animation m-2 text-xs text-gray-700 font-bold bg-gray-100 solidity p-2">
+            <button className="focus:outline-none m-2 text-xs text-gray-700 font-bold bg-gray-100 solidity p-2">
               Pricing
             </button>
           </div>
@@ -267,6 +287,37 @@ export const Create: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* currency */}
+      {isCurrencyModalOpen && (
+        <Modal icon="🔧" onClickDismiss={toggelCurrencyModal}>
+          <div className="p-8">
+            <h3 className="text-center text-xl text-gray-600 font-bold mb-8">Select Currency</h3>
+
+            {aTokens &&
+              aTokens.map((atoken: any, i: number) => {
+                return (
+                  <li
+                    key={i}
+                    className="flex mx-auto items-center border border-gray-200 p-4 max-w-xl  w-full"
+                  >
+                    <img className="w-10 h-10" src={`/coins/${atoken.symbol}.svg`} />
+                    <p className="p-2 text-sm font-bold">{atoken.symbol}</p>
+                    <div className="flex-auto"></div>
+                    <input
+                      type="radio"
+                      name="currency"
+                      value={atoken.symbol}
+                      checked={atoken.symbol == currency}
+                      onChange={handleCurrencyChange}
+                    ></input>
+                  </li>
+                );
+              })}
+          </div>
+        </Modal>
+      )}
+      {/* pricing */}
+      {/* <Modal icon="🔧">{aTokens && <>ok</>}</Modal> */}
       {messageModal && <MessageModal {...messageModal} onClickDismiss={closeModal} />}
       <Footer />
     </Body>

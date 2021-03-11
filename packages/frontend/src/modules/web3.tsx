@@ -14,7 +14,7 @@ import { abi as chocomintOwnershipAbi } from "../../../contracts/artifacts/contr
 import { ChocomintPublisher, ChocomintOwnership, ERC20 } from "../../../contracts/typechain";
 
 import { getAaveTokens } from "../../../contracts/helpers/util";
-export { hashChoco, getPrices, getPrice } from "../../../contracts/helpers/util";
+export { hashChoco, getPrices, getPrice, getAaveTokens } from "../../../contracts/helpers/util";
 
 import { nullAddress } from "../../../contracts/helpers/constant";
 
