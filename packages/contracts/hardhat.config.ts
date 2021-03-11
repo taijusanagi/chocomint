@@ -12,7 +12,7 @@ const network = networkJson as any;
 
 module.exports = {
   solidity: {
-    version: "0.8.2",
+    version: "0.8.1",
     settings: {
       optimizer: {
         enabled: true,
@@ -35,6 +35,10 @@ module.exports = {
     },
     rinkeby: {
       url: network.rinkeby.rpc,
+      accounts: [privateKey],
+    },
+    kovan: {
+      url: network.kovan.rpc,
       accounts: [privateKey],
     },
   },

@@ -1,5 +1,4 @@
 import React from "react";
-import { useHistory } from "react-router-dom";
 
 import { Choco } from "../types";
 import { useParams } from "react-router-dom";
@@ -14,7 +13,6 @@ import { Shares } from "../components/molecules/Shares";
 import { Header } from "../components/organisms/Header";
 import { Footer } from "../components/organisms/Footer";
 export const Creator: React.FC = () => {
-  const history = useHistory();
   const { address } = useParams<{ address: string }>();
   const [chocos, setChocos] = React.useState<Choco[] | undefined>(undefined);
   const [prices, setPrices] = React.useState<any>(undefined);

@@ -8,6 +8,7 @@
     "run-localchain": "yarn hardhat node --fork https://mainnet.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "deploy-contract-to-localchain": "hardhat run scripts/deployChocomint.ts --network localhost",
     "deploy-contract-to-rinkeby": "hardhat run scripts/deployChocomint.ts --network rinkeby",
+    "deploy-contract-to-kovan": "hardhat run scripts/deployChocomint.ts --network kovan",
     "deploy-contract-to-mainnet": "hardhat run scripts/deployChocomint.ts --network mainnet"
   },
   "devDependencies": {

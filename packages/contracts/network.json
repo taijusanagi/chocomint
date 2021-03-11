@@ -23,9 +23,9 @@
     "chainId": "42",
     "rpc": "https://kovan.infura.io/v3/95f65ab099894076814e8526f52c9149",
     "explore": "https://kovan.etherscan.io/tx/",
-    "aWETHAddress": "",
+    "aWETHAddress": "0x87b1f4cf9bd63f7bbd3ee1ad04e8f52540349347",
     "aaveLendingPoolAddress": "0xe0fba4fc209b4948668006b2be61711b7f465bae",
-    "aaveWETHGatewayAddress": "0xf8aC10E65F2073460aAD5f28E1EABE807D",
+    "aaveWETHGatewayAddress": "0xf8aC10E65F2073460aAD5f28E1EABE807DC287CF",
     "ownershipAddress": "0xd07E84Aa171e1e6781562C2405117f1796791eBC",
     "publisherAddress": "0xc77a509d7260716c41E346ba12ED406971A8B69E"
   },
