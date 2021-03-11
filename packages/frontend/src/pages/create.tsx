@@ -204,7 +204,7 @@ export const Create: React.FC = () => {
   return (
     <Body>
       <Header />
-      <div className="flex justify-center flex-grow container mx-auto">
+      <div className="flex justify-center flex-grow container mx-auto font-way">
         {/* TODO: align center for smart phone */}
         <div className="w-full sm:max-w-md p-4">
           <img className=" mx-auto h-20 w-auto solidity" src="/logo.png" alt="logo" />

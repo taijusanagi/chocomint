@@ -37,7 +37,9 @@ export const Home: React.FC = () => {
       <Hero src="/hero.png" />
       {createdChocos && (
         <>
-          <h3 className="text-center text-2xl text-gray-600 font-bold p-12">New Chocos!</h3>
+          <h3 className="text-center text-2xl text-gray-600 font-bold font-way p-12">
+            New Chocos!
+          </h3>
           <div className="container px-2 mx-auto max-w-5xl">
             <ChocoList chocos={createdChocos}></ChocoList>
           </div>
