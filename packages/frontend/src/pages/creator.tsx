@@ -68,7 +68,7 @@ export const Creator: React.FC = () => {
       <div className="text-center mb-6">
         <Shares />
       </div>
-      <div className="container px-8 mx-auto max-w-5xl">
+      <div className="container px-2 mx-auto max-w-5xl">
         {chocos ? <ChocoList chocos={chocos} prices={prices}></ChocoList> : <></>}
       </div>
       <Footer />

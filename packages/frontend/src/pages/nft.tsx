@@ -34,6 +34,8 @@ export const NFT: React.FC = () => {
   const [printPrice, setPrintPrice] = React.useState(0);
   const [burnPrice, setBurnPrice] = React.useState(0);
   const [slippage, setSlippage] = React.useState(0);
+  const [pricesAtEachSupply, setPricesAtEachSupply] = React.useState<any>();
+
   const slippageList = [0, 1, 2, 3];
 
   const { connectWallet } = useWallet();
@@ -69,6 +71,7 @@ export const NFT: React.FC = () => {
             choco.crr,
             choco.royaltyRatio
           );
+          setPricesAtEachSupply(pricesAtEachSupply);
           // fixme: contracts/util cannot have type setting because of react loader issue
           const { printPrice, burnPrice } = pricesAtEachSupply[printCountBN.toNumber()] as any;
           setPrintPrice(printPrice);
@@ -90,7 +93,7 @@ export const NFT: React.FC = () => {
   };
 
   const print = async () => {
-    if (!choco) {
+    if (!choco || !pricesAtEachSupply) {
       return;
     }
     try {
@@ -99,7 +102,8 @@ export const NFT: React.FC = () => {
         return;
       }
 
-      console.log(slippage);
+      const { printPrice } = pricesAtEachSupply[printCount + slippage];
+
       const { hash: tx } = await chocomintPublisherContract
         .connect(signer)
         .publishAndMintPrint(
@@ -112,9 +116,9 @@ export const NFT: React.FC = () => {
           choco.crr,
           choco.royaltyRatio,
           choco.signature,
-          choco.initialPrice,
+          printPrice,
           0,
-          { value: choco.initialPrice }
+          { value: printPrice }
         );
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
     } catch (err) {
@@ -131,10 +135,9 @@ export const NFT: React.FC = () => {
       if (!signer) {
         return;
       }
-      console.log(slippage);
       const { hash: tx } = await chocomintPublisherContract
         .connect(signer)
-        .burnPrint(hash, printCount);
+        .burnPrint(hash, printCount - slippage);
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
     } catch (err) {
       openModal("🙇‍♂️", err.message);
