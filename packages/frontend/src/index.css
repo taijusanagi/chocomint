@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@500&display=swap');
 @layer utilities {
   .solidity {
     @apply border-b-2 border-gray-200 shadow-md rounded-xl;
