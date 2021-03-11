@@ -22,7 +22,7 @@ import { Button } from "../components/atoms/Button";
 import { Modal, useModal } from "../components/molecules/Modal";
 import { Shares } from "../components/molecules/Shares";
 import { Header } from "../components/organisms/Header";
-
+import { Footer } from "../components/organisms/Footer";
 import { Choco } from "../types";
 
 export const NFT: React.FC = () => {
@@ -98,6 +98,8 @@ export const NFT: React.FC = () => {
       if (!signer) {
         return;
       }
+
+      console.log(slippage);
       const { hash: tx } = await chocomintPublisherContract
         .connect(signer)
         .publishAndMintPrint(
@@ -129,6 +131,7 @@ export const NFT: React.FC = () => {
       if (!signer) {
         return;
       }
+      console.log(slippage);
       const { hash: tx } = await chocomintPublisherContract
         .connect(signer)
         .burnPrint(hash, printCount);
@@ -228,6 +231,7 @@ export const NFT: React.FC = () => {
         </div>
       )}
       {modal && <Modal {...modal} onClickDismiss={closeModal} />}
+      <Footer />
     </Body>
   );
 };

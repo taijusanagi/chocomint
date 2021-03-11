@@ -29,7 +29,7 @@ import { Button } from "../components/atoms/Button";
 import { ImageUploadIcon } from "../components/atoms/ImageUploadIcon";
 import { Modal, useModal } from "../components/molecules/Modal";
 import { Header } from "../components/organisms/Header";
-
+import { Footer } from "../components/organisms/Footer";
 const canonicalize = require("canonicalize");
 
 export const Create: React.FC = () => {
@@ -255,6 +255,7 @@ export const Create: React.FC = () => {
         </div>
       </div>
       {modal && <Modal {...modal} onClickDismiss={closeModal} />}
+      <Footer />
     </Body>
   );
 };

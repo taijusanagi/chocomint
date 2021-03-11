@@ -6,7 +6,7 @@ import { Body } from "../components/atoms/Body";
 import { ChocoList } from "../components/molecules/ChocoList";
 import { Hero } from "../components/molecules/Hero";
 import { Header } from "../components/organisms/Header";
-
+import { Footer } from "../components/organisms/Footer";
 export const Home: React.FC = () => {
   const [createdChocos, setCreatedChocos] = React.useState<Choco[] | undefined>(undefined);
 
@@ -39,6 +39,7 @@ export const Home: React.FC = () => {
           </div>
         </>
       )}
+      <Footer />
     </Body>
   );
 };

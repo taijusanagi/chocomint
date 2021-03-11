@@ -12,7 +12,7 @@ import { Body } from "../components/atoms/Body";
 import { ChocoList } from "../components/molecules/ChocoList";
 import { Shares } from "../components/molecules/Shares";
 import { Header } from "../components/organisms/Header";
-
+import { Footer } from "../components/organisms/Footer";
 export const Creator: React.FC = () => {
   const history = useHistory();
   const { address } = useParams<{ address: string }>();
@@ -71,6 +71,7 @@ export const Creator: React.FC = () => {
       <div className="container px-8 mx-auto max-w-5xl">
         {chocos ? <ChocoList chocos={chocos} prices={prices}></ChocoList> : <></>}
       </div>
+      <Footer />
     </Body>
   );
 };
