@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.1;
+pragma solidity ^0.8.0;
 
-// @openzeppelin/contracts@4.0.0-rc.0
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "./dependencies/@openzeppelin/token/ERC20/IERC20.sol";
+import "./dependencies/@openzeppelin/token/ERC721/IERC721.sol";
+import "./dependencies/@openzeppelin/token/ERC1155/ERC1155.sol";
+import "./dependencies/@openzeppelin/utils/cryptography/ECDSA.sol";
+import "./dependencies/@openzeppelin/utils/math/SafeMath.sol";
 
-import "./interfaces/ILendingPool.sol";
-import "./interfaces/IWETHGateway.sol";
+import "./dependencies/@aave/interfaces/ILendingPool.sol";
+import "./dependencies/@aave/misc/interfaces/IWETHGateway.sol";
 
-import "./ChocomintOwnership.sol";
-import "./ChocomintUtils.sol";
+import "./interfaces/IChocopound.sol";
+import "./interfaces/IChocopoundOwnership.sol";
+import "./interfaces/IERC20Metadata.sol";
+import "./utils/IPFS.sol";
 
 import "hardhat/console.sol";
 
-contract ChocomintPublisher is ERC1155, ChocomintUtils {
+contract Chocopound is IChocopound, ERC1155, IPFS {
   using ECDSA for bytes32;
   using SafeMath for uint256;
 
@@ -58,7 +59,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   mapping(address => bool) public approvedCurrencies;
   mapping(uint256 => address) public currencies;
   mapping(uint256 => address) public creators;
-  mapping(uint256 => bytes32) public ipfsHashes;
+  mapping(uint256 => bytes32) public override ipfsHashes;
   mapping(uint256 => uint256) public supplyLimits;
   mapping(uint256 => uint256) public totalSupplies;
   mapping(uint256 => uint256) public initialPrices;
@@ -70,7 +71,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   mapping(uint256 => uint256) public royaltyBalances;
 
   uint256 constant BASE_RATIO = 10000;
-  uint256 constant MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+  uint256 constant MAX_UINT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
   address public chocomintOwnership;
   address payable public aaveLendingPool;
   address payable public aaveWETHGateway;
@@ -106,11 +107,12 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
 
   function approveCurrency(address _currency) public {
     address aTokenAddress = ILendingPool(aaveLendingPool).getReserveData(_currency).aTokenAddress;
-    require(aTokenAddress != address(0x0), "Not included in aave currency");
-    if (keccak256(bytes(ERC20(aTokenAddress).name())) == keccak256(bytes("aWETH"))) {
-      ERC20(aTokenAddress).approve(aaveWETHGateway, MAX_INT);
+    require(aTokenAddress != address(0x0), "currency must be included aave reserve list");
+    if (keccak256(abi.encodePacked(IERC20Metadata(aTokenAddress).symbol())) == keccak256("aWETH")) {
+      IERC20(aTokenAddress).approve(aaveWETHGateway, MAX_UINT);
+      approvedCurrencies[address(0x0)] = true;
     }
-    ERC20(aTokenAddress).approve(aaveLendingPool, MAX_INT);
+    IERC20(aTokenAddress).approve(aaveLendingPool, MAX_UINT);
     approvedCurrencies[_currency] = true;
   }
 
@@ -120,14 +122,14 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     require(!ownershipClaimed[_tokenId], "ownership is already claimed");
     address to = creators[_tokenId];
     require(msg.sender == to, "msg sender must be eligible");
-    ChocomintOwnership(chocomintOwnership).mint(to, _tokenId);
+    IChocopoundOwnership(chocomintOwnership).mint(to, _tokenId);
     emit OwnershipClaimed(to, _tokenId);
   }
 
   function withdrawRoyalty(uint256 _tokenId) public {
     address tempTo;
     if (ownershipClaimed[_tokenId]) {
-      tempTo = ChocomintOwnership(chocomintOwnership).ownerOf(_tokenId);
+      tempTo = IERC721(chocomintOwnership).ownerOf(_tokenId);
     } else {
       tempTo = creators[_tokenId];
     }
@@ -331,6 +333,14 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     }
   }
 
+  function _getChainId() internal view returns (uint256) {
+    uint256 id;
+    assembly {
+      id := chainid()
+    }
+    return id;
+  }
+
   function _deposit(
     address _currency,
     uint256 _price,
@@ -339,7 +349,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     if (_currency == address(0x0)) {
       IWETHGateway(aaveWETHGateway).depositETH{ value: _price }(address(this), _referralCode);
     } else {
-      ERC20(_currency).transferFrom(msg.sender, address(this), _price);
+      IERC20(_currency).transferFrom(msg.sender, address(this), _price);
       ILendingPool(aaveLendingPool).deposit(_currency, _price, address(this), _referralCode);
     }
   }

@@ -52,15 +52,11 @@ describe("Chocomint", function () {
     ownershipContract = ownership;
   });
 
-  it.only("get", async function () {
-    console.log(getAaveTokens());
-  });
-
   it("deploy: deploy is ok", async function () {
     const { aaveLendingPoolAddress, aaveWETHGatewayAddress } = configs[networkName];
     expect(await ownershipContract.name()).to.equal(ownershipName);
     expect(await ownershipContract.symbol()).to.equal(ownershipSymbol);
-    expect(await ownershipContract.chocomintPublisher()).to.equal(publisherContract.address);
+    expect(await ownershipContract.chocopound()).to.equal(publisherContract.address);
     expect(await publisherContract.name()).to.equal(publisherName);
     expect(await publisherContract.symbol()).to.equal(publisherSymbol);
     expect(await publisherContract.chocomintOwnership()).to.equal(ownershipContract.address);

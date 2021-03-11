@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.1;
 
-contract ChocomintUtils {
-  function _getChainId() internal view returns (uint256) {
-    uint256 id;
-    assembly {
-      id := chainid()
-    }
-    return id;
-  }
-
+contract IPFS {
   function _addSha256FunctionCodePrefix(bytes32 _input) internal pure returns (bytes memory) {
     return abi.encodePacked(hex"1220", _input);
   }
