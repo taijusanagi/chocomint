@@ -33,10 +33,6 @@ module.exports = {
       url: network.mainnet.rpc,
       accounts: [privateKey],
     },
-    rinkeby: {
-      url: network.rinkeby.rpc,
-      accounts: [privateKey],
-    },
     kovan: {
       url: network.kovan.rpc,
       accounts: [privateKey],

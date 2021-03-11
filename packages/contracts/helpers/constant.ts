@@ -1,5 +1,9 @@
-export const nullAddress = "0x0000000000000000000000000000000000000000";
+export const chocopoundName = "Chocopound";
+export const ownershipName = "ChocomintOwnership";
+export const chocopoundSymbol = "CMP";
+export const ownershipSymbol = "CMO";
 
+export const nullAddress = "0x0000000000000000000000000000000000000000";
 export const BASE_RATIO = 10000;
 
 // this is used for prod template data

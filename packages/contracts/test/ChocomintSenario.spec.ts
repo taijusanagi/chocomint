@@ -1,20 +1,22 @@
 import { ethers } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
+import {
+  getNetwork,
+  deployChocopound,
+  deployChocopoundOwnership,
+  initializeChocopound,
+  initializeChocopoundOwnership,
+  approveCurrency,
+} from "../helpers/migration";
 
 import {
-  initialize,
-  publisherName,
-  publisherSymbol,
+  chocopoundName,
+  chocopoundSymbol,
   ownershipName,
   ownershipSymbol,
-  getNetwork,
-} from "../helpers/deploy";
-
+} from "../helpers/constant";
 import { hashChoco, getPrices, getAaveTokens } from "../helpers/util";
-
-import { hardhatChainId, dummyMetadataIpfsHash } from "../helpers/mock";
-
 import {
   defaultSupplyLimit,
   defaultDiluter,
@@ -23,14 +25,17 @@ import {
   defaultCrr,
   nullAddress,
 } from "../helpers/constant";
-
 import configs from "../network.json";
 
 chai.use(solidity);
 const { expect } = chai;
 
 describe("Chocomint", function () {
-  let publisherContract;
+  const dummyMetadataIpfsHash =
+    "0x7d5a99f603f231d53a4f39d1521f98d2e8bb279cf29bebfd0687dc98458e7f89";
+  const hardhatChainId = "31337";
+
+  let chocopoundContract;
   let ownershipContract;
 
   let ownerSigner, ownershipSigner;
@@ -47,21 +52,23 @@ describe("Chocomint", function () {
   this.beforeEach("initialization.", async function () {
     networkName = getNetwork();
     [ownerSigner, ownershipSigner] = await ethers.getSigners();
-    const { publisher, ownership } = await initialize(networkName);
-    publisherContract = publisher;
-    ownershipContract = ownership;
+    chocopoundContract = await deployChocopound();
+    ownershipContract = await deployChocopoundOwnership();
+    await initializeChocopound();
+    await initializeChocopoundOwnership();
+    await approveCurrency("WETH");
   });
 
   it("deploy: deploy is ok", async function () {
-    const { aaveLendingPoolAddress, aaveWETHGatewayAddress } = configs[networkName];
+    const { LendingPool, WETHGateway } = configs[networkName];
     expect(await ownershipContract.name()).to.equal(ownershipName);
     expect(await ownershipContract.symbol()).to.equal(ownershipSymbol);
-    expect(await ownershipContract.chocopound()).to.equal(publisherContract.address);
-    expect(await publisherContract.name()).to.equal(publisherName);
-    expect(await publisherContract.symbol()).to.equal(publisherSymbol);
-    expect(await publisherContract.chocomintOwnership()).to.equal(ownershipContract.address);
-    expect(await publisherContract.aaveLendingPool()).to.equal(aaveLendingPoolAddress);
-    expect(await publisherContract.aaveWETHGateway()).to.equal(aaveWETHGatewayAddress);
+    expect(await ownershipContract.chocopound()).to.equal(chocopoundContract.address);
+    expect(await chocopoundContract.name()).to.equal(chocopoundName);
+    expect(await chocopoundContract.symbol()).to.equal(chocopoundSymbol);
+    expect(await chocopoundContract.chocomintOwnership()).to.equal(ownershipContract.address);
+    expect(await chocopoundContract.aaveLendingPool()).to.equal(LendingPool);
+    expect(await chocopoundContract.aaveWETHGateway()).to.equal(WETHGateway);
   });
 
   it("initialization fails after initialized", async function () {
@@ -69,13 +76,13 @@ describe("Chocomint", function () {
       "contract is already initialized"
     );
     await expect(
-      publisherContract.initialize(ownerSigner.address, ownerSigner.address, ownerSigner.address)
+      chocopoundContract.initialize(ownerSigner.address, ownerSigner.address, ownerSigner.address)
     ).to.revertedWith("contract is already initialized");
   });
 
   it("calculateVirtualReserve", async function () {
     expect(
-      await publisherContract.calculateVirtualReserve(
+      await chocopoundContract.calculateVirtualReserve(
         defaultInitialPrice,
         defaultDiluter,
         defaultCrr
@@ -85,13 +92,13 @@ describe("Chocomint", function () {
 
   it("calculatePrice", async function () {
     expect(
-      await publisherContract.calculatePrintPrice(virtualReserve, defaultDiluter, defaultCrr)
+      await chocopoundContract.calculatePrintPrice(virtualReserve, defaultDiluter, defaultCrr)
     ).to.equal(defaultInitialPrice);
   });
 
   it("calculateRoyalty", async function () {
     expect(
-      await publisherContract.calculateRoyalty(
+      await chocopoundContract.calculateRoyalty(
         pricesAtEachSupply[0].printPrice,
         defaultRoyaltyRatio
       )
@@ -103,7 +110,7 @@ describe("Chocomint", function () {
     const currency = nullAddress;
     const tokenId = hashChoco(
       hardhatChainId,
-      publisherContract.address,
+      chocopoundContract.address,
       currency,
       creatorAddress,
       dummyMetadataIpfsHash,
@@ -115,7 +122,7 @@ describe("Chocomint", function () {
     );
     const tokenIdBinary = ethers.utils.arrayify(tokenId);
     const signature = await ownershipSigner.signMessage(tokenIdBinary);
-    await publisherContract
+    await chocopoundContract
       .connect(ownerSigner)
       .publishAndMintPrint(
         currency,
@@ -134,19 +141,19 @@ describe("Chocomint", function () {
         }
       );
     // check input is properly kept in contract
-    expect(await publisherContract.currencies(tokenId)).to.equal(currency);
-    expect(await publisherContract.creators(tokenId)).to.equal(creatorAddress);
-    expect(await publisherContract.ipfsHashes(tokenId)).to.equal(dummyMetadataIpfsHash);
-    expect(await publisherContract.totalSupplies(tokenId)).to.equal(1);
-    expect(await publisherContract.supplyLimits(tokenId)).to.equal(defaultSupplyLimit);
-    expect(await publisherContract.initialPrices(tokenId)).to.equal(defaultInitialPrice);
-    expect(await publisherContract.diluters(tokenId)).to.equal(defaultDiluter);
-    expect(await publisherContract.crrs(tokenId)).to.equal(defaultCrr);
-    expect(await publisherContract.royaltyRatios(tokenId)).to.equal(defaultRoyaltyRatio);
-    expect(await publisherContract.reserveBalances(tokenId)).to.equal(
+    expect(await chocopoundContract.currencies(tokenId)).to.equal(currency);
+    expect(await chocopoundContract.creators(tokenId)).to.equal(creatorAddress);
+    expect(await chocopoundContract.ipfsHashes(tokenId)).to.equal(dummyMetadataIpfsHash);
+    expect(await chocopoundContract.totalSupplies(tokenId)).to.equal(1);
+    expect(await chocopoundContract.supplyLimits(tokenId)).to.equal(defaultSupplyLimit);
+    expect(await chocopoundContract.initialPrices(tokenId)).to.equal(defaultInitialPrice);
+    expect(await chocopoundContract.diluters(tokenId)).to.equal(defaultDiluter);
+    expect(await chocopoundContract.crrs(tokenId)).to.equal(defaultCrr);
+    expect(await chocopoundContract.royaltyRatios(tokenId)).to.equal(defaultRoyaltyRatio);
+    expect(await chocopoundContract.reserveBalances(tokenId)).to.equal(
       pricesAtEachSupply[1].reserveBalance
     );
-    expect(await publisherContract.royaltyBalances(tokenId)).to.equal(
+    expect(await chocopoundContract.royaltyBalances(tokenId)).to.equal(
       pricesAtEachSupply[0].royalty
     );
   });
@@ -156,7 +163,7 @@ describe("Chocomint", function () {
     const currency = nullAddress;
     const tokenId = hashChoco(
       hardhatChainId,
-      publisherContract.address,
+      chocopoundContract.address,
       currency,
       creatorAddress,
       dummyMetadataIpfsHash,
@@ -168,7 +175,7 @@ describe("Chocomint", function () {
     );
     const tokenIdBinary = ethers.utils.arrayify(tokenId);
     const signature = await ownershipSigner.signMessage(tokenIdBinary);
-    await publisherContract
+    await chocopoundContract
       .connect(ownerSigner)
       .publishAndMintPrint(
         currency,
@@ -186,11 +193,11 @@ describe("Chocomint", function () {
           value: defaultInitialPrice,
         }
       );
-    const [firstSuppliedPrintPrice] = await publisherContract.getPrintPrice(tokenId);
+    const [firstSuppliedPrintPrice] = await chocopoundContract.getPrintPrice(tokenId);
     expect(firstSuppliedPrintPrice).to.equal(pricesAtEachSupply[1].printPrice);
 
     // this is using publish and mint for same time transaction
-    await publisherContract
+    await chocopoundContract
       .connect(ownerSigner)
       .publishAndMintPrint(
         currency,
@@ -208,43 +215,43 @@ describe("Chocomint", function () {
           value: pricesAtEachSupply[1].printPrice,
         }
       );
-    const [secondSuppliedPrintPrice] = await publisherContract.getPrintPrice(tokenId);
+    const [secondSuppliedPrintPrice] = await chocopoundContract.getPrintPrice(tokenId);
     expect(secondSuppliedPrintPrice).to.equal(pricesAtEachSupply[2].printPrice);
 
     // once nft is published only token id is required to mint print
-    await publisherContract
+    await chocopoundContract
       .connect(ownerSigner)
       .mintPrint(tokenId, pricesAtEachSupply[2].printPrice, 0, {
         value: pricesAtEachSupply[2].printPrice,
       });
 
-    const [thirdSuppliedPrintPrice] = await publisherContract.getPrintPrice(tokenId);
+    const [thirdSuppliedPrintPrice] = await chocopoundContract.getPrintPrice(tokenId);
     expect(thirdSuppliedPrintPrice).to.equal(pricesAtEachSupply[3].printPrice);
 
-    const totalSupplyAfterPrint = await publisherContract.totalSupplies(tokenId);
+    const totalSupplyAfterPrint = await chocopoundContract.totalSupplies(tokenId);
     expect(totalSupplyAfterPrint).to.equal(3);
 
     // stop printing, start burning
 
-    const thirdSuppliedBurnPrice = await publisherContract.getBurnPrice(tokenId);
+    const thirdSuppliedBurnPrice = await chocopoundContract.getBurnPrice(tokenId);
     expect(thirdSuppliedBurnPrice).to.equal(pricesAtEachSupply[3].burnPrice);
 
-    await publisherContract.connect(ownerSigner).burnPrint(tokenId, 3);
+    await chocopoundContract.connect(ownerSigner).burnPrint(tokenId, 3);
 
-    const secondSuppliedBurnPrice = await publisherContract.getBurnPrice(tokenId);
+    const secondSuppliedBurnPrice = await chocopoundContract.getBurnPrice(tokenId);
     expect(secondSuppliedBurnPrice).to.equal(pricesAtEachSupply[2].burnPrice);
 
-    await publisherContract.connect(ownerSigner).burnPrint(tokenId, 2);
+    await chocopoundContract.connect(ownerSigner).burnPrint(tokenId, 2);
 
-    const firstSuppliedBurnPrice = await publisherContract.getBurnPrice(tokenId);
+    const firstSuppliedBurnPrice = await chocopoundContract.getBurnPrice(tokenId);
     expect(firstSuppliedBurnPrice).to.equal(pricesAtEachSupply[1].burnPrice);
 
-    await publisherContract.connect(ownerSigner).burnPrint(tokenId, 1);
+    await chocopoundContract.connect(ownerSigner).burnPrint(tokenId, 1);
 
-    const zeroSuppliedBurnPrice = await publisherContract.getBurnPrice(tokenId);
+    const zeroSuppliedBurnPrice = await chocopoundContract.getBurnPrice(tokenId);
     expect(zeroSuppliedBurnPrice).to.equal(pricesAtEachSupply[0].burnPrice);
 
-    await expect(publisherContract.connect(ownerSigner).burnPrint(tokenId, 0)).to.revertedWith(
+    await expect(chocopoundContract.connect(ownerSigner).burnPrint(tokenId, 0)).to.revertedWith(
       "total supply must be more than 0"
     );
   });
