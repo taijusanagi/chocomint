@@ -8,7 +8,6 @@ import {
   publisherAddress,
   getWeb3,
   selectedAddressState,
-  initializeWeb3Modal,
   cidToIpfsHash,
   hashChoco,
   defaultSupplyLimit,
@@ -17,6 +16,7 @@ import {
   defaultCrr,
   defaultRoyaltyRatio,
   nullAddress,
+  useWallet,
 } from "../modules/web3";
 
 import { Choco } from "../types";
@@ -41,8 +41,8 @@ export const Create: React.FC = () => {
   const [isWaitingTransactionConfirmation, setIsWaitingTransactionConfirmation] = React.useState(
     false
   );
-  const [selectedAddress, setSelectedAddress] = useRecoilState(selectedAddressState);
-
+  const [, setSelectedAddress] = useRecoilState(selectedAddressState);
+  const { connectWallet } = useWallet();
   const { modal, openModal, closeModal } = useModal();
 
   const readAsArrayBufferAsync = (file: File) => {
@@ -120,19 +120,18 @@ export const Create: React.FC = () => {
     setImagePreview("");
   };
 
-  const connectWallet = async () => {
-    const provider = await initializeWeb3Modal();
-    setSelectedAddress(provider.selectedAddress);
-  };
-
   const createNft = async () => {
-    if (!isFormReady() || !selectedAddress) {
+    if (!isFormReady()) {
       return;
     }
     setIsWaitingTransactionConfirmation(true);
     try {
+      const provider = await connectWallet();
+      const web3 = await getWeb3(provider);
+      const [creatorAddress] = await web3.eth.getAccounts();
+      setSelectedAddress(creatorAddress);
+
       const currencyAddress = nullAddress;
-      const creatorAddress = selectedAddress;
       const metadata = {
         name,
         description,
@@ -141,7 +140,7 @@ export const Create: React.FC = () => {
       const metadataString = canonicalize(metadata);
       const { cid } = await ipfs.add(metadataString);
       const ipfsHash = cidToIpfsHash(cid);
-      const web3 = await getWeb3();
+
       const chocoId = hashChoco(
         chainId,
         publisherAddress,
@@ -249,15 +248,9 @@ export const Create: React.FC = () => {
             </div>
           </div>
           <div className="mt-8">
-            {!selectedAddress ? (
-              <Button onClick={connectWallet} type="primary">
-                Connect <span className="ml-1">🔐</span>
-              </Button>
-            ) : (
-              <Button onClick={createNft} disabled={!isFormReady()} type="primary">
-                Create <span className="ml-1">💎</span>
-              </Button>
-            )}
+            <Button onClick={createNft} disabled={!isFormReady()} type="primary">
+              Create <span className="ml-1">💎</span>
+            </Button>
           </div>
         </div>
       </div>

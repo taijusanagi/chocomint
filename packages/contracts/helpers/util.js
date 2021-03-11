@@ -1,10 +1,19 @@
-import { ethers } from "ethers";
-import { BASE_RATIO } from "./constant";
+//FIXME: if this is ts, and has type, react cannot read this... so I made this as js
+const { ethers } = require("ethers");
+const { BASE_RATIO } = require("./constant");
+
+exports.getPrice = (currentSupply, currentReserve, initialPrice, diluter, crr) => {
+  const virtualReserve = ethers.BigNumber.from(initialPrice).mul(diluter).mul(crr).div(BASE_RATIO);
+  const supply = ethers.BigNumber.from(currentSupply).add(diluter);
+  const reserve = virtualReserve.add(currentReserve);
+  return ethers.BigNumber.from(reserve).mul(BASE_RATIO).div(crr).div(supply);
+};
 
 // first calculate all mint printPrice
 // then get brun printPrice by royality ratio
-export const getPrices = (totalSupply, initialPrice, diluter, crr, royaltyRatio) => {
-  const pricesAtEachSupply = [{}];
+exports.getPrices = (totalSupply, initialPrice, diluter, crr, royaltyRatio) => {
+  const pricesAtEachSupply = [];
+  delete pricesAtEachSupply[0];
   let reserveBalance = ethers.BigNumber.from(0);
   let burnPrice = ethers.BigNumber.from(0);
   const virtualReserve = ethers.BigNumber.from(initialPrice).mul(diluter).mul(crr).div(BASE_RATIO);
@@ -37,7 +46,7 @@ export const getPrices = (totalSupply, initialPrice, diluter, crr, royaltyRatio)
   return { pricesAtEachSupply, virtualReserve };
 };
 
-export const hashChoco = (
+exports.hashChoco = (
   chainId,
   publisherAddress,
   currencyAddress,

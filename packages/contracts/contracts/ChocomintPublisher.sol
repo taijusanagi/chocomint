@@ -72,7 +72,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   uint256 constant MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
   address public chocomintOwnership;
   address payable public aaveLendingPool;
-  address payable public aaveWEthGateway;
+  address payable public aaveWETHGateway;
   string public name;
   string public symbol;
 
@@ -88,17 +88,17 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
   function initialize(
     address _chocomintOwnership,
     address payable _aaveLendingPool,
-    address payable _aaveWEthGateway
+    address payable _aaveWETHGateway
   ) public {
     require(
       chocomintOwnership == address(0x0) ||
         aaveLendingPool == address(0x0) ||
-        aaveWEthGateway == address(0x0),
+        aaveWETHGateway == address(0x0),
       "contract is already initialized"
     );
     chocomintOwnership = _chocomintOwnership;
     aaveLendingPool = _aaveLendingPool;
-    aaveWEthGateway = _aaveWEthGateway;
+    aaveWETHGateway = _aaveWETHGateway;
 
     // TODO: approve
     // address[] memory getReservesList = ILendingPool(aaveLendingPool).getReservesList();
@@ -109,7 +109,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
 
     // ここもう少しきれいに書きたい
     // aaveからトークンリストを取得する、もろもろapproveするっていう感じのロジックを書くのがいいと思っている
-    ERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e).approve(aaveWEthGateway, MAX_INT);
+    ERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e).approve(aaveWETHGateway, MAX_INT);
   }
 
   // nft owner operation
@@ -334,7 +334,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint16 _referralCode
   ) internal {
     if (_currency == address(0x0)) {
-      IWETHGateway(aaveWEthGateway).depositETH{ value: _price }(address(this), _referralCode);
+      IWETHGateway(aaveWETHGateway).depositETH{ value: _price }(address(this), _referralCode);
     } else {
       ERC20(_currency).transferFrom(msg.sender, address(this), _price);
       ILendingPool(aaveLendingPool).deposit(_currency, _price, address(this), _referralCode);
@@ -347,7 +347,7 @@ contract ChocomintPublisher is ERC1155, ChocomintUtils {
     uint256 _price
   ) internal {
     if (_currency == address(0x0)) {
-      IWETHGateway(aaveWEthGateway).withdrawETH(_price, address(this));
+      IWETHGateway(aaveWETHGateway).withdrawETH(_price, address(this));
       _to.transfer(_price);
     } else {
       ILendingPool(aaveLendingPool).withdraw(_currency, _price, address(this));

@@ -1,4 +1,4 @@
-import { atom } from "recoil";
+import { atom, useRecoilState } from "recoil";
 
 import { ethers } from "ethers";
 import Web3 from "web3";
@@ -12,7 +12,7 @@ import { abi as chocomintPublisherAbi } from "../../../contracts/artifacts/contr
 import { abi as chocomintOwnershipAbi } from "../../../contracts/artifacts/contracts/ChocomintOwnership.sol/ChocomintOwnership.json";
 import { ChocomintPublisher, ChocomintOwnership } from "../../../contracts/typechain";
 
-export { hashChoco, getPrices } from "../../../contracts/helpers/util";
+export { hashChoco, getPrices, getPrice } from "../../../contracts/helpers/util";
 
 export {
   defaultSupplyLimit,
@@ -21,6 +21,7 @@ export {
   defaultCrr,
   defaultRoyaltyRatio,
   nullAddress,
+  BASE_RATIO,
 } from "../../../contracts/helpers/constant";
 
 const bs58 = require("bs58");
@@ -102,16 +103,14 @@ export const clearWeb3Modal = async () => {
   await web3Modal.clearCachedProvider();
 };
 
-export const getEthersSigner = async () => {
-  const web3ModalProvider = await initializeWeb3Modal();
-  const web3EthersProvider = new ethers.providers.Web3Provider(web3ModalProvider);
+export const getEthersSigner = async (provider: any) => {
+  const web3EthersProvider = new ethers.providers.Web3Provider(provider);
   return web3EthersProvider.getSigner();
 };
 
 // this is only used for signing because torus wallet sign fails for ethers
-export const getWeb3 = async () => {
-  const web3ModalProvider = await initializeWeb3Modal();
-  return new Web3(web3ModalProvider);
+export const getWeb3 = async (provider: any) => {
+  return new Web3(provider);
 };
 
 export const selectedAddressState = atom({
@@ -119,8 +118,19 @@ export const selectedAddressState = atom({
   default: "",
 });
 
+export const useWallet = () => {
+  const [selectedAddress, setSelectedAddress] = useRecoilState(selectedAddressState);
+
+  const connectWallet = async () => {
+    const provider = await initializeWeb3Modal();
+    setSelectedAddress(provider.selectedAddress);
+    return provider;
+  };
+  return { selectedAddress, connectWallet };
+};
+
 export const roundAndFormatPrintPrice = (
-  price: string | ethers.BigNumber,
+  price: string | ethers.BigNumber | number,
   maxDecimalDigits: number
 ) => {
   const num = new Decimal(ethers.utils.formatEther(price));
@@ -128,7 +138,7 @@ export const roundAndFormatPrintPrice = (
 };
 
 export const roundAndFormatBurnPrice = (
-  price: string | ethers.BigNumber,
+  price: string | ethers.BigNumber | number,
   maxDecimalDigits: number
 ) => {
   const num = new Decimal(ethers.utils.formatEther(price));

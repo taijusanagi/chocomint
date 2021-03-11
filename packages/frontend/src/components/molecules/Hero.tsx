@@ -1,15 +1,17 @@
 import React from "react";
+import { useHistory } from "react-router-dom";
 import { Button } from "../atoms/Button";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTwitter } from "@fortawesome/free-brands-svg-icons";
-
 export interface HeroProps {
-  onClick?: () => void;
   src: string;
 }
 
-export const Hero: React.FC<HeroProps> = ({ src, onClick }) => {
+export const Hero: React.FC<HeroProps> = ({ src }) => {
+  const history = useHistory();
+  const onClick = () => {
+    history.push("/create");
+  };
+
   return (
     <section>
       <div className="w-full">
