@@ -25,6 +25,18 @@ export const initialize = async (networkName: NetworkName, debug?: boolean, gasP
     gasPrice,
   });
   debug && console.log("ownership initialized");
+
+  // etherscan verify function
+  // await hre.run("verify:verify", {
+  //   address: publisher.address,
+  //   constructorArguments: [publisherName, publisherSymbol],
+  // });
+
+  // await hre.run("verify:verify", {
+  //   address: ownership.address,
+  //   constructorArguments: [ownershipName, ownershipSymbol],
+  // });
+
   return { publisher, ownership };
 };
 
