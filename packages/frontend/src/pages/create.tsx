@@ -27,7 +27,7 @@ import {
 
 import { Choco } from "../types";
 
-import { functions } from "../modules/firebase";
+import { functions, firestore, collectionName } from "../modules/firebase";
 
 import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
@@ -40,7 +40,6 @@ const canonicalize = require("canonicalize");
 
 export const Create: React.FC = () => {
   const maxBooster = 128;
-
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
@@ -61,7 +60,7 @@ export const Create: React.FC = () => {
     defaultCrr,
     defaultRoyaltyRatio
   );
-  const lastPriceString = prices.pricesAtEachSupply[supplyLimit - 1].printPrice;
+  const lastPriceString = prices.pricesAtEachSupply[defaultSupplyLimit - 1].printPrice;
   const [lastPrice, setLastPrice] = React.useState(roundAndFormatPrintPrice(lastPriceString, 3));
   const [isWaitingTransactionConfirmation, setIsWaitingTransactionConfirmation] = React.useState(
     false
@@ -109,12 +108,23 @@ export const Create: React.FC = () => {
   };
 
   const handleSupplyLimitChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSupplyLimit(parseInt(event.target.value));
+    const val = parseInt(event.target.value);
+    if (val > 0) {
+      setSupplyLimit(parseInt(event.target.value));
+    } else {
+      setSupplyLimit(1);
+    }
   };
 
   const handleInitialPriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInitialPriceString(event.target.value);
-    setInitialPrice(ethers.utils.parseEther(event.target.value).toString());
+    const val = parseFloat(event.target.value);
+    if (val > 0.001) {
+      setInitialPriceString(event.target.value);
+      setInitialPrice(ethers.utils.parseEther(event.target.value).toString());
+    } else {
+      setInitialPriceString("0");
+      setInitialPrice("0");
+    }
   };
 
   const handleDiluterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,14 +133,15 @@ export const Create: React.FC = () => {
 
   const updateSalePlanning = () => {
     const reverseDiluter = maxBooster + 1 - diluter;
+    const tempLimit = supplyLimit;
     const prices = getPrices(
-      supplyLimit,
+      tempLimit,
       initialPrice,
       reverseDiluter,
       defaultCrr,
       defaultRoyaltyRatio
     );
-    const lastPrice = prices.pricesAtEachSupply[supplyLimit - 1].printPrice;
+    const lastPrice = prices.pricesAtEachSupply[tempLimit - 1].printPrice;
 
     const roundedPrice = roundAndFormatPrintPrice(lastPrice, 3);
     setLastPrice(roundedPrice);
@@ -220,32 +231,53 @@ export const Create: React.FC = () => {
         currencyAddress,
         creatorAddress,
         ipfsHash,
-        defaultSupplyLimit,
-        defaultInitialPrice,
-        defaultDiluter,
+        supplyLimit,
+        initialPrice,
+        diluter,
         defaultCrr,
         defaultRoyaltyRatio
       );
-      const signature = await web3.eth.personal.sign(chocoId, creatorAddress, "");
-      const choco: Choco = {
-        chocoId,
-        chainId,
-        chocopoundAddress: Chocopound,
-        currencyAddress,
-        creatorAddress,
-        ipfsHash,
-        supplyLimit,
-        initialPrice,
-        diluter: defaultDiluter,
-        crr: defaultCrr,
-        royaltyRatio: defaultRoyaltyRatio,
-        signature,
-        metadata,
-      };
-      await functions.httpsCallable("createChoco")({ chocoId, choco });
-      clearForm();
-      setIsWaitingTransactionConfirmation(false);
-      openModal("🎉", "NFT is created in Chocomint!", "Check", `/nft/${chocoId}`, false);
+
+      const doc = await firestore.collection(collectionName).doc(chocoId).get();
+      if (doc.exists) {
+        clearForm();
+        setIsWaitingTransactionConfirmation(false);
+        openModal(
+          "🤔",
+          "This NFT is already listed in Chocomint!",
+          "Check",
+          `/creator/${creatorAddress}`,
+          false
+        );
+        return;
+      } else {
+        const signature = await web3.eth.personal.sign(chocoId, creatorAddress, "");
+        const choco: Choco = {
+          chocoId,
+          chainId,
+          chocopoundAddress: Chocopound,
+          currencyAddress,
+          creatorAddress,
+          ipfsHash,
+          supplyLimit,
+          initialPrice,
+          diluter: defaultDiluter,
+          crr: defaultCrr,
+          royaltyRatio: defaultRoyaltyRatio,
+          signature,
+          metadata,
+        };
+        await functions.httpsCallable("createChoco")({ chocoId, choco });
+        clearForm();
+        setIsWaitingTransactionConfirmation(false);
+        openModal(
+          "🎉",
+          "NFT is created in Chocomint!",
+          "Check",
+          `/creator/${creatorAddress}`,
+          false
+        );
+      }
     } catch (err) {
       openModal("🙇‍♂️", err.message);
     }
@@ -313,7 +345,7 @@ export const Create: React.FC = () => {
             <p className="block text-sm font-bold text-gray-600">Sales Planning</p>
             <div className="flex">
               <p className="h-8 leading-8 align-bottom text-sm font-medium text-gray-500">
-                {supplyLimit} prints / {initialPriceString} {currency} - {lastPrice} {currency}
+                {supplyLimit} prints / {initialPriceString} {currency} to {lastPrice} {currency}
               </p>
               <div className="flex-auto"></div>
               <button
@@ -331,7 +363,6 @@ export const Create: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* currency */}
       {isCurrencyModalOpen && (
         <Modal icon="🔧">
           <div className="p-4">
@@ -341,6 +372,7 @@ export const Create: React.FC = () => {
                 Supply Limit
               </label>
               <input
+                min="1"
                 value={supplyLimit}
                 onChange={handleSupplyLimitChange}
                 type="number"
@@ -353,6 +385,7 @@ export const Create: React.FC = () => {
                 Initial Price ( {currency} )
               </label>
               <input
+                min="0.001"
                 step="0.001"
                 value={initialPriceString}
                 onChange={handleInitialPriceChange}

@@ -23,7 +23,6 @@ export const Home: React.FC = () => {
         querySnapshot.forEach((doc) => {
           createdChocos.push(doc.data() as Choco);
         });
-        console.log(createdChocos);
         if (createdChocos.length > 0) {
           setCreatedChocos(createdChocos);
         }

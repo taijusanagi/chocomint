@@ -30,29 +30,13 @@ export const Creator: React.FC = () => {
         });
         setChocos(chocos);
       });
-    const MintEvent = chocopoundContract.filters.PrintMinted(null, null, null, null, null, null);
-    const BurnEvent = chocopoundContract.filters.PrintBurned(null, null, null, null, null);
-    Promise.all([
-      chocopoundContract.queryFilter(MintEvent, 0, "latest"),
-      chocopoundContract.queryFilter(BurnEvent, 0, "latest"),
-    ]).then((resolved) => {
-      const events = resolved[0].concat(resolved[1]);
-      events.sort((a, b) => (a.blockNumber > b.blockNumber ? 1 : -1));
-      console.log(events);
-      const prices = {} as any;
-      events.forEach((event) => {
-        console.log(event.args!.nextPrintPrice.toString());
-        prices[event.args!.tokenId.toHexString()] = event.args!.nextPrintPrice.toString();
-      });
-      setPrices(prices);
-    });
   }, []);
 
   return (
     <Body>
       <Header />
       <h3 className="text-center text-2xl text-gray-600 font-bold mb-2">Created By</h3>
-      <button className="mx-auto w-60 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2 mb-6">
+      <button className="cursor-default focus:outline-none mx-auto w-60 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2 mb-6">
         <span className="pr-2">👩‍🎨</span>
         {middlenAddress(address)}
       </button>
@@ -60,7 +44,7 @@ export const Creator: React.FC = () => {
         <Shares />
       </div>
       <div className="container px-2 mx-auto max-w-5xl">
-        {chocos ? <ChocoList chocos={chocos} prices={prices}></ChocoList> : <></>}
+        {chocos ? <ChocoList chocos={chocos}></ChocoList> : <></>}
       </div>
       <Footer />
     </Body>

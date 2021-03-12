@@ -17,6 +17,7 @@ import {
   nullAddress,
   erc20Contract,
   selectedAddressState,
+  getCurrencySymbol,
 } from "../modules/web3";
 
 import { shortenAddress, shortenName } from "../modules/util";
@@ -135,7 +136,7 @@ export const NFT: React.FC = () => {
           choco.signature,
           printPrice,
           0,
-          { value: printPrice }
+          { value: choco.currencyAddress == nullAddress ? printPrice : 0 }
         );
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
     } catch (err) {
@@ -169,11 +170,8 @@ export const NFT: React.FC = () => {
           <div className="p-4 flex justify-center sm:justify-end relative">
             <div className="flex w-full sm:justify-end">
               <div className="absolute opacity-90 m-4">
-                <button
-                  onClick={connectWallet}
-                  className="solidity bg-gray-100 text-xs p-2 text-gray-700 text-xs font-medium"
-                >
-                  {printCount}/ {choco.supplyLimit}
+                <button className="focus:outline-none cursor-default solidity bg-gray-100 text-xs p-2 text-gray-700 text-xs font-medium">
+                  {printCount} / {choco.supplyLimit}{" "}
                 </button>
               </div>
               <img
@@ -185,7 +183,7 @@ export const NFT: React.FC = () => {
 
           <div className="p-4 w-full sm:w-7/12 flex justify-start flex-col">
             <Link to={`/creator/${choco.creatorAddress}`}>
-              <button className="w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2">
+              <button className="focus:outline-none w-40 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2">
                 <span className="pr-2">👩‍🎨</span>
                 {shortenAddress(choco.creatorAddress)}
               </button>
@@ -202,7 +200,8 @@ export const NFT: React.FC = () => {
                   <>
                     <p className="text-lg text-gray-500 font-medium">Buy Price</p>
                     <p className="text-2xl sm:text-3xl text-gray-700 font-medium">
-                      {roundAndFormatPrintPrice(printPrice, 3)} ETH
+                      {roundAndFormatPrintPrice(printPrice, 3)}{" "}
+                      {getCurrencySymbol(choco.currencyAddress)}
                     </p>
                   </>
                 )}
@@ -212,7 +211,8 @@ export const NFT: React.FC = () => {
                   <>
                     <p className="text-lg text-gray-500 font-medium">Sell Price</p>
                     <p className="text-2xl sm:text-3xl text-gray-700 font-medium">
-                      {roundAndFormatBurnPrice(burnPrice, 3)} ETH
+                      {roundAndFormatBurnPrice(burnPrice, 3)}{" "}
+                      {getCurrencySymbol(choco.currencyAddress)}
                     </p>
                   </>
                 )}
@@ -251,9 +251,7 @@ export const NFT: React.FC = () => {
                   <Button onClick={burn} type="tertiary">
                     <div className="flex justify-center items-center">
                       Sell
-                      <span className="ml-4">
-                        <img className="h-4 h-4 rounded-md opacity-80" src="/cell.png" alt="cell" />
-                      </span>
+                      <span className="ml-4">🔥</span>
                     </div>
                   </Button>
                 )}

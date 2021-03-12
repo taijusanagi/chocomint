@@ -7,14 +7,18 @@ import "./ChocoList.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
-import { roundAndFormatPrintPrice, chocopoundContract, getPrice } from "../../modules/web3";
+import {
+  roundAndFormatPrintPrice,
+  chocopoundContract,
+  getPrice,
+  getCurrencySymbol,
+} from "../../modules/web3";
 
 export interface ChocoListProps {
   chocos: Choco[];
-  prices?: any;
 }
 
-export const ChocoList: React.FC<ChocoListProps> = ({ chocos, prices }) => {
+export const ChocoList: React.FC<ChocoListProps> = ({ chocos }) => {
   const [supplies, setSupplies] = React.useState<any>(undefined);
   const [reserves, setReserves] = React.useState<any>(undefined);
 
@@ -89,7 +93,7 @@ export const ChocoList: React.FC<ChocoListProps> = ({ chocos, prices }) => {
                         <FontAwesomeIcon icon={faSpinner} className="animate-spin ml-1" />
                       </>
                     )}
-                    ETH
+                    {getCurrencySymbol(choco.currencyAddress)}
                   </div>
                 </div>
               </li>

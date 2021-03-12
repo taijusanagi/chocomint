@@ -177,3 +177,18 @@ export const roundAndFormatBurnPrice = (
   const num = new Decimal(ethers.utils.formatEther(price));
   return num.toFixed(maxDecimalDigits, Decimal.ROUND_DOWN);
 };
+
+export const getCurrencySymbol = (currency: string) => {
+  if (currency == nullAddress) {
+    return "ETH";
+  } else {
+    const aaveTokens = getAaveTokens(networkName);
+    let symbol = "?";
+    aaveTokens.forEach((aaveToken: any) => {
+      if (aaveToken.address == currency) {
+        symbol = aaveToken.symbol;
+      }
+    });
+    return symbol;
+  }
+};
