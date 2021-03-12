@@ -109,7 +109,7 @@ export const Create: React.FC = () => {
 
   const handleSupplyLimitChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(event.target.value);
-    if (val > 0) {
+    if (val > 0 && val < 257) {
       setSupplyLimit(parseInt(event.target.value));
     } else {
       setSupplyLimit(1);
@@ -118,7 +118,7 @@ export const Create: React.FC = () => {
 
   const handleInitialPriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(event.target.value);
-    if (val > 0.001) {
+    if (val > 0.001 && val < 10000) {
       setInitialPriceString(event.target.value);
       setInitialPrice(ethers.utils.parseEther(event.target.value).toString());
     } else {
@@ -261,7 +261,7 @@ export const Create: React.FC = () => {
           ipfsHash,
           supplyLimit,
           initialPrice,
-          diluter: defaultDiluter,
+          diluter,
           crr: defaultCrr,
           royaltyRatio: defaultRoyaltyRatio,
           signature,
@@ -373,6 +373,7 @@ export const Create: React.FC = () => {
               </label>
               <input
                 min="1"
+                max="256"
                 value={supplyLimit}
                 onChange={handleSupplyLimitChange}
                 type="number"

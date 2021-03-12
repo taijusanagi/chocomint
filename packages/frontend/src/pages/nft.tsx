@@ -103,8 +103,6 @@ export const NFT: React.FC = () => {
     if (!choco || !pricesAtEachSupply) {
       return;
     }
-    console.log("start");
-    console.log(chocopoundContract.address);
     try {
       const signer = await validateNetworkAndGetSigner();
       if (!signer) {
@@ -116,12 +114,10 @@ export const NFT: React.FC = () => {
       if (choco.currencyAddress != nullAddress) {
         const currencyContract = await erc20Contract.attach(choco.currencyAddress);
         const allowance = await currencyContract.allowance(address, chocopoundContract.address);
-        console.log(allowance.toString());
         if (allowance < printPrice) {
           await currencyContract.connect(signer).approve(chocopoundContract.address, printPrice);
         }
       }
-      console.log("UNI", choco.currencyAddress);
       const { hash: tx } = await chocopoundContract
         .connect(signer)
         .publishAndMintPrint(
