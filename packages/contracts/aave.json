@@ -5,8 +5,8 @@
       "aTokenSymbol": "aWETH",
       "stableDebtTokenAddress": "0x4e977830ba4bd783C0BB7F15d3e243f73FF57121",
       "variableDebtTokenAddress": "0xF63B34710400CAd3e044cFfDcAb00a0f32E33eCf",
-      "symbol": "WETH",
-      "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18
     },
     {
@@ -43,8 +43,8 @@
       "aTokenSymbol": "aWETH",
       "stableDebtTokenAddress": "0x1F85D0dc45332D00aead98D26db0735350F80D18",
       "variableDebtTokenAddress": "0xDD13CE9DE795E7faCB6fEC90E346C7F3abe342E2",
-      "symbol": "WETH",
-      "address": "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18
     },
     {

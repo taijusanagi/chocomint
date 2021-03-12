@@ -40,7 +40,7 @@ export const Create: React.FC = () => {
   const [imagePreview, setImagePreview] = React.useState("");
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [currency, setCurrency] = React.useState("WETH");
+  const [currency, setCurrency] = React.useState("ETH");
   const [isWaitingTransactionConfirmation, setIsWaitingTransactionConfirmation] = React.useState(
     false
   );
@@ -212,10 +212,7 @@ export const Create: React.FC = () => {
         <div className="w-full sm:max-w-md p-4">
           <img className=" mx-auto h-20 w-auto solidity" src="/logo.png" alt="logo" />
           <div className="mt-2">
-            <label
-              htmlFor="name"
-              className="block text-sm font-bold text-gray-600 sm:mt-px sm:pt-2"
-            >
+            <label htmlFor="name" className="block text-sm font-bold text-gray-600">
               Name
             </label>
             <input
@@ -227,10 +224,7 @@ export const Create: React.FC = () => {
             />
           </div>
           <div className="mt-2">
-            <label
-              htmlFor="description"
-              className="block text-sm font-bold text-gray-600 sm:mt-px sm:pt-2"
-            >
+            <label htmlFor="description" className="block text-sm font-bold text-gray-600">
               Description
             </label>
             <textarea
@@ -241,10 +235,7 @@ export const Create: React.FC = () => {
             ></textarea>
           </div>
           <div className="mt-2" id="dropContainer">
-            <label
-              htmlFor="cover_photo"
-              className="block text-sm font-bold text-gray-600 sm:mt-px sm:pt-2"
-            >
+            <label htmlFor="cover_photo" className="block text-sm font-bold text-gray-600">
               Image
             </label>
             <div className="mt-1 flex justify-center p-8 border-2 border-gray-300 border-dashed rounded-xl">
@@ -271,17 +262,20 @@ export const Create: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="block text-sm font-bold text-gray-600 sm:mt-px sm:pt-2">Advanced</div>
-          <div className="flex flex-row justify-start">
-            <button
-              onClick={toggelCurrencyModal}
-              className="focus:outline-none m-2 text-xs text-gray-700 font-bold bg-gray-100 solidity p-2"
-            >
-              Currency
-            </button>
-            <button className="focus:outline-none m-2 text-xs text-gray-700 font-bold bg-gray-100 solidity p-2">
-              Pricing
-            </button>
+          <div className="mt-2">
+            <p className="block text-sm font-bold text-gray-600 mb-2">Sales Planning</p>
+            <div className="flex">
+              <p className="h-10 leading-10 align-bottom text-lg font-bold text-gray-500">
+                128 prints / 0.025 {currency} - 100 {currency}
+              </p>
+              <div className="flex-auto"></div>
+              <button
+                onClick={toggelCurrencyModal}
+                className="focus:outline-none text-sm text-gray-700 font-bold bg-gray-100 p-2 solidity"
+              >
+                Update
+              </button>
+            </div>
           </div>
           <div className="mt-8">
             <Button onClick={createNft} disabled={!isFormReady()} type="primary">
@@ -294,14 +288,14 @@ export const Create: React.FC = () => {
       {isCurrencyModalOpen && (
         <Modal icon="🔧" onClickDismiss={toggelCurrencyModal}>
           <div className="p-4">
-            <h3 className="text-center text-xl text-gray-600 font-bold mb-4">Select Currency</h3>
+            <h3 className="text-center text-xl text-gray-600 font-bold mb-4">Sales Planning</h3>
 
             {aTokens &&
               aTokens.map((atoken: any, i: number) => {
                 return (
-                  <li key={i} className="flex mx-auto items-center p-4 max-w-xl  w-full">
-                    <img className="w-10 h-10" src={`/coins/${atoken.symbol}.svg`} />
-                    <p className="p-2 text-sm font-bold">{atoken.symbol}</p>
+                  <li key={i} className="flex mx-auto items-center p-2 max-w-xl  w-full">
+                    <img className="w-8 h-8" src={`/coins/${atoken.symbol}.svg`} />
+                    <p className="p-4 text-sm font-bold">{atoken.symbol}</p>
                     <div className="flex-auto"></div>
                     <input
                       type="radio"
