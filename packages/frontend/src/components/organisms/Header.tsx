@@ -26,7 +26,7 @@ export const Header: React.FC = () => {
     <header>
       <div className="relative h-24">
         <Link to="/">
-          <div className="px-4 py-8 absolute left-0 font-bold">Chocomint 🌱</div>
+          <div className="px-4 py-8 absolute left-0 font-bold">Chocomint Testnet 🌱</div>
         </Link>
         <div className="p-4 absolute right-0">
           {!selectedAddress ? (

@@ -92,7 +92,7 @@ export const ChocoList: React.FC<ChocoListProps> = ({ chocos }) => {
                         sync
                         <FontAwesomeIcon icon={faSpinner} className="animate-spin ml-1" />
                       </>
-                    )}
+                    )}{" "}
                     {getCurrencySymbol(choco.currencyAddress)}
                   </div>
                 </div>
