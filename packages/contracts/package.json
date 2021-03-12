@@ -12,6 +12,7 @@
     "deploy:3": "yarn hardhat run scripts/3_initializeChocopoundOwnership.ts",
     "deploy:4": "yarn hardhat run scripts/4_ChocopoundApproveWETH.ts",
     "deploy:5": "yarn hardhat run scripts/5_ChocopoundApproveUNI.ts",
+    "deploy:6": "yarn hardhat run scripts/6_ChocopoundApproveDAI.ts",
     "deploy-contract-to-localchain": "hardhat run scripts/99_batchMigration.ts --network localhost",
     "deploy-contract-to-kovan": "run-s deploy:*  -- --network kovan"
   },

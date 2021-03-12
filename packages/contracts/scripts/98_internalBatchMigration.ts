@@ -13,5 +13,6 @@ export const main = async () => {
   await initializeChocopoundOwnership();
   await approveCurrency("WETH");
   await approveCurrency("UNI");
+  await approveCurrency("DAI");
   return { chocopound, chocopoundOwnership };
 };

@@ -18,6 +18,7 @@
     "dev:storybook": "yarn workspace frontend storybook",
     "dev:functions": "yarn workspace functions dev:watch",
     "dev:firebase": "firebase emulators:start --only firestore,functions",
+    "dev-staging": "cross-env REACT_APP_NETWORK_NAME=kovan yarn workspace frontend dev",
     "build": "run-p build:*",
     "build:frontend": "yarn workspace frontend build",
     "build:functions": "yarn workspace functions build",

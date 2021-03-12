@@ -293,16 +293,13 @@ export const Create: React.FC = () => {
       {/* currency */}
       {isCurrencyModalOpen && (
         <Modal icon="🔧" onClickDismiss={toggelCurrencyModal}>
-          <div className="p-8">
-            <h3 className="text-center text-xl text-gray-600 font-bold mb-8">Select Currency</h3>
+          <div className="p-4">
+            <h3 className="text-center text-xl text-gray-600 font-bold mb-4">Select Currency</h3>
 
             {aTokens &&
               aTokens.map((atoken: any, i: number) => {
                 return (
-                  <li
-                    key={i}
-                    className="flex mx-auto items-center border border-gray-200 p-4 max-w-xl  w-full"
-                  >
+                  <li key={i} className="flex mx-auto items-center p-4 max-w-xl  w-full">
                     <img className="w-10 h-10" src={`/coins/${atoken.symbol}.svg`} />
                     <p className="p-2 text-sm font-bold">{atoken.symbol}</p>
                     <div className="flex-auto"></div>
@@ -316,6 +313,11 @@ export const Create: React.FC = () => {
                   </li>
                 );
               })}
+            <div className="mt-8">
+              <Button onClick={toggelCurrencyModal} type="tertiary">
+                Confirm
+              </Button>
+            </div>
           </div>
         </Modal>
       )}

@@ -44,6 +44,7 @@ export const deployChocopoundOwnership = async () => {
 };
 
 export const deploy = async (contractName: string, params: string[]) => {
+  console.log(networkName);
   debug && console.log("contract deploy for", contractName);
   const Contract = await ethers.getContractFactory(contractName);
   const contract = await Contract.deploy(...params, { gasPrice });

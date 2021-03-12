@@ -9,13 +9,7 @@ exports.getAaveTokens = (_networkName) => {
   const networkName = _networkName == "kovan" ? "kovan" : "mainnet";
   console.log(networkName);
   return aaveConfig[networkName].filter((config) => {
-    return (
-      config.symbol == "WETH" ||
-      config.symbol == "UNI" ||
-      config.symbol == "DAI" ||
-      config.symbol == "AAVE" ||
-      config.symbol == "REN"
-    );
+    return config.symbol == "WETH" || config.symbol == "UNI" || config.symbol == "DAI";
   });
 };
 
