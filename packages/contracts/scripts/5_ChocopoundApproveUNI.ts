@@ -1,6 +1,6 @@
 import { approveCurrency } from "../helpers/migration";
 
-approveCurrency("DAI")
+approveCurrency("UNI")
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);

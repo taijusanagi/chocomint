@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./dependencies/@openzeppelin/token/ERC20/IERC20.sol";
+import "./dependencies/@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "./dependencies/@openzeppelin/token/ERC721/IERC721.sol";
 import "./dependencies/@openzeppelin/token/ERC1155/ERC1155.sol";
 import "./dependencies/@openzeppelin/utils/cryptography/ECDSA.sol";
@@ -20,6 +21,7 @@ import "hardhat/console.sol";
 contract Chocopound is IChocopound, ERC1155, IPFS {
   using ECDSA for bytes32;
   using SafeMath for uint256;
+  using SafeERC20 for IERC20;
 
   event OwnershipClaimed(address indexed operator, uint256 indexed tokenId);
   event RoyaltyWithdrawed(address indexed operato, uint256 indexed tokenId, uint256 amount);
@@ -105,14 +107,19 @@ contract Chocopound is IChocopound, ERC1155, IPFS {
 
   // owner operation
 
+  // TODO: this approve is too much? need to check later
   function approveCurrency(address _currency) public {
     address aTokenAddress = ILendingPool(aaveLendingPool).getReserveData(_currency).aTokenAddress;
     require(aTokenAddress != address(0x0), "currency must be included aave reserve list");
+    console.log("_currency", _currency);
+    console.log("IERC20Metadata(aTokenAddress).symbol()", IERC20Metadata(aTokenAddress).symbol());
     if (keccak256(abi.encodePacked(IERC20Metadata(aTokenAddress).symbol())) == keccak256("aWETH")) {
-      IERC20(aTokenAddress).approve(aaveWETHGateway, MAX_UINT);
+      IERC20(_currency).safeApprove(aaveWETHGateway, MAX_UINT);
+      IERC20(aTokenAddress).safeApprove(aaveWETHGateway, MAX_UINT);
       approvedCurrencies[address(0x0)] = true;
     }
-    IERC20(aTokenAddress).approve(aaveLendingPool, MAX_UINT);
+    IERC20(_currency).safeApprove(aaveLendingPool, MAX_UINT);
+    IERC20(aTokenAddress).safeApprove(aaveLendingPool, MAX_UINT);
     approvedCurrencies[_currency] = true;
   }
 
@@ -349,8 +356,17 @@ contract Chocopound is IChocopound, ERC1155, IPFS {
     if (_currency == address(0x0)) {
       IWETHGateway(aaveWETHGateway).depositETH{ value: _price }(address(this), _referralCode);
     } else {
-      IERC20(_currency).transferFrom(msg.sender, address(this), _price);
+      console.log("start transfer");
+      IERC20(_currency).safeTransferFrom(msg.sender, address(this), _price);
+      console.log("start deposit");
+      //  function deposit(
+      //   address asset,
+      //   uint256 amount,
+      //   address onBehalfOf,
+      //   uint16 referralCode
+      // ) external;
       ILendingPool(aaveLendingPool).deposit(_currency, _price, address(this), _referralCode);
+      console.log("deposit done");
     }
   }
 
@@ -364,7 +380,7 @@ contract Chocopound is IChocopound, ERC1155, IPFS {
       _to.transfer(_price);
     } else {
       ILendingPool(aaveLendingPool).withdraw(_currency, _price, address(this));
-      IERC20(_currency).transferFrom(address(this), _to, _price);
+      IERC20(_currency).safeTransferFrom(address(this), _to, _price);
     }
   }
 

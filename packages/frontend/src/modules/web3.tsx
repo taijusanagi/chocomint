@@ -20,6 +20,7 @@ import {
 import { getAaveTokens } from "../../../contracts/helpers/util";
 export { hashChoco, getPrices, getPrice, getAaveTokens } from "../../../contracts/helpers/util";
 
+import { nullAddress } from "../../../contracts/helpers/constant";
 export {
   defaultSupplyLimit,
   defaultDiluter,
@@ -87,6 +88,8 @@ export const chocopoundContract = new ethers.Contract(
 //   chocomintOwnershipAbi,
 //   provider
 // ) as ChocopoundOwnership;
+
+export const erc20Contract = new ethers.Contract(nullAddress, erc20Abi, provider) as IERC20;
 
 export const getAtokenWithBalance = async () => {
   const aaveTokens = getAaveTokens(networkName);

@@ -21,7 +21,7 @@
     "build": "run-p build:*",
     "build:frontend": "yarn workspace frontend build",
     "build:functions": "yarn workspace functions build",
-    "build-staging": "cross-env REACT_APP_NETWORK_NAME=staging yarn build",
+    "build-staging": "cross-env REACT_APP_NETWORK_NAME=kovan yarn build",
     "build-production": "cross-env REACT_APP_NETWORK_NAME=mainnet yarn build",
     "start-staging": "yarn build-staging && firebase emulators:start --only hosting",
     "start-production": "yarn build-production && firebase emulators:start --only hosting",

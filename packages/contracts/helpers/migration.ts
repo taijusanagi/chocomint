@@ -12,7 +12,8 @@ export const getNetwork = () => {
 };
 
 export const networkName = getNetwork();
-export const gasPrice = process.env.GASPRICE ? parseInt(process.env.GASPRICE) : 100000000000;
+
+export const gasPrice = process.env.GASPRICE ? parseInt(process.env.GASPRICE) : 10000000000; //10 gwei
 export const debug = process.env.DEBUG;
 
 export const readFileAsJson = () => {
@@ -81,7 +82,7 @@ export const approveCurrency = async (currencySymbol: string) => {
   const configs = readFileAsJson();
   const address = configs[networkName][target];
   const contract = await Contract.attach(address);
-  const aaveTokens = getAaveTokens();
+  const aaveTokens = getAaveTokens(networkName);
   for (const aaveToken of aaveTokens) {
     if (aaveToken.symbol == currencySymbol) {
       await contract.approveCurrency(aaveToken.address);

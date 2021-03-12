@@ -1,19 +1,4 @@
-import {
-  deployChocopound,
-  deployChocopoundOwnership,
-  initializeChocopound,
-  initializeChocopoundOwnership,
-  approveCurrency,
-} from "../helpers/migration";
-
-export const main = async () => {
-  await deployChocopound();
-  await deployChocopoundOwnership();
-  await initializeChocopound();
-  await initializeChocopoundOwnership();
-  await approveCurrency("WETH");
-  await approveCurrency("DAI");
-};
+import { main } from "./98_internalBatchMigration";
 
 main()
   .then(() => process.exit(0))

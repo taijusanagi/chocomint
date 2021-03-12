@@ -1,5 +1,6 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
+import { useRecoilState } from "recoil";
 
 import { firestore, collectionName } from "../modules/firebase";
 import {
@@ -13,6 +14,9 @@ import {
   roundAndFormatPrintPrice,
   roundAndFormatBurnPrice,
   useWallet,
+  nullAddress,
+  erc20Contract,
+  selectedAddressState,
 } from "../modules/web3";
 
 import { shortenAddress, shortenName } from "../modules/util";
@@ -37,7 +41,7 @@ export const NFT: React.FC = () => {
   const [pricesAtEachSupply, setPricesAtEachSupply] = React.useState<any>();
 
   const slippageList = [0, 1, 2, 3];
-
+  const [selectedAddress, setSelectedAddress] = useRecoilState(selectedAddressState);
   const { connectWallet } = useWallet();
 
   // this only calls blockchian once so perfomance would be ok
@@ -83,6 +87,8 @@ export const NFT: React.FC = () => {
   const validateNetworkAndGetSigner = async () => {
     const provider = await connectWallet();
     const signer = await getEthersSigner(provider);
+    const address = await signer.getAddress();
+    setSelectedAddress(address);
     const signerNetwork = await signer.provider.getNetwork();
     if (signerNetwork.chainId != chainId) {
       openModal("😲", `Wrong network detected, please connect to ${networkName}.`);
@@ -96,14 +102,24 @@ export const NFT: React.FC = () => {
     if (!choco || !pricesAtEachSupply) {
       return;
     }
+    console.log("start");
+    console.log(chocopoundContract.address);
     try {
       const signer = await validateNetworkAndGetSigner();
       if (!signer) {
         return;
       }
-
+      const address = await signer.getAddress();
       const { printPrice } = pricesAtEachSupply[printCount + slippage];
 
+      if (choco.currencyAddress != nullAddress) {
+        const currencyContract = await erc20Contract.attach(choco.currencyAddress);
+        const allowance = await currencyContract.allowance(address, chocopoundContract.address);
+        if (allowance < printPrice) {
+          await currencyContract.connect(signer).approve(chocopoundContract.address, printPrice);
+        }
+      }
+      console.log("UNI", choco.currencyAddress);
       const { hash: tx } = await chocopoundContract
         .connect(signer)
         .publishAndMintPrint(
@@ -226,7 +242,7 @@ export const NFT: React.FC = () => {
                   <Button onClick={print} type="primary">
                     <div className="flex justify-center items-center">
                       Buy
-                      <span className="ml-4">🛒</span>
+                      <span className="ml-4">🛍</span>
                     </div>
                   </Button>
                 )}

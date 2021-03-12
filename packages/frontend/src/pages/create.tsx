@@ -18,6 +18,7 @@ import {
   nullAddress,
   useWallet,
   getAaveTokens,
+  networkName,
 } from "../modules/web3";
 
 import { Choco } from "../types";
@@ -110,7 +111,7 @@ export const Create: React.FC = () => {
       }
       event.preventDefault();
     };
-    setAtokens(getAaveTokens());
+    setAtokens(getAaveTokens(networkName));
   }, []);
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,6 +162,8 @@ export const Create: React.FC = () => {
       } else {
         const aToken = aTokens.filter((aToken: any) => aToken.symbol == currency);
         currencyAddress = aToken[0].address;
+        console.log(networkName);
+        console.log(currencyAddress);
       }
 
       const chocoId = hashChoco(

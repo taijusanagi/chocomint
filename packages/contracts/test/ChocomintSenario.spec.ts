@@ -1,14 +1,7 @@
 import { ethers } from "hardhat";
 import * as chai from "chai";
 import { solidity } from "ethereum-waffle";
-import {
-  getNetwork,
-  deployChocopound,
-  deployChocopoundOwnership,
-  initializeChocopound,
-  initializeChocopoundOwnership,
-  approveCurrency,
-} from "../helpers/migration";
+import { getNetwork } from "../helpers/migration";
 
 import {
   chocopoundName,
@@ -16,7 +9,7 @@ import {
   ownershipName,
   ownershipSymbol,
 } from "../helpers/constant";
-import { hashChoco, getPrices, getAaveTokens } from "../helpers/util";
+import { hashChoco, getPrices } from "../helpers/util";
 import {
   defaultSupplyLimit,
   defaultDiluter,
@@ -25,6 +18,8 @@ import {
   defaultCrr,
   nullAddress,
 } from "../helpers/constant";
+import { main } from "../scripts/98_internalBatchMigration";
+
 import configs from "../network.json";
 
 chai.use(solidity);
@@ -52,12 +47,9 @@ describe("Chocomint", function () {
   this.beforeEach("initialization.", async function () {
     networkName = getNetwork();
     [ownerSigner, ownershipSigner] = await ethers.getSigners();
-    chocopoundContract = await deployChocopound();
-    ownershipContract = await deployChocopoundOwnership();
-    await initializeChocopound();
-    await initializeChocopoundOwnership();
-    await approveCurrency("WETH");
-    await approveCurrency("DAI");
+    const { chocopound, chocopoundOwnership } = await main();
+    chocopoundContract = chocopound;
+    ownershipContract = chocopoundOwnership;
   });
 
   it("deploy: deploy is ok", async function () {

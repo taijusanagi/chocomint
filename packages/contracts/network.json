@@ -14,16 +14,16 @@
     "explore": "https://kovan.etherscan.io/tx/",
     "LendingPool": "0xe0fba4fc209b4948668006b2be61711b7f465bae",
     "WETHGateway": "0xf8aC10E65F2073460aAD5f28E1EABE807DC287CF",
-    "ChocopoundOwnership": "0x029A31eDd4C791C99387B318cbc352EA4D3f64bf",
-    "Chocopound": "0x9E7088C23e5C0B2D02cD7886A1BDbC7FE8b71016"
+    "ChocopoundOwnership": "0x4D604ae0414BA551BB050D7ABA9C00b48784B12D",
+    "Chocopound": "0xBcF2DE3Dce8D36439783576889C9dF1BefcB31Aa"
   },
   "localhost": {
     "chainId": "31337",
     "rpc": "http://localhost:8545",
-    "explore": "https://rinkeby.etherscan.io/tx/",
+    "explore": "https://kovan.etherscan.io/tx/",
     "LendingPool": "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9",
     "WETHGateway": "0xDcD33426BA191383f1c9B431A342498fdac73488",
-    "ChocopoundOwnership": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
+    "ChocopoundOwnership": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
     "Chocopound": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"
   }
 }
