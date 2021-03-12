@@ -1,4 +1,5 @@
 import React from "react";
+import { ethers } from "ethers";
 
 import { Choco } from "../types";
 import { useParams } from "react-router-dom";
@@ -19,9 +20,11 @@ export const Creator: React.FC = () => {
 
   React.useEffect(() => {
     const chocos: Choco[] = [];
+
     firestore
       .collection(collectionName)
       .orderBy("createdAt", "desc")
+      .where("creatorAddress", "==", ethers.utils.getAddress(address))
       .limit(32)
       .get()
       .then((querySnapshot) => {
