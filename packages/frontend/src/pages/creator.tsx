@@ -21,9 +21,9 @@ export const Creator: React.FC = () => {
   React.useEffect(() => {
     const chocos: Choco[] = [];
 
+    console.log(ethers.utils.getAddress(address));
     firestore
       .collection(collectionName)
-      .orderBy("createdAt", "desc")
       .where("creatorAddress", "==", ethers.utils.getAddress(address))
       .limit(32)
       .get()
