@@ -110,12 +110,12 @@ export const getAtokenWithBalance = async () => {
 };
 
 export const providerOptions = {
-  walletconnect: {
-    package: WalletConnectProvider,
-    options: {
-      infuraId: "95f65ab099894076814e8526f52c9149",
-    },
-  },
+  // walletconnect: {
+  //   package: WalletConnectProvider,
+  //   options: {
+  //     infuraId: "95f65ab099894076814e8526f52c9149",
+  //   },
+  // },
   torus: {
     package: Torus,
   },

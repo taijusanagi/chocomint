@@ -20,7 +20,6 @@ exports.getPrice = (currentSupply, currentReserve, initialPrice, diluter, crr) =
 // then get brun printPrice by royality ratio
 exports.getPrices = (totalSupply, initialPrice, diluter, crr, royaltyRatio) => {
   const pricesAtEachSupply = [];
-  delete pricesAtEachSupply[0];
   let reserveBalance = ethers.BigNumber.from(0);
   let burnPrice = ethers.BigNumber.from(0);
   const virtualReserve = ethers.BigNumber.from(initialPrice).mul(diluter).mul(crr).div(BASE_RATIO);

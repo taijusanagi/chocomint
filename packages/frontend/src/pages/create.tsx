@@ -1,6 +1,8 @@
 import React from "react";
 import { useRecoilState } from "recoil";
 
+import { ethers } from "ethers";
+
 import {
   ipfs,
   chainId,
@@ -19,6 +21,8 @@ import {
   useWallet,
   getAaveTokens,
   networkName,
+  roundAndFormatPrintPrice,
+  getPrices,
 } from "../modules/web3";
 
 import { Choco } from "../types";
@@ -35,12 +39,30 @@ import { Footer } from "../components/organisms/Footer";
 const canonicalize = require("canonicalize");
 
 export const Create: React.FC = () => {
+  const maxBooster = 128;
+
   const [imageUrl, setImageUrl] = React.useState("");
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState("");
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [currency, setCurrency] = React.useState("ETH");
+  const [supplyLimit, setSupplyLimit] = React.useState(defaultSupplyLimit);
+  const [initialPriceString, setInitialPriceString] = React.useState(
+    ethers.utils.formatEther(defaultInitialPrice)
+  );
+  const [diluter, setDiluter] = React.useState(defaultDiluter);
+  const [initialPrice, setInitialPrice] = React.useState(defaultInitialPrice);
+
+  const prices = getPrices(
+    defaultSupplyLimit,
+    defaultInitialPrice,
+    defaultDiluter,
+    defaultCrr,
+    defaultRoyaltyRatio
+  );
+  const lastPriceString = prices.pricesAtEachSupply[supplyLimit - 1].printPrice;
+  const [lastPrice, setLastPrice] = React.useState(roundAndFormatPrintPrice(lastPriceString, 3));
   const [isWaitingTransactionConfirmation, setIsWaitingTransactionConfirmation] = React.useState(
     false
   );
@@ -86,6 +108,35 @@ export const Create: React.FC = () => {
     setDescription(event.target.value);
   };
 
+  const handleSupplyLimitChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSupplyLimit(parseInt(event.target.value));
+  };
+
+  const handleInitialPriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInitialPriceString(event.target.value);
+    setInitialPrice(ethers.utils.parseEther(event.target.value).toString());
+  };
+
+  const handleDiluterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDiluter(parseInt(event.target.value));
+  };
+
+  const updateSalePlanning = () => {
+    const reverseDiluter = maxBooster + 1 - diluter;
+    const prices = getPrices(
+      supplyLimit,
+      initialPrice,
+      reverseDiluter,
+      defaultCrr,
+      defaultRoyaltyRatio
+    );
+    const lastPrice = prices.pricesAtEachSupply[supplyLimit - 1].printPrice;
+
+    const roundedPrice = roundAndFormatPrintPrice(lastPrice, 3);
+    setLastPrice(roundedPrice);
+    toggelCurrencyModal();
+  };
+
   const clickInputFile = () => {
     document.getElementById("file")!.click();
   };
@@ -121,7 +172,6 @@ export const Create: React.FC = () => {
   };
 
   const handleCurrencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(event.target.value);
     setCurrency(event.target.value);
   };
 
@@ -162,8 +212,6 @@ export const Create: React.FC = () => {
       } else {
         const aToken = aTokens.filter((aToken: any) => aToken.symbol == currency);
         currencyAddress = aToken[0].address;
-        console.log(networkName);
-        console.log(currencyAddress);
       }
 
       const chocoId = hashChoco(
@@ -186,15 +234,14 @@ export const Create: React.FC = () => {
         currencyAddress,
         creatorAddress,
         ipfsHash,
-        supplyLimit: defaultSupplyLimit,
-        initialPrice: defaultInitialPrice,
+        supplyLimit,
+        initialPrice,
         diluter: defaultDiluter,
         crr: defaultCrr,
         royaltyRatio: defaultRoyaltyRatio,
         signature,
         metadata,
       };
-      console.log(choco);
       await functions.httpsCallable("createChoco")({ chocoId, choco });
       clearForm();
       setIsWaitingTransactionConfirmation(false);
@@ -210,8 +257,8 @@ export const Create: React.FC = () => {
       <div className="flex justify-center flex-grow container mx-auto font-way">
         {/* TODO: align center for smart phone */}
         <div className="w-full sm:max-w-md p-4">
-          <img className=" mx-auto h-20 w-auto solidity" src="/logo.png" alt="logo" />
-          <div className="mt-2">
+          <img className=" mx-auto h-12 w-auto solidity" src="/logo.png" alt="logo" />
+          <div className="mt-4">
             <label htmlFor="name" className="block text-sm font-bold text-gray-600">
               Name
             </label>
@@ -223,7 +270,7 @@ export const Create: React.FC = () => {
               className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             />
           </div>
-          <div className="mt-2">
+          <div className="mt-4">
             <label htmlFor="description" className="block text-sm font-bold text-gray-600">
               Description
             </label>
@@ -234,7 +281,7 @@ export const Create: React.FC = () => {
               className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
             ></textarea>
           </div>
-          <div className="mt-2" id="dropContainer">
+          <div className="mt-4" id="dropContainer">
             <label htmlFor="cover_photo" className="block text-sm font-bold text-gray-600">
               Image
             </label>
@@ -262,16 +309,16 @@ export const Create: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="mt-2">
-            <p className="block text-sm font-bold text-gray-600 mb-2">Sales Planning</p>
+          <div className="mt-4">
+            <p className="block text-sm font-bold text-gray-600">Sales Planning</p>
             <div className="flex">
-              <p className="h-10 leading-10 align-bottom text-lg font-bold text-gray-500">
-                128 prints / 0.025 {currency} - 100 {currency}
+              <p className="h-8 leading-8 align-bottom text-sm font-medium text-gray-500">
+                {supplyLimit} prints / {initialPriceString} {currency} - {lastPrice} {currency}
               </p>
               <div className="flex-auto"></div>
               <button
                 onClick={toggelCurrencyModal}
-                className="focus:outline-none text-sm text-gray-700 font-bold bg-gray-100 p-2 solidity"
+                className="focus:outline-none text-xs text-gray-700 font-bold bg-gray-100 px-2 solidity"
               >
                 Update
               </button>
@@ -286,29 +333,72 @@ export const Create: React.FC = () => {
       </div>
       {/* currency */}
       {isCurrencyModalOpen && (
-        <Modal icon="🔧" onClickDismiss={toggelCurrencyModal}>
+        <Modal icon="🔧">
           <div className="p-4">
             <h3 className="text-center text-xl text-gray-600 font-bold mb-4">Sales Planning</h3>
-
-            {aTokens &&
-              aTokens.map((atoken: any, i: number) => {
-                return (
-                  <li key={i} className="flex mx-auto items-center p-2 max-w-xl  w-full">
-                    <img className="w-8 h-8" src={`/coins/${atoken.symbol}.svg`} />
-                    <p className="p-4 text-sm font-bold">{atoken.symbol}</p>
-                    <div className="flex-auto"></div>
-                    <input
-                      type="radio"
-                      name="currency"
-                      value={atoken.symbol}
-                      checked={atoken.symbol == currency}
-                      onChange={handleCurrencyChange}
-                    ></input>
-                  </li>
-                );
-              })}
-            <div className="mt-8">
-              <Button onClick={toggelCurrencyModal} type="tertiary">
+            <div className="mt-4">
+              <label htmlFor="name" className="block text-left text-sm font-bold text-gray-600">
+                Supply Limit
+              </label>
+              <input
+                value={supplyLimit}
+                onChange={handleSupplyLimitChange}
+                type="number"
+                id="supplyLimit"
+                className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
+              />
+            </div>
+            <div className="mt-4">
+              <label htmlFor="name" className="block text-left text-sm font-bold text-gray-600">
+                Initial Price ( {currency} )
+              </label>
+              <input
+                step="0.001"
+                value={initialPriceString}
+                onChange={handleInitialPriceChange}
+                type="number"
+                id="initialPrice"
+                className="mt-1 block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-xl"
+              />
+            </div>
+            <div className="mt-4">
+              <label htmlFor="name" className="block text-left text-sm font-bold text-gray-600">
+                Bonded Curve Booster
+              </label>
+              <input
+                type="range"
+                className="w-full mt-2"
+                onChange={handleDiluterChange}
+                value={diluter}
+                min="1"
+                max={maxBooster}
+              />
+            </div>
+            <ul className="flex mt-2">
+              {aTokens &&
+                aTokens.map((atoken: any, i: number) => {
+                  return (
+                    <li key={i} className="items-center p-2">
+                      <label>
+                        <img
+                          className={`w-10 h-10 ${atoken.symbol != currency && "opacity-20"}`}
+                          src={`/coins/${atoken.symbol}.svg`}
+                        />
+                        <input
+                          type="radio"
+                          name="currency"
+                          value={atoken.symbol}
+                          className="sr-only"
+                          checked={atoken.symbol == currency}
+                          onChange={handleCurrencyChange}
+                        ></input>
+                      </label>
+                    </li>
+                  );
+                })}
+            </ul>
+            <div className="mt-4">
+              <Button onClick={updateSalePlanning} type="tertiary">
                 Confirm
               </Button>
             </div>
