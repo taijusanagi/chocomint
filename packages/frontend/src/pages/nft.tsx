@@ -115,7 +115,17 @@ export const NFT: React.FC = () => {
         const currencyContract = await erc20Contract.attach(choco.currencyAddress);
         const allowance = await currencyContract.allowance(address, chocopoundContract.address);
         if (allowance < printPrice) {
-          await currencyContract.connect(signer).approve(chocopoundContract.address, printPrice);
+          const { hash: tx } = await currencyContract
+            .connect(signer)
+            .approve(chocopoundContract.address, printPrice);
+          openModal(
+            "🎉",
+            "Approve transaction is submitted, please purchase approval is confirmed.",
+            "Check",
+            `${explore}${tx}`,
+            true
+          );
+          return;
         }
       }
       const { hash: tx } = await chocopoundContract

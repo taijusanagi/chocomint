@@ -1,5 +1,4 @@
 import React from "react";
-
 import { Choco } from "../types";
 import { firestore, collectionName } from "../modules/firebase";
 
@@ -12,18 +11,24 @@ import { Footer } from "../components/organisms/Footer";
 export const Home: React.FC = () => {
   const [createdChocos, setCreatedChocos] = React.useState<Choco[] | undefined>(undefined);
   const [aTokens, setAtokens] = React.useState<any>(undefined);
+
+  const [totalCreated, setTotalCreated] = React.useState<any>(undefined);
   React.useEffect(() => {
     const createdChocos: Choco[] = [];
     firestore
       .collection(collectionName)
       .orderBy("createdAt", "desc")
-      .limit(9)
       .get()
       .then((querySnapshot) => {
+        let counter = 0;
         querySnapshot.forEach((doc) => {
-          createdChocos.push(doc.data() as Choco);
+          counter++;
+          if (createdChocos.length < 9) {
+            createdChocos.push(doc.data() as Choco);
+          }
         });
         if (createdChocos.length > 0) {
+          setTotalCreated(counter);
           setCreatedChocos(createdChocos);
         }
       });
@@ -37,7 +42,9 @@ export const Home: React.FC = () => {
       <Hero src="/hero.png" />
       {createdChocos && (
         <>
-          <h3 className="text-center text-2xl text-gray-600 font-bold p-12">New Chocos!</h3>
+          <h3 className="text-center text-2xl text-gray-600 font-bold m-12">
+            {totalCreated} Chocos are created
+          </h3>
           <div className="container px-2 mx-auto max-w-5xl">
             <ChocoList chocos={createdChocos}></ChocoList>
           </div>
