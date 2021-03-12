@@ -23,7 +23,7 @@ export const MessageModal: React.FC<MessageModalProps> = ({
 }) => {
   return (
     <Modal onClickDismiss={onClickDismiss} icon={icon}>
-      <p className="my-8 text-sm font-medium text-gray-600 font-way">{messageText}</p>
+      <p className="my-8 text-sm font-medium text-gray-600">{messageText}</p>
       {url && (
         <div className="flex justify-center">
           <div className="w-6/12">

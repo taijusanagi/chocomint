@@ -11,7 +11,7 @@ export interface ModalProps {
 
 export const Modal: React.FC<ModalProps> = ({ children, icon, onClickDismiss }) => {
   return (
-    <section className="fixed z-10 inset-0 font-way">
+    <section className="fixed z-10 inset-0">
       <div className="flex p-4 items-center justify-center min-h-screen text-center">
         <div
           onClick={onClickDismiss}
