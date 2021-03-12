@@ -9,7 +9,7 @@ export interface HeroProps {
 export const Hero: React.FC<HeroProps> = ({ src }) => {
   return (
     <section>
-      <div className="w-full font-way">
+      <div className="w-full">
         <div className="flex flex-col items-center mx-auto bg-gradient-to-r from-green-400 via-blue-100 to-green-400 p-8">
           <img className="max-w-96 max-h-80 mt-6 mb-3" src={src} />
           <div className="mx-auto py-4">

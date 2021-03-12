@@ -24,7 +24,7 @@ export const Header: React.FC = () => {
 
   return (
     <header>
-      <div className="relative h-24 font-way">
+      <div className="relative h-24">
         <Link to="/">
           <div className="px-4 py-8 absolute left-0 font-bold">Chocomint 🌱</div>
         </Link>

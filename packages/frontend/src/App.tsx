@@ -10,24 +10,26 @@ import NFT from "./pages/nft";
 
 const App: React.FC = () => {
   return (
-    <RecoilRoot>
-      <Router>
-        <Switch>
-          <Route path="/creator/:address" exact>
-            <Creator />
-          </Route>
-          <Route path="/create" exact>
-            <Create />
-          </Route>
-          <Route path="/" exact>
-            <Home />
-          </Route>
-          <Route path="/nft/:hash" exact>
-            <NFT />
-          </Route>
-        </Switch>
-      </Router>
-    </RecoilRoot>
+    <div className="font-way">
+      <RecoilRoot>
+        <Router>
+          <Switch>
+            <Route path="/creator/:address" exact>
+              <Creator />
+            </Route>
+            <Route path="/create" exact>
+              <Create />
+            </Route>
+            <Route path="/" exact>
+              <Home />
+            </Route>
+            <Route path="/nft/:hash" exact>
+              <NFT />
+            </Route>
+          </Switch>
+        </Router>
+      </RecoilRoot>
+    </div>
   );
 };
 

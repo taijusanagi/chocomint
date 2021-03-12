@@ -165,7 +165,7 @@ export const NFT: React.FC = () => {
     <Body>
       <Header />
       {choco && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 flex font-way">
+        <div className="grid grid-cols-1 sm:grid-cols-2 flex">
           <div className="p-4 flex justify-center sm:justify-end relative">
             <div className="flex w-full sm:justify-end">
               <div className="absolute opacity-90 m-4">
