@@ -51,8 +51,8 @@ export const Creator: React.FC = () => {
   return (
     <Body>
       <Header />
-      <h3 className="text-center text-2xl text-gray-600 font-bold mb-2 font-way">Created By</h3>
-      <button className="mx-auto w-60 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2 mb-6 font-way">
+      <h3 className="text-center text-2xl text-gray-600 font-bold mb-2">Created By</h3>
+      <button className="mx-auto w-60 bg-white text-gray-700 text-xs font-medium rounded-full shadow-md p-2 mb-6">
         <span className="pr-2">👩‍🎨</span>
         {middlenAddress(address)}
       </button>
