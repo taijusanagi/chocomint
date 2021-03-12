@@ -5,12 +5,8 @@ const { BASE_RATIO } = require("./constant");
 const aaveConfig = require("../aave.json");
 
 exports.getAaveTokens = (_networkName) => {
-  console.log("get");
   const networkName = _networkName == "kovan" ? "kovan" : "mainnet";
-  console.log(networkName);
-  return aaveConfig[networkName].filter((config) => {
-    return config.symbol == "WETH" || config.symbol == "UNI" || config.symbol == "DAI";
-  });
+  return aaveConfig[networkName];
 };
 
 exports.getPrice = (currentSupply, currentReserve, initialPrice, diluter, crr) => {

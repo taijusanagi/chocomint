@@ -115,6 +115,7 @@ export const NFT: React.FC = () => {
       if (choco.currencyAddress != nullAddress) {
         const currencyContract = await erc20Contract.attach(choco.currencyAddress);
         const allowance = await currencyContract.allowance(address, chocopoundContract.address);
+        console.log(allowance.toString());
         if (allowance < printPrice) {
           await currencyContract.connect(signer).approve(chocopoundContract.address, printPrice);
         }

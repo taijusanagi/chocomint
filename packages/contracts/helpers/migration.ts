@@ -22,11 +22,11 @@ export const readFileAsJson = () => {
 };
 
 export const updateJson = (target: string, address: string) => {
-  debug && console.log("json update for", target);
+  networkName != "localhost" && console.log("json update for", target);
   const configs = readFileAsJson();
   configs[networkName][target] = address;
   fs.writeFileSync(path.join(__dirname, filePath), JSON.stringify(configs));
-  debug && console.log("json updated");
+  networkName != "localhost" && console.log("json updated");
 };
 
 export const deployChocopound = async () => {
@@ -44,11 +44,11 @@ export const deployChocopoundOwnership = async () => {
 };
 
 export const deploy = async (contractName: string, params: string[]) => {
-  console.log(networkName);
-  debug && console.log("contract deploy for", contractName);
+  networkName != "localhost" && console.log("contract deploy for", contractName);
   const Contract = await ethers.getContractFactory(contractName);
   const contract = await Contract.deploy(...params, { gasPrice });
-  debug && console.log("contract deployed", contract.address);
+  networkName != "localhost" &&
+    console.log("contract deployed", contract.deployTransaction.hash, contract.address);
   return contract;
 };
 
@@ -67,13 +67,13 @@ export const initializeChocopoundOwnership = async () => {
 };
 
 export const initialize = async (contractName: string, params: string[]) => {
-  debug && console.log("contract initialize", contractName);
+  networkName != "localhost" && console.log("contract initialize", contractName);
   const Contract = await ethers.getContractFactory(contractName);
   const configs = readFileAsJson();
   const address = configs[networkName][contractName];
   const contract = await Contract.attach(address);
   await contract.initialize(...params);
-  debug && console.log("contract initialized");
+  networkName != "localhost" && console.log("contract initialized");
   return contract.address;
 };
 

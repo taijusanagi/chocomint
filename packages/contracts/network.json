@@ -14,8 +14,8 @@
     "explore": "https://kovan.etherscan.io/tx/",
     "LendingPool": "0xe0fba4fc209b4948668006b2be61711b7f465bae",
     "WETHGateway": "0xf8aC10E65F2073460aAD5f28E1EABE807DC287CF",
-    "ChocopoundOwnership": "0x4D604ae0414BA551BB050D7ABA9C00b48784B12D",
-    "Chocopound": "0xBcF2DE3Dce8D36439783576889C9dF1BefcB31Aa"
+    "ChocopoundOwnership": "0x3B4D0157F96830F88fd2568A05C96A4F6E548F10",
+    "Chocopound": "0x1afCe44bB23353dd0834A2E60a81644D18D2Cfa1"
   },
   "localhost": {
     "chainId": "31337",
