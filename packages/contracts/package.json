@@ -14,7 +14,9 @@
     "deploy:5": "yarn hardhat run scripts/5_ChocopoundApproveUNI.ts",
     "deploy:6": "yarn hardhat run scripts/6_ChocopoundApproveDAI.ts",
     "deploy-contract-to-localchain": "hardhat run scripts/99_batchMigration.ts --network localhost",
-    "deploy-contract-to-kovan": "hardhat run scripts/99_batchMigration.ts --network kovan"
+    "deploy-contract-to-kovan": "hardhat run scripts/99_batchMigration.ts --network kovan",
+    "tally-transactions-to-kovan": "hardhat run scripts/100_totalTransactions.ts --network kovan",
+    "tally-deposit-to-kovan": "hardhat run scripts/101_totalDepositAmount.ts --network kovan"
   },
   "devDependencies": {
     "@aave/protocol-v2": "^1.0.1",
