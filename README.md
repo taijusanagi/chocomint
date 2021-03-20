@@ -2,10 +2,14 @@
 
 ```
 yarn
-yarn dev //local development
-yarn start-staging //staging development with rinkeby
-yarn start-production //production development with mainnet
+yarn dev
+yarn start-staging
+yarn start-production
 ```
+
+- dev for local development
+- start-staging for staging development
+- start-production for production development
 
 ### URLs
 
