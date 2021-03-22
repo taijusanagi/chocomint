@@ -110,8 +110,9 @@ export const NFT: React.FC = () => {
       }
       const address = await signer.getAddress();
       const { printPrice } = pricesAtEachSupply[printCount + slippage];
-
+      console.log(choco.currencyAddress);
       if (choco.currencyAddress != nullAddress) {
+        console.log("test");
         const currencyContract = await erc20Contract.attach(choco.currencyAddress);
         const allowance = await currencyContract.allowance(address, chocopoundContract.address);
         if (allowance < printPrice) {

@@ -84,9 +84,16 @@ export const approveCurrency = async (currencySymbol: string) => {
   const address = configs[networkName][target];
   const contract = await Contract.attach(address);
   const aaveTokens = getAaveTokens(networkName);
-  for (const aaveToken of aaveTokens) {
-    if (aaveToken.symbol == currencySymbol) {
-      await contract.approveCurrency(aaveToken.address);
+  if (currencySymbol != "ETH") {
+    for (const aaveToken of aaveTokens) {
+      if (aaveToken.symbol == currencySymbol) {
+        console.log(currencySymbol);
+        console.log(aaveToken.address);
+        await contract.approveCurrency(aaveToken.address);
+      }
     }
+  } else {
+    console.log("eth approve for quick fix");
+    await contract.approveCurrency("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
   }
 };

@@ -11,7 +11,7 @@ export const main = async () => {
   const chocopoundOwnership = await deployChocopoundOwnership();
   await initializeChocopound();
   await initializeChocopoundOwnership();
-  await approveCurrency("WETH");
+  await approveCurrency("ETH");
   await approveCurrency("UNI");
   await approveCurrency("DAI");
   return { chocopound, chocopoundOwnership };
