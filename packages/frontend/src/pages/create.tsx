@@ -27,7 +27,7 @@ import {
 
 import { Choco } from "../types";
 
-import { functions, firestore, collectionName } from "../modules/firebase";
+import { analytics, functions, firestore, collectionName } from "../modules/firebase";
 
 import { Body } from "../components/atoms/Body";
 import { Button } from "../components/atoms/Button";
@@ -277,6 +277,10 @@ export const Create: React.FC = () => {
           `/creator/${creatorAddress}`,
           false
         );
+        analytics.logEvent("click", {
+          type: "button",
+          name: "create_nft",
+        });
       }
     } catch (err) {
       openModal("🙇‍♂️", err.message);

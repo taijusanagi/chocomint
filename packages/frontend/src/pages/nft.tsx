@@ -2,7 +2,7 @@ import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { useRecoilState } from "recoil";
 
-import { firestore, collectionName } from "../modules/firebase";
+import { analytics, firestore, collectionName } from "../modules/firebase";
 import {
   verifyMetadata,
   chocopoundContract,
@@ -146,6 +146,11 @@ export const NFT: React.FC = () => {
           { value: choco.currencyAddress == nullAddress ? printPrice : 0 }
         );
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
+
+      analytics.logEvent("click", {
+        type: "button",
+        name: "print_nft",
+      });
     } catch (err) {
       openModal("🙇‍♂️", err.message);
     }
@@ -164,6 +169,11 @@ export const NFT: React.FC = () => {
         .connect(signer)
         .burnPrint(hash, printCount - slippage);
       openModal("🎉", "Transaction is send to blockchain.", "Check", `${explore}${tx}`, true);
+
+      analytics.logEvent("click", {
+        type: "button",
+        name: "burn_nft",
+      });
     } catch (err) {
       openModal("🙇‍♂️", err.message);
     }

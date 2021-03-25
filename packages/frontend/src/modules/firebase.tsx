@@ -14,6 +14,7 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig);
 
+const analytics = app.analytics();
 const firestore = app.firestore();
 const functions = app.functions();
 
@@ -28,4 +29,4 @@ if (process.env.NODE_ENV === "development") {
 export const collectionName =
   process.env.REACT_APP_NETWORK_NAME == "mainnet" ? "nft_production" : "nft_staging";
 
-export { firestore, functions };
+export { analytics, firestore, functions };

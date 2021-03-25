@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { Choco } from "../../types";
 import "./ChocoList.scss";
 
+import { analytics } from "../../modules/firebase";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
@@ -35,6 +37,14 @@ export const ChocoList: React.FC<ChocoListProps> = ({ chocos }) => {
     }
   };
 
+  const onClickChoco = () => {
+    console.log(1);
+    analytics.logEvent("click", {
+      type: "button",
+      name: "choco",
+    });
+  };
+
   React.useEffect(() => {
     const MintEvent = chocopoundContract.filters.PrintMinted(null, null, null, null, null, null);
     const BurnEvent = chocopoundContract.filters.PrintBurned(null, null, null, null, null);
@@ -61,7 +71,7 @@ export const ChocoList: React.FC<ChocoListProps> = ({ chocos }) => {
       <ul className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {chocos.map((choco, i) => {
           return (
-            <Link key={i} to={`/nft/${choco.chocoId}`}>
+            <Link key={i} to={`/nft/${choco.chocoId}`} onClick={onClickChoco}>
               <li className="chocolist-container grab-animation">
                 <div className="chocolist-dummy"></div>
                 <div className="chocolist-element">
