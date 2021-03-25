@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 import { useRecoilState } from "recoil";
 
+import { analytics } from "../../modules/firebase";
+
 import { initializeWeb3Modal, web3Modal, selectedAddressState } from "../../modules/web3";
 
 import { shortenAddress } from "../../modules/util";
@@ -14,6 +16,10 @@ export const Header: React.FC = () => {
   const connectWallet = async () => {
     const provider = await initializeWeb3Modal();
     setSelectedAddress(provider.selectedAddress);
+    analytics.logEvent("click", {
+      type: "button",
+      name: "connect_wallet",
+    });
   };
 
   React.useEffect(() => {
