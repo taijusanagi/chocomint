@@ -38,7 +38,6 @@ export const ChocoList: React.FC<ChocoListProps> = ({ chocos }) => {
   };
 
   const onClickChoco = () => {
-    console.log(1);
     analytics.logEvent("click", {
       type: "button",
       name: "choco",
